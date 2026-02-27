@@ -36,6 +36,7 @@ return [
 		'se' => 'Švědština',
 		'es' => 'Španělština',
 		'ca' => 'Katalánština',
+		'zh_CN' => 'Čínština (Zjednodušená)',
 	],
 	'2fa' => [
 		'2fa' => 'Možnosti 2FA',

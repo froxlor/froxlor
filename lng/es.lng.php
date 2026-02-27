@@ -33,7 +33,8 @@ return [
 		'nl' => 'Holandés',
 		'pt' => 'Portugués',
 		'se' => 'Sueco',
-                'es' => 'Español',
+		'es' => 'Español',
+		'zh_CN' => 'Chino (Simplificado)',
 	],
 	'2fa' => [
 		'2fa' => 'Opciones 2FA',
