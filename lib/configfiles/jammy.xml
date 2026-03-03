@@ -1474,7 +1474,7 @@ user = <SQL_UNPRIVILEGED_USER>
 password = <SQL_UNPRIVILEGED_PASSWORD>
 dbname = <SQL_DB>
 hosts = <SQL_HOST>
-query = SELECT GROUP_CONCAT(DISTINCT mu.username SEPARATOR ' ') AS sasl_users FROM mail_users mu WHERE mu.username = '%s' OR mu.email in ((SELECT mail_virtual.email_full FROM mail_virtual WHERE mail_virtual.email = '%s') UNION (SELECT mail_virtual.destination FROM mail_virtual WHERE mail_virtual.email = '%s') UNION (SELECT mail_sender_aliases.email FROM mail_sender_aliases WHERE mail_sender_aliases.allowed_sender = '%s'));
+query = SELECT GROUP_CONCAT(DISTINCT mu.username SEPARATOR ' ') AS sasl_users FROM mail_users mu WHERE mu.username = '%s' OR mu.email IN ((SELECT mail_virtual.email_full FROM mail_virtual WHERE mail_virtual.email = '%s') UNION (SELECT mail_virtual.destination FROM mail_virtual WHERE mail_virtual.email = '%s') UNION (SELECT mail_sender_aliases.email FROM mail_sender_aliases WHERE mail_sender_aliases.allowed_sender = '%s') UNION (SELECT mail_sender_aliases.email FROM mail_sender_aliases WHERE mail_sender_aliases.allowed_sender = CONCAT('@', SUBSTRING_INDEX('%s','@',-1))));
 ]]>
 							</content>
 						</file>
