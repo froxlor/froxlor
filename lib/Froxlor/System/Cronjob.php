@@ -28,6 +28,7 @@ namespace Froxlor\System;
 use Exception;
 use Froxlor\Cron\TaskId;
 use Froxlor\Database\Database;
+use Froxlor\FileDir;
 use Froxlor\FroxlorLogger;
 use Froxlor\Settings;
 use PDO;
@@ -150,6 +151,51 @@ class Cronjob
 		}
 
 		return $distro;
+	}
+
+	/**
+	 * @throws Exception
+	 */
+	public static function checkLocalUserGroupMembership(): bool
+	{
+		if ((int)Settings::Get('phpfpm.enabled') == 1) {
+			$username = Settings::Get('phpfpm.vhost_httpuser');
+		} elseif ((int)Settings::Get('system.mod_fcgid') == 1) {
+			$username = Settings::Get('system.mod_fcgid_httpuser');
+		} else {
+			$username = Settings::Get('system.httpuser');
+		}
+		$user = posix_getpwnam($username);
+		$group = posix_getgrnam(Settings::Get('system.httpgroup'));
+
+		$mylog = FroxlorLogger::getInstanceOf();
+		if (!$user || !$group) {
+			$mylog->logAction(
+				FroxlorLogger::CRON_ACTION,
+				LOG_NOTICE,
+				'Either local froxlor user or webserver-group could not be found/read. Please check settings.'
+			);
+			return false;
+		}
+
+		// primary group?
+		if ($user['gid'] === $group['gid']) {
+			return true;
+		}
+
+		// supplementary groups?
+		if (in_array($username, $group['members'])) {
+			return true;
+		}
+
+		// not yet in group, add it
+		$mylog->logAction(
+			FroxlorLogger::CRON_ACTION,
+			LOG_NOTICE,
+			'Local froxlor user not in webserver-group. Adding user "' . $username . '" to group "' . Settings::Get('system.httpgroup') . '"'
+		);
+		FileDir::safe_exec('usermod -aG ' . escapeshellarg(Settings::Get('system.httpgroup')) . ' ' . escapeshellarg($username));
+		return true;
 	}
 
 	/**

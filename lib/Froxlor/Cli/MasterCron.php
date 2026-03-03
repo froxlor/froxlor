@@ -27,7 +27,6 @@ namespace Froxlor\Cli;
 
 use Exception;
 use Froxlor\Cron\CronConfig;
-use Froxlor\Cron\System\Extrausers;
 use Froxlor\Cron\TaskId;
 use Froxlor\Database\Database;
 use Froxlor\FileDir;
@@ -159,6 +158,12 @@ final class MasterCron extends CliCommand
 		Cronjob::checkLastGuid();
 		$this->cronLog->logAction(FroxlorLogger::CRON_ACTION, LOG_NOTICE, 'Checking system\'s OS version');
 		Cronjob::checkCurrentDistro();
+		// validate if we're on fcgid/php-fpm that the local froxlor user is in the http-group to access log files
+		if ((int)Settings::Get('phpfpm.enabled') == 1 || (int)Settings::Get('system.mod_fcgid') == 1) {
+			$this->cronLog->logAction(FroxlorLogger::CRON_ACTION, LOG_NOTICE, 'Checking group membership of local user');
+			Cronjob::checkLocalUserGroupMembership();
+		}
+
 
 		// check for cron.d-generation task and create it if necessary
 		CronConfig::checkCrondConfigurationFile();

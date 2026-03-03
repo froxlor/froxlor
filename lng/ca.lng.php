@@ -35,6 +35,7 @@ return [
 		'se' => 'Suec',
 		'es' => 'Espanyol',
 		'ca' => 'Catala',
+		'zh_CN' => 'Xines (Simplificat)',
 	],
 	'2fa' => [
 		'2fa' => 'Opcions 2FA',
