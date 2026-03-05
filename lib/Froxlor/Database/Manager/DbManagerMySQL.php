@@ -175,10 +175,17 @@ class DbManagerMySQL
 			], false);
 
 			if (!empty($global_user)) {
-				Database::pexecute($rev_stmt, [
-					'guser' => $global_user,
-					'host' => $host['Host']
-				], false);
+				try {
+					Database::pexecute($rev_stmt, [
+						'guser' => $global_user,
+						'host' => $host['Host']
+					], false);
+				} catch (\PDOException $e) {
+					// ignore SQLSTATE[42000]: Syntax error or access violation: 1141 There is no such grant defined for user ':guser' on host ':host'
+					if ($e->errorInfo[1] != 1141) {
+						throw $e;
+					}
+				}
 			}
 		}
 
