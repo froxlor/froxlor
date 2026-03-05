@@ -325,7 +325,9 @@ class MysqlsTest extends TestCase
 				// as well as a PUBLIC user and an empty user
 				continue;
 			}
-			$this->assertNotEmpty($data['password'], 'No password for user "' . $user . '"');
+			foreach ($data as $host => $hostdata) {
+				$this->assertNotEmpty($hostdata['password'], "No password for user '" . $user . "'@'" . $host . "'");
+			}
 		}
 
 		if (TRAVIS_CI == 0) {
