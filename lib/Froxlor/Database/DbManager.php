@@ -135,9 +135,10 @@ class DbManager
 						$mysql_access_host = trim($mysql_access_host);
 
 						if (!in_array($mysql_access_host, $users[$username]['hosts'])) {
+							// if this is a new host, use credentials from localhost, which should always exist
 							$password = [
-								'password' => $users[$username]['hosts'][$mysql_access_host]['password'],
-								'plugin' => $users[$username]['hosts'][$mysql_access_host]['plugin']
+								'password' => $users[$username]['hosts']['localhost']['password'],
+								'plugin' => $users[$username]['hosts']['localhost']['plugin']
 							];
 							$dbm->getManager()->grantPrivilegesTo($username, $password, $mysql_access_host, true);
 						}
