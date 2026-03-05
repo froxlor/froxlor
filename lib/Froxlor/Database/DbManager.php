@@ -131,15 +131,14 @@ class DbManager
 			foreach ($databases[$dbserver['dbserver']] as $username) {
 				if (isset($users[$username]['hosts']) && is_array($users[$username]['hosts'])) {
 
-					$password = [
-						'password' => $users[$username]['password'],
-						'plugin' => $users[$username]['plugin']
-					];
-
 					foreach ($mysql_access_host_array as $mysql_access_host) {
 						$mysql_access_host = trim($mysql_access_host);
 
 						if (!in_array($mysql_access_host, $users[$username]['hosts'])) {
+							$password = [
+								'password' => $users[$username]['hosts'][$mysql_access_host]['password'],
+								'plugin' => $users[$username]['hosts'][$mysql_access_host]['plugin']
+							];
 							$dbm->getManager()->grantPrivilegesTo($username, $password, $mysql_access_host, true);
 						}
 					}

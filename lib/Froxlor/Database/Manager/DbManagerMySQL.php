@@ -291,12 +291,13 @@ class DbManagerMySQL
 			if ($user_only == false) {
 				if (!isset($allsqlusers[$row['User']]) || !is_array($allsqlusers[$row['User']])) {
 					$allsqlusers[$row['User']] = [
-						'password' => $row['Password'] ?? $row['authentication_string'],
-						'plugin' => $row['plugin'] ?? 'caching_sha2_password',
 						'hosts' => []
 					];
 				}
-				$allsqlusers[$row['User']]['hosts'][] = $row['Host'];
+				$allsqlusers[$row['User']]['hosts'][$row['Host']] = [
+					'password' => $row['Password'] ?? $row['authentication_string'],
+					'plugin' => $row['plugin'] ?? 'caching_sha2_password',
+				];
 			} else {
 				$allsqlusers[] = $row['User'];
 			}

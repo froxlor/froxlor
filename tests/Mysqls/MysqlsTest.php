@@ -337,8 +337,8 @@ class MysqlsTest extends TestCase
 		// grant privileges to another host
 		$testdata = $users['froxlor010'];
 		$password = [
-			'password' => $testdata['password'],
-			'plugin' => $testdata['plugin']
+			'password' => $testdata['hosts']['localhost']['password'],
+			'plugin' => $testdata['hosts']['localhost']['plugin']
 		];
 		$dbm->getManager()->grantPrivilegesTo('froxlor010', $password, '10.0.0.10', true);
 
@@ -350,7 +350,7 @@ class MysqlsTest extends TestCase
 		$results = $sel_stmt->fetchAll(\PDO::FETCH_ASSOC);
 		foreach ($results as $user) {
 			$passwd = $user['Password'] ?? $user['authentication_string'];
-			$this->assertEquals($testdata['password'], $passwd, "Wrong authentication_string for user '" . $user['User'] . "'@'" . $user['Host'] . "'");
+			$this->assertEquals($testdata['hosts'][$user['Host']]['password'], $passwd, "Wrong authentication_string for user '" . $user['User'] . "'@'" . $user['Host'] . "'");
 		}
 	}
 }
