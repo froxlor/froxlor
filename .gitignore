@@ -12,6 +12,7 @@
 /.vscode
 /.zed
 /auth.json
+/cache
 /k8s
 /node_modules
 /public/build
