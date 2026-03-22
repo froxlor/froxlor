@@ -36,11 +36,6 @@
             "url": "https://github.com/sponsors/d00p"
         }
     ],
-    "repositories": [{
-        "name": "froxlor",
-        "type": "composer",
-        "url": "https://packages.froxlor.org"
-    }],
     "require": {
         "php": "^8.4",
         "froxlor/framework": "*",
@@ -91,11 +86,11 @@
         ],
         "dev": [
             "Composer\\Config::disableProcessTimeout",
-            "npx concurrently -c \"#93c5fd,#c4b5fd,#fb7185,#fdba74\" \"php artisan serve\" \"php artisan queue:listen --tries=1 --timeout=0\" \"php artisan pail --timeout=0\" \"npm run dev\" --names=server,queue,logs,vite --kill-others"
+            "npx concurrently -c \"#93c5fd,#c4b5fd,#fb7185,#bd74fd,#fdba74\" \"php artisan serve\" \"php artisan queue:listen --tries=1 --timeout=0\" \"php artisan pail --timeout=0\" \"npm run dev\" \"php artisan schedule:work --quiet\" --names=server,queue,logs,vite,schedule --kill-others"
         ],
         "serve": [
             "Composer\\Config::disableProcessTimeout",
-            "npx concurrently -c \"#93c5fd,#c4b5fd,#fb7185\" \"php artisan serve --host=0.0.0.0\" \"php artisan queue:listen --tries=1 --timeout=0\" \"php artisan pail --timeout=0\" --names=server,queue,logs,vite --kill-others"
+            "npx concurrently -c \"#93c5fd,#c4b5fd,#fb7185,#bd74fd\" \"php artisan serve --host=0.0.0.0\" \"php artisan queue:listen --tries=1 --timeout=0\" \"php artisan pail --timeout=0\" \"php artisan schedule:work --quiet\" --names=server,queue,logs,schedule --kill-others"
         ],
         "test": [
             "@php artisan config:clear --ansi",
@@ -117,5 +112,10 @@
         }
     },
     "minimum-stability": "dev",
-    "prefer-stable": true
+    "prefer-stable": true,
+    "repositories": [{
+        "name": "froxlor",
+        "type": "composer",
+        "url": "https://packages.froxlor.org"
+    }]
 }
