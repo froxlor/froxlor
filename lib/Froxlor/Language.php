@@ -88,6 +88,10 @@ class Language
 	 */
 	private static function loadLanguage($iso): array
 	{
+		// Reject path traversal attempts
+		if ($iso !== basename($iso) || str_contains($iso, '..')) {
+			return [];
+		}
 		$languageFile = dirname(__DIR__, 2) . sprintf('/lng/%s.lng.php', $iso);
 
 		if (!file_exists($languageFile)) {

@@ -34,6 +34,7 @@ use Froxlor\Database\DbManager;
 use Froxlor\FileDir;
 use Froxlor\FroxlorLogger;
 use Froxlor\Idna\IdnaWrapper;
+use Froxlor\Language;
 use Froxlor\Settings;
 use Froxlor\System\Cronjob;
 use Froxlor\System\Crypt;
@@ -382,6 +383,9 @@ class Customers extends ApiCommand implements ResourceEntity
 				$email = $idna_convert->encode(Validate::validate($email, 'email', '', '', [], true));
 				$customernumber = Validate::validate($customernumber, 'customer number', '/^[A-Za-z0-9 \-]*$/Di', '', [], true);
 				$def_language = Validate::validate($def_language, 'default language', '', '', [], true);
+				if (!empty($def_language) && !isset(Language::getLanguages()[$def_language])) {
+					$def_language = Settings::Get('panel.standardlanguage');
+				}
 				$custom_notes = Validate::validate(str_replace("\r\n", "\n", $custom_notes), 'custom_notes', Validate::REGEX_CONF_TEXT, '', [], true);
 
 				if (Settings::Get('system.mail_quota_enabled') != '1') {
@@ -1205,6 +1209,10 @@ class Customers extends ApiCommand implements ResourceEntity
 
 		}
 		$def_language = Validate::validate($def_language, 'default language', '', '', [], true);
+		if (!empty($def_language) && !isset(Language::getLanguages()[$def_language])) {
+			$def_language = Settings::Get('panel.standardlanguage');
+		}
+
 		$theme = Validate::validate($theme, 'theme', '', '', [], true);
 
 		if (Settings::Get('system.mail_quota_enabled') != '1') {
