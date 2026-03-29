@@ -981,6 +981,7 @@ return [
 		'dns_rp_invalid' => 'Ungültiger RP Eintrag',
 		'dns_sshfp_invalid' => 'Ungültiger SSHFP Eintrag',
 		'dns_tlsa_invalid' => 'Ungültiger TLSA Eintrag',
+		'dns_naptr_invalid' => 'Ungültiger NAPTR Eintrag',
 		'domain_nopunycode' => 'Die Eingabe von Punycode (IDNA) ist nicht notwendig. Die Domain wird automatisch konvertiert.',
 		'domain_noipaddress' => 'Eine IP-Adresse kann nicht als Domain angelegt werden',
 		'dns_record_toolong' => 'Records/Labels können maximal 63 Zeichen lang sein',

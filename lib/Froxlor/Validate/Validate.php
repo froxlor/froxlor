@@ -62,8 +62,8 @@ class Validate
 		string $str,
 		string $fieldname,
 		string $pattern = '',
-			   $lng = '',
-			   $emptydefault = [],
+		       $lng = '',
+		       $emptydefault = [],
 		bool   $throw_exception = false
 	)
 	{
@@ -440,7 +440,7 @@ class Validate
 
 		// remove trailing dot if any
 		$mboxDname = rtrim($mboxDname, '.');
-		$txtDname  = rtrim($txtDname, '.');
+		$txtDname = rtrim($txtDname, '.');
 
 		if (!self::validateDomain($mboxDname)) {
 			return false;
@@ -556,5 +556,57 @@ class Validate
 		}
 
 		return $input;
+	}
+
+	public static function validateDnsNaptr(string $input): bool
+	{
+		// Split respecting quoted strings
+		$pattern = '/^
+        (\d{1,5})\s+                # order
+        (\d{1,5})\s+                # preference
+        "([^"]*)"\s+                # flags
+        "([^"]*)"\s+                # services
+        "([^"]*)"\s+                # regexp
+        (\S+)                      # replacement
+    $/x';
+
+		if (!preg_match($pattern, $input, $matches)) {
+			return false;
+		}
+
+		[, $order, $preference, $flags, $services, $regexp, $replacement] = $matches;
+
+		// 1. order & preference: 0–65535
+		if ($order < 0 || $order > 65535 || $preference < 0 || $preference > 65535) {
+			return false;
+		}
+
+		// 2. flags: allowed chars (RFC says single letters typically, but allow multiple)
+		if (!preg_match('/^[A-Za-z0-9]*$/', $flags)) {
+			return false;
+		}
+
+		// 3. services: usually like "E2U+sip"
+		if (!preg_match('/^[A-Za-z0-9+:\-]*$/', $services)) {
+			return false;
+		}
+
+		// 4. regexp: delimiter-based substitution (very loose validation)
+		// Example: !^.*$!sip:info@example.com!
+		if ($regexp !== '') {
+			$delim = $regexp[0];
+			if (substr_count($regexp, $delim) < 3) {
+				return false;
+			}
+		}
+
+		// 5. replacement: must be "." or valid domain
+		if ($replacement !== '.') {
+			if (!filter_var($replacement, FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME)) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 }

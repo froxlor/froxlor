@@ -1052,6 +1052,7 @@ return [
 		'dns_rp_invalid' => 'The RP record has invalid content',
 		'dns_sshfp_invalid' => 'The SSHFP record has invalid content',
 		'dns_tlsa_invalid' => 'The TLSA record has invalid content',
+		'dns_naptr_invalid' => 'The NAPTR record has invalid content',
 		'domain_nopunycode' => 'You must not specify punycode (IDNA). The domain will automatically be converted',
 		'domain_noipaddress' => 'Cannot add an IP address as domain',
 		'dns_record_toolong' => 'Records/labels can only be up to 63 characters',

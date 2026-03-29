@@ -213,9 +213,6 @@ class DomainZones extends ApiCommand implements ResourceEntity
 		} elseif ($type == 'LOC' && !empty($content)) {
 			if (!Validate::validateDnsLoc($content)) {
 				$errors[] = lng('error.dns_loc_invalid');
-			} else {
-				// keep content
-				$content = $content;
 			}
 		} elseif ($type == 'MX') {
 			if ($prio === null || $prio < 0) {
@@ -244,6 +241,10 @@ class DomainZones extends ApiCommand implements ResourceEntity
 			if ($content == '.' && $prio != 0) {
 				$prio = 0;
 			}
+		} elseif ($type == 'NAPTR' && !empty($content)) {
+			if (!Validate::validateDnsNaptr($content)) {
+				$errors[] = lng('error.dns_naptr_invalid');
+			}
 		} elseif ($type == 'NS') {
 			// check for trailing dot
 			if (substr($content, -1) == '.') {
@@ -258,9 +259,6 @@ class DomainZones extends ApiCommand implements ResourceEntity
 		} elseif ($type == 'RP' && !empty($content)) {
 			if (!Validate::validateDnsRp($content)) {
 				$errors[] = lng('error.dns_rp_invalid');
-			} else {
-				// keep content
-				$content = $content;
 			}
 		} elseif ($type == 'SRV') {
 			if ($prio === null || $prio < 0) {
@@ -300,16 +298,10 @@ class DomainZones extends ApiCommand implements ResourceEntity
 		} elseif ($type == 'SSHFP' && !empty($content)) {
 			if (!Validate::validateDnsSshfp($content)) {
 				$errors[] = lng('error.dns_sshfp_invalid');
-			} else {
-				// keep content
-				$content = $content;
 			}
 		} elseif ($type == 'TLSA' && !empty($content)) {
 			if (!Validate::validateDnsTlsa($content)) {
 				$errors[] = lng('error.dns_tlsa_invalid');
-			} else {
-				// keep content
-				$content = $content;
 			}
 		} elseif ($type == 'TXT' && !empty($content)) {
 			// check that TXT content is enclosed in " "
