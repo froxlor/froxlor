@@ -418,6 +418,9 @@ class Domains extends ApiCommand implements ResourceEntity
 						Response::dynamicError("Selected admin cannot have any more domains or could not be found");
 					}
 					unset($admin);
+				} else {
+					// Force adminid to the caller's own ID when they don't have customers_see_all
+					$adminid = intval($this->getUserDetail('adminid'));
 				}
 
 				// set default path if admin/reseller has "change_serversettings == false" but we still
