@@ -2261,6 +2261,7 @@ Vielen Dank, Ihr Administrator',
 		'DELETE_DOMAIN_PDNS' => 'Lösche Domain %s von PowerDNS Datenbank',
 		'DELETE_DOMAIN_SSL' => 'Lösche SSL Dateien von Domain %s',
 		'UPDATE_LE_SERVICES' => 'Aktualisiere Systemdienste für Let\'s Encrypt',
+		'REBUILD_NSSUSERS' => 'Neuerstellung der libnss-extrausers Dateien',
 	],
 	'terms' => 'AGB',
 	'traffic' => [

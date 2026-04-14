@@ -2388,6 +2388,7 @@ Yours sincerely, your administrator',
 		'DELETE_DOMAIN_PDNS' => 'Delete domain %s from PowerDNS database',
 		'DELETE_DOMAIN_SSL' => 'Delete ssl files of domain %s',
 		'UPDATE_LE_SERVICES' => 'Updating system services for Let\'s Encrypt',
+		'REBUILD_NSSUSERS' => 'Rebuilding libnss-extrausers files',
 	],
 	'terms' => 'Terms of use',
 	'traffic' => [
