@@ -34,6 +34,7 @@ return [
 		'nl' => 'Dutch',
 		'pt' => 'Portuguese',
 		'se' => 'Swedish',
+		'sk' => 'Slovak',
 		'es' => 'Spanish',
 		'ca' => 'Catalan',
 		'zh_CN' => 'Chinese (Simplified)',

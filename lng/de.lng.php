@@ -34,6 +34,7 @@ return [
 		'nl' => 'Niederländisch',
 		'pt' => 'Portugiesisch',
 		'se' => 'Schwedisch',
+		'sk' => 'Slowakisch',
 		'es' => 'Spanisch',
 		'ca' => 'Katalanisch',
 		'zh_CN' => 'Chinesisch (Vereinfacht)',

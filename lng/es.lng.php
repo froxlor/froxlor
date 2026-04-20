@@ -33,6 +33,7 @@ return [
 		'nl' => 'Holandés',
 		'pt' => 'Portugués',
 		'se' => 'Sueco',
+		'sk' => 'Eslovaco',
 		'es' => 'Español',
 		'zh_CN' => 'Chino (Simplificado)',
 	],

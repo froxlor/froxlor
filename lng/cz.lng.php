@@ -34,6 +34,7 @@ return [
 		'nl' => 'Holandština',
 		'pt' => 'Portugalština',
 		'se' => 'Švědština',
+		'sk' => 'Slovenština',
 		'es' => 'Španělština',
 		'ca' => 'Katalánština',
 		'zh_CN' => 'Čínština (Zjednodušená)',
