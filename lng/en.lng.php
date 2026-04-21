@@ -1165,7 +1165,7 @@ return [
 		'combination_not_found' => 'Combination of user and email address not found.',
 		'2fa' => 'Two-factor authentication (2FA)',
 		'2facode' => 'Please enter 2FA code',
-		'2faremember' => 'Trust browser',
+		'2faremember' => 'Trust browser'
 	],
 	'mails' => [
 		'pop_success' => [
@@ -1448,6 +1448,10 @@ Yours sincerely, your administrator',
 		'distro_mismatch' => 'It seems that you have upgraded to a new distribution. Please remember to reconfigure services accordingly.',
 		'set_new_distro' => 'Set distribution',
 		'dismiss' => 'Dismiss',
+		'confirmaction' => 'Confirm action',
+		'confirmactiondesc' => 'Please confirm this action by entering your current account password',
+		'authenticationfailed' => 'Authentication failed',
+		'noauthentication' => 'Missing authentication',
 	],
 	'phpfpm' => [
 		'vhost_httpuser' => 'Local user to use for PHP-FPM (froxlor vHost)',

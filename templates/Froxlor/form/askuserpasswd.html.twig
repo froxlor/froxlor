@@ -1,0 +1,32 @@
+{% extends "Froxlor/userarea.html.twig" %}
+
+{% block content %}
+
+	<form action="{{ action|default("") }}" method="post" enctype="application/x-www-form-urlencoded" class="form">
+
+		<div class="alert alert-warning" role="alert">
+			<h4 class="alert-heading">{{ lng('panel.security_question') }}</h4>
+			<p>{{ question|raw }}</p>
+			<p>
+				{{ lng('panel.confirmactiondesc') }}<br>
+				<input name="user_password" id="user_password" type="password" class="form-control"
+					   autocomplete="current-password" autofocus required/>
+			</p>
+			<p>
+				<input type="hidden" name="csrf_token" value="{{ csrf_token }}"/>
+				<input type="hidden" name="send" value="send"/>
+				{% for id,field in url_params %}
+					<input type="hidden" name="{{ id }}" value="{{ field }}"/>
+				{% endfor %}
+				<button class="btn btn-danger" type="submit" name="submitbutton">{{ lng('panel.confirmaction') }}</button>&nbsp;
+				{% if back_link is defined and back_link is iterable and back_link|length > 0 %}
+					<a href="{{ linker(back_link) }}" class="btn btn-secondary">{{ lng('panel.cancel') }}</a>
+				{% else %}
+					<a href="javascript:history.back(-1)" class="btn btn-secondary">{{ lng('panel.cancel') }}</a>
+				{% endif %}
+			</p>
+		</div>
+
+	</form>
+
+{% endblock %}

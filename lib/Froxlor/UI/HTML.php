@@ -242,4 +242,17 @@ class HTML
 		]);
 		exit();
 	}
+
+	public static function askUserPasswd(string $text, string $targetfile, array $params = [], string $replacer = '', array $back_link = [])
+	{
+		$text = lng('question.' . $text, [htmlspecialchars($replacer)]);
+
+		Panel\UI::view('form/askuserpasswd.html.twig', [
+			'action' => $targetfile,
+			'url_params' => $params,
+			'question' => $text,
+			'back_link' => $back_link
+		]);
+		exit();
+	}
 }
