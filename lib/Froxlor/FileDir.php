@@ -312,7 +312,7 @@ class FileDir
 	public static function storeDefaultIndex(
 		string $loginname,
 		string $destination,
-			   $logger = null,
+		       $logger = null,
 		bool   $force = false
 	)
 	{
@@ -391,6 +391,8 @@ class FileDir
 			$filename = '/' . $filename;
 		}
 
+		$filename = FileDir::makeCorrectDir(dirname($filename)) . '/' . basename($filename);
+
 		// if given, check that the target file is within the $fixed_homedir
 		// by checking each folder and the file for being a symlink and whether it targets
 		// the customers homedir or points outside of it
@@ -420,7 +422,8 @@ class FileDir
 			}
 			// check whether file is symlink itself
 			if (is_link($filename)) {
-				$check_dir = readlink($check_dir);
+				$filename = readlink($filename);
+				$check_dir = FileDir::makeCorrectDir(dirname($filename), $fixed_homedir);
 				if (substr($check_dir, 0, strlen($fixed_homedir)) != $fixed_homedir) {
 					throw new Exception("Found symlink pointing outside of customer home directory: " . substr($filename, strlen($fixed_homedir)));
 				}
