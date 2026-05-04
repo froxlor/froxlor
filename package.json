@@ -16,7 +16,7 @@
 		"jquery-validation": "^1.21.0",
 		"laravel-vite-plugin": "^1.2.0",
 		"lodash": "^4.18.1",
-		"postcss": "^8.5.3",
+		"postcss": "^8.5.13",
 		"resolve-url-loader": "^5.0.0",
 		"sass": "^1.85.1",
 		"vite": "^6.4.2",
