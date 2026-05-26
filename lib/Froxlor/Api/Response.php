@@ -35,7 +35,10 @@ class Response
 	public static function jsonResponse($data = null, int $response_code = 200)
 	{
 		if (!defined('TRAVIS_CI') || TRAVIS_CI == 0) {
-			http_response_code($response_code);
+			// Only set HTTP headers if not in CLI mode (e.g., PHPUnit tests)
+			if (php_sapi_name() !== 'cli') {
+				http_response_code($response_code);
+			}
 		}
 
 		return json_encode($data, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);

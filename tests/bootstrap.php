@@ -48,12 +48,20 @@ use Froxlor\Database\Database;
 use Froxlor\Settings;
 
 if (TRAVIS_CI == 0) {
-	Database::needRoot(true);
+	// Use a root connection without selecting froxlor010 first. This lets the
+	// bootstrap create the test database from scratch instead of requiring an
+	// empty froxlor010 database to exist before the test run starts.
+	Database::needRoot(true, 0, false);
 	Database::query("DROP DATABASE IF EXISTS `froxlor010`;");
 	Database::query("CREATE DATABASE `froxlor010`;");
+	$testuser_stmt = Database::prepare("CREATE USER IF NOT EXISTS 'froxlor010'@'localhost' IDENTIFIED BY :pwd");
+	Database::pexecute($testuser_stmt, ['pwd' => $pwd]);
+	$testuser_stmt = Database::prepare("ALTER USER 'froxlor010'@'localhost' IDENTIFIED BY :pwd");
+	Database::pexecute($testuser_stmt, ['pwd' => $pwd]);
+	Database::query("GRANT ALL PRIVILEGES ON `froxlor010`.* TO 'froxlor010'@'localhost';");
 	$sql = include(dirname(__DIR__) . "/install/froxlor.sql.php");
 	file_put_contents("/tmp/froxlor.sql", $sql);
-	exec("mysql -u root -p" . $rpwd . " froxlor010 < /tmp/froxlor.sql");
+	exec("mysql -u root -p" . escapeshellarg($rpwd) . " froxlor010 < /tmp/froxlor.sql");
 	Database::query("DROP USER IF EXISTS 'test1sql1'@'localhost';");
 	Database::query("DROP USER IF EXISTS 'test1sql1'@'127.0.0.1';");
 	Database::query("DROP USER IF EXISTS 'test1sql1'@'172.17.0.1';");
@@ -64,6 +72,14 @@ if (TRAVIS_CI == 0) {
 	Database::query("DROP USER IF EXISTS 'test1_abc123'@'172.17.0.1';");
 	Database::query("DROP USER IF EXISTS 'test1_abc123'@'82.149.225.46';");
 	Database::query("DROP USER IF EXISTS 'test1_abc123'@'2a01:440:1:12:82:149:225:46';");
+	// Drop test1 and test1hp users that may have been left behind from previous test runs.
+	// The Customers API test creates these users via the API, but they are not cleaned up
+	// if the test fails (e.g., due to CREATE USER failing with error 1396 if the user already exists).
+	foreach (['test1', 'test1hp'] as $username) {
+		foreach (['localhost', '127.0.0.1', '172.17.0.1', '82.149.225.46', '2a01:440:1:12:82:149:225:46', '::1'] as $host) {
+			Database::query("DROP USER IF EXISTS '{$username}'@'{$host}';");
+		}
+	}
 	Database::query("DROP DATABASE IF EXISTS `test1sql1`;");
 	Database::query("DROP DATABASE IF EXISTS `test1_abc123`;");
 	Database::needRoot(false);

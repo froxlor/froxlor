@@ -342,23 +342,29 @@ class MysqlsTest extends TestCase
 			'password' => $testdata['hosts']['localhost']['password'],
 			'plugin' => $testdata['hosts']['localhost']['plugin']
 		];
-		$dbm->getManager()->grantPrivilegesTo('froxlor010', $password, '10.0.0.10', true);
+		try {
+			$dbm->getManager()->grantPrivilegesTo('froxlor010', $password, '10.0.0.10', true);
 
-		// select all entries from mysql.user for froxlor010 to compare password-hashes
-		$sel_stmt = Database::prepare("SELECT * FROM mysql.user WHERE `User` = :usr");
-		Database::pexecute($sel_stmt, [
-			'usr' => 'froxlor010'
-		]);
-		$results = $sel_stmt->fetchAll(\PDO::FETCH_ASSOC);
-		foreach ($results as $user) {
-			if ($user['Host'] == '10.0.0.10') {
-				// user 'froxlor010'@'10.0.0.10' has been added after we ran
-				// $dbm->getManager()->getAllSqlUsers(false) so it cannot be part of the array
-				$this->assertArrayNotHasKey($user['Host'], $testdata['hosts']);
-			} else {
-				$passwd = $user['Password'] ?? $user['authentication_string'];
-				$this->assertEquals($testdata['hosts'][$user['Host']]['password'], $passwd, "Wrong authentication_string for user '" . $user['User'] . "'@'" . $user['Host'] . "'");
+			// select all entries from mysql.user for froxlor010 to compare password-hashes
+			$sel_stmt = Database::prepare("SELECT * FROM mysql.user WHERE `User` = :usr");
+			Database::pexecute($sel_stmt, [
+				'usr' => 'froxlor010'
+			]);
+			$results = $sel_stmt->fetchAll(\PDO::FETCH_ASSOC);
+			foreach ($results as $user) {
+				if ($user['Host'] == '10.0.0.10') {
+					// user 'froxlor010'@'10.0.0.10' has been added after we ran
+					// $dbm->getManager()->getAllSqlUsers(false) so it cannot be part of the array
+					$this->assertArrayNotHasKey($user['Host'], $testdata['hosts']);
+				} else {
+					$passwd = $user['Password'] ?? $user['authentication_string'];
+					$this->assertEquals($testdata['hosts'][$user['Host']]['password'], $passwd, "Wrong authentication_string for user '" . $user['User'] . "'@'" . $user['Host'] . "'");
+				}
 			}
+		} finally {
+			// This test creates a temporary remote-host grant; remove it so later
+			// runs do not see stale froxlor010@10.0.0.10 entries in mysql.user/db.
+			Database::query("DROP USER IF EXISTS froxlor010@10.0.0.10;");
 		}
 	}
 }
