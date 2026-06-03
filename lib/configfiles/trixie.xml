@@ -2205,7 +2205,7 @@ ModuleControlsACLs insmod,rmmod allow user root
 ModuleControlsACLs lsmod allow user *
 
 #This is required only if you need to set IdentLookups on
-#LoadModule mod_ident.c
+LoadModule mod_ident.c
 
 LoadModule mod_ctrls_admin.c
 
