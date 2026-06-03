@@ -25,8 +25,8 @@
 
 namespace Froxlor\Ajax;
 
-use Exception;
 use DateTime;
+use Exception;
 use Froxlor\Config\ConfigDisplay;
 use Froxlor\Config\ConfigParser;
 use Froxlor\CurrentUser;
@@ -34,12 +34,13 @@ use Froxlor\Database\Database;
 use Froxlor\FileDir;
 use Froxlor\Froxlor;
 use Froxlor\Http\HttpClient;
+use Froxlor\Http\RateLimiter;
 use Froxlor\Install\Update;
 use Froxlor\Settings;
+use Froxlor\UI\Linker;
 use Froxlor\UI\Listing;
 use Froxlor\UI\Panel\UI;
 use Froxlor\UI\Request;
-use Froxlor\UI\Response;
 use Froxlor\Validate\Validate;
 
 class Ajax
@@ -58,6 +59,7 @@ class Ajax
 
 		UI::sendHeaders();
 		UI::sendSslHeaders();
+		RateLimiter::run();
 	}
 
 	/**
@@ -66,6 +68,15 @@ class Ajax
 	public function handle()
 	{
 		$this->userinfo = $this->getValidatedSession();
+
+		// check if csrf token is valid
+		if (in_array($_SERVER['REQUEST_METHOD'], ['POST', 'PUT', 'PATCH', 'DELETE'])) {
+			$current_token = Request::post('csrf_token', $_SERVER['HTTP_X_CSRF_TOKEN'] ?? null);
+			if ($current_token != CurrentUser::getField('csrf_token')) {
+				http_response_code(403);
+				return $this->errorResponse('CSRF validation failed');
+			}
+		}
 
 		switch ($this->action) {
 			case 'newsfeed':
@@ -99,6 +110,16 @@ class Ajax
 		if (CurrentUser::hasSession() == false) {
 			throw new Exception("No valid session");
 		}
+		// create new csrf token if not set
+		if (!$csrf_token = CurrentUser::getField('csrf_token')) {
+			$csrf_token = Froxlor::genSessionId(20);
+			CurrentUser::setField('csrf_token', $csrf_token);
+		}
+		// set csrf token for twig
+		UI::initTwig();
+		$linker = new Linker('index.php');
+		UI::setLinker($linker);
+		UI::twig()->addGlobal('csrf_token', $csrf_token);
 		return CurrentUser::getData();
 	}
 
