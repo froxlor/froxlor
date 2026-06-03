@@ -801,30 +801,41 @@ class Apache extends HttpConfigBase
 		if (preg_match('/^https?\:\/\//', $domain['documentroot'])) {
 			$possible_deactivated_webroot = $this->getWebroot($domain);
 			if ($this->deactivated == false) {
-				$corrected_docroot = $domain['documentroot'];
+				if (Validate::validateUrl($domain['documentroot'])) {
+					$corrected_docroot = $domain['documentroot'];
 
-				// Get domain's redirect code
-				$code = Domain::getDomainRedirectCode($domain['id']);
-				$modrew_red = '';
-				if ($code != '') {
-					$modrew_red = ' [R=' . $code . ';L,NE]';
-				}
+					// Get domain's redirect code
+					$code = Domain::getDomainRedirectCode($domain['id']);
+					$modrew_red = '';
+					if ($code != '') {
+						$modrew_red = ' [R=' . $code . ';L,NE]';
+					}
 
-				$vhost_content .= $this->getLogfiles($domain);
-				// redirect everything, not only root-directory, #541
-				$vhost_content .= '  <IfModule mod_rewrite.c>' . "\n";
-				$vhost_content .= '    RewriteEngine On' . "\n";
-				if (!$ssl_vhost) {
-					$vhost_content .= '    RewriteCond %{HTTPS} off' . "\n";
+					$vhost_content .= $this->getLogfiles($domain);
+					// redirect everything, not only root-directory, #541
+					$vhost_content .= '  <IfModule mod_rewrite.c>' . "\n";
+					$vhost_content .= '    RewriteEngine On' . "\n";
+					if (!$ssl_vhost) {
+						$vhost_content .= '    RewriteCond %{HTTPS} off' . "\n";
+					}
+					if ($domain['letsencrypt'] == '1') {
+						$vhost_content .= '    RewriteCond %{REQUEST_URI} !^/\.well-known/acme-challenge' . "\n";
+					}
+					$vhost_content .= '    RewriteRule ^/(.*) ' . $corrected_docroot . '$1' . $modrew_red . "\n";
+					$vhost_content .= '  </IfModule>' . "\n";
+					$vhost_content .= '  <IfModule !mod_rewrite.c>' . "\n";
+					$vhost_content .= '    Redirect ' . $code . ' / ' . $domain['documentroot_norewrite'] . "\n";
+					$vhost_content .= '  </IfModule>' . "\n";
+				} else {
+					$vhost_content .= '  <IfModule !mod_rewrite.c>' . "\n";
+					$vhost_content .= '  	RedirectMatch 500 ^/' . "\n";
+					$vhost_content .= '  </IfModule>' . "\n";
+					$vhost_content .= 'ErrorDocument 500 "misconfigured redirect url"' . "\n";
+					$vhost_content .= '  <IfModule mod_rewrite.c>' . "\n";
+					$vhost_content .= '    RewriteEngine On' . "\n";
+					$vhost_content .= '    RewriteRule ^ - [R=500,L]' . "\n";
+					$vhost_content .= '  </IfModule>' . "\n";
 				}
-				if ($domain['letsencrypt'] == '1') {
-					$vhost_content .= '    RewriteCond %{REQUEST_URI} !^/\.well-known/acme-challenge' . "\n";
-				}
-				$vhost_content .= '    RewriteRule ^/(.*) ' . $corrected_docroot . '$1' . $modrew_red . "\n";
-				$vhost_content .= '  </IfModule>' . "\n";
-				$vhost_content .= '  <IfModule !mod_rewrite.c>' . "\n";
-				$vhost_content .= '    Redirect ' . $code . ' / ' . $domain['documentroot_norewrite'] . "\n";
-				$vhost_content .= '  </IfModule>' . "\n";
 			} elseif (Settings::Get('system.deactivateddocroot') != '') {
 				$vhost_content .= $possible_deactivated_webroot;
 			}

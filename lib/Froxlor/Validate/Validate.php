@@ -218,6 +218,29 @@ class Validate
 			$host = substr($host, 1, -1);
 		}
 
+		foreach (['path', 'query', 'fragment'] as $part) {
+			if (!empty($parts[$part])) {
+				$decoded = rawurldecode($parts[$part]);
+				if (preg_match('/[\r\n]|%0a|%0d/i', $parts[$part])) {
+					return false;
+				}
+				if (preg_match('/[\r\n]/', $decoded)) {
+					return false;
+				}
+				// no control chars
+				if (preg_match('/[\x00-\x1F\x7F]/', $decoded)) {
+					return false;
+				}
+				if (!preg_match('/^[a-zA-Z0-9._~!$&\'()*+,;=:@%\/?-]*$/', $parts[$part])) {
+					return false;
+				}
+				// anti traversal
+				if (strstr($decoded, '..') !== false || strstr($parts[$part], '..') !== false) {
+					return false;
+				}
+			}
+		}
+
 		$opts = FILTER_FLAG_IPV4 | FILTER_FLAG_NO_RES_RANGE | FILTER_FLAG_NO_PRIV_RANGE;
 		$opts6 = FILTER_FLAG_IPV6 | FILTER_FLAG_NO_RES_RANGE | FILTER_FLAG_NO_PRIV_RANGE;
 		if ($allow_private_ip) {

@@ -620,18 +620,22 @@ class Nginx extends HttpConfigBase
 		if (preg_match('/^https?\:\/\//', $domain['documentroot'])) {
 			$possible_deactivated_webroot = $this->getWebroot($domain);
 			if ($this->deactivated == false) {
-				$uri = $domain['documentroot'];
-				if (substr($uri, -1) == '/') {
-					$uri = substr($uri, 0, -1);
+				if (Validate::validateUrl($domain['documentroot'])) {
+					$uri = $domain['documentroot'];
+					if (substr($uri, -1) == '/') {
+						$uri = substr($uri, 0, -1);
+					}
+
+					// Get domain's redirect code
+					$code = Domain::getDomainRedirectCode($domain['id']);
+
+					$vhost_content .= $this->getLogFiles($domain);
+					$vhost_content .= "\t" . 'location / {' . "\n";
+					$vhost_content .= "\t\t" . 'return ' . $code . ' ' . $uri . '$request_uri;' . "\n";
+					$vhost_content .= "\t" . '}' . "\n";
+				} else {
+					$vhost_content .= "\t" . 'return 500 "misconfigured redirect url";' . "\n";
 				}
-
-				// Get domain's redirect code
-				$code = Domain::getDomainRedirectCode($domain['id']);
-
-				$vhost_content .= $this->getLogFiles($domain);
-				$vhost_content .= "\t" . 'location / {' . "\n";
-				$vhost_content .= "\t\t" . 'return ' . $code . ' ' . $uri . '$request_uri;' . "\n";
-				$vhost_content .= "\t" . '}' . "\n";
 			} elseif (Settings::Get('system.deactivateddocroot') != '') {
 				$vhost_content .= $possible_deactivated_webroot;
 			}
