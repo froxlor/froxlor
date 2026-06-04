@@ -92,7 +92,7 @@ class Text
 
 	public static function wordwrap(array $attributes): string
 	{
-		return wordwrap($attributes['data'], 100, '<br>', true);
+		return wordwrap(htmlspecialchars($attributes['data']), 100, '<br>', true);
 	}
 
 	public static function customerNoteDetailModal(array $attributes): array
