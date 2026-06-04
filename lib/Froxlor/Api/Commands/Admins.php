@@ -271,6 +271,11 @@ class Admins extends ApiCommand implements ResourceEntity
 				$password = Crypt::validatePassword($password, true);
 			}
 
+			// verify ip-address ids are numeric values only
+			if (is_array($ipaddress)) {
+				$ipaddress = array_filter($ipaddress, 'is_numeric');
+			}
+
 			$diskspace *= 1024;
 			$traffic *= 1024 * 1024;
 
@@ -355,7 +360,9 @@ class Admins extends ApiCommand implements ResourceEntity
 					'quota' => $email_quota,
 					'ftps' => $ftps,
 					'mysqls' => $mysqls,
-					'ip' => empty($ipaddress) ? "" : (is_array($ipaddress) && $ipaddress > 0 ? json_encode($ipaddress) : -1),
+					'ip' => empty($ipaddress) ? "" : (is_array($ipaddress) && count($ipaddress) > 0
+						? json_encode(array_map('intval', $ipaddress))
+						: -1),
 					'theme' => $_theme,
 					'custom_notes' => $custom_notes,
 					'custom_notes_show' => $custom_notes_show
@@ -617,6 +624,10 @@ class Admins extends ApiCommand implements ResourceEntity
 					$theme = Settings::Get('panel.default_theme');
 				}
 
+				if (is_array($ipaddress)) {
+					$ipaddress = array_filter($ipaddress, 'is_numeric');
+				}
+
 				if (empty(trim($name))) {
 					Response::standardError([
 						'stringisempty',
@@ -726,7 +737,9 @@ class Admins extends ApiCommand implements ResourceEntity
 						'quota' => $email_quota,
 						'ftps' => $ftps,
 						'mysqls' => $mysqls,
-						'ip' => empty($ipaddress) ? "" : (is_array($ipaddress) && $ipaddress > 0 ? json_encode($ipaddress) : -1),
+						'ip' => empty($ipaddress) ? "" : (is_array($ipaddress) && count($ipaddress) > 0
+							? json_encode(array_map('intval', $ipaddress))
+							: -1),
 						'deactivated' => $deactivated,
 						'custom_notes' => $custom_notes,
 						'custom_notes_show' => $custom_notes_show,

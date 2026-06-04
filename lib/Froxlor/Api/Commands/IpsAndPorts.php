@@ -69,7 +69,8 @@ class IpsAndPorts extends ApiCommand implements ResourceEntity
 			$ip_where = "";
 			$append_where = false;
 			if (!empty($this->getUserDetail('ip')) && $this->getUserDetail('ip') != -1) {
-				$ip_where = "WHERE `id` IN (" . implode(", ", json_decode($this->getUserDetail('ip'), true)) . ")";
+				$ip_ids = array_map('intval', json_decode($this->getUserDetail('ip'), true));
+				$ip_where = "WHERE `id` IN (" . implode(", ", $ip_ids) . ")";
 				$append_where = true;
 			}
 			$query_fields = [];
@@ -101,7 +102,8 @@ class IpsAndPorts extends ApiCommand implements ResourceEntity
 			$ip_where = "";
 			$query_fields = [];
 			if (!empty($this->getUserDetail('ip')) && $this->getUserDetail('ip') != -1) {
-				$ip_where = "WHERE `id` IN (" . implode(", ", json_decode($this->getUserDetail('ip'), true)) . ") " . $this->getSearchWhere($query_fields, true);
+				$ip_ids = array_map('intval', json_decode($this->getUserDetail('ip'), true));
+				$ip_where = "WHERE `id` IN (" . implode(", ", $ip_ids) . ") " . $this->getSearchWhere($query_fields, true);
 			} else {
 				$ip_where =  $this->getSearchWhere($query_fields);
 			}
