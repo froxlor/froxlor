@@ -158,7 +158,6 @@ class Domain
 	{
 		return $attributes['fields']['isbinddomain'] == '1'
 			&& UI::getCurrentUser()['dnsenabled'] == '1'
-			&& $attributes['fields']['caneditdomain'] == '1'
 			&& Settings::Get('system.bind_enable') == '1'
 			&& Settings::Get('system.dnsenabled') == '1'
 			&& !$attributes['fields']['deactivated'];
@@ -183,7 +182,6 @@ class Domain
 	{
 		if (Settings::Get('system.use_ssl') == '1'
 			&& DDomain::domainHasSslIpPort($attributes['fields']['id'])
-			&& (CurrentUser::isAdmin() || (!CurrentUser::isAdmin() && (int)$attributes['fields']['caneditdomain'] == 1))
 			&& (int)$attributes['fields']['letsencrypt'] == 0
 			&& !(int)$attributes['fields']['email_only']
 			&& !$attributes['fields']['deactivated']
