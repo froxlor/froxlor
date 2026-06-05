@@ -902,6 +902,7 @@ return [
 		'plausibilitychecknotunderstood' => 'Die Antwort des Plausibilitätschecks wurde nicht verstanden',
 		'errorwhensaving' => 'Bei dem Speichern des Feldes "%s" trat ein Fehler auf',
 		'pathmaynotcontaincolon' => 'Der eingegebene Pfad sollte keinen Doppelpunkt (":") enthalten. Bitte geben Sie einen korrekten Wert für den Pfad ein.',
+		'pathexistsasfile' => 'Der eingegebene Pfad existiert bereits als Datei. Bitte geben Sie einen anderen Pfad ein.',
 		'invaliddocumentrooturl' => 'Die URL, die Sie für den Pfad eingegeben haben, ist ungültig. Bitte geben Sie eine korrekte URL oder einen Unix-Pfad ein.',
 		'notrequiredpasswordcomplexity' => 'Die vorgegebene Passwort-Komplexität wurde nicht erfüllt.<br />Bitte kontaktieren Sie Ihren Administrator, wenn Sie Fragen zur Komplexitäts-Vorgabe haben.',
 		'invaliderrordocumentvalue' => 'Der angegebene Wert für das Fehlederdokument ist keine gültige Datei, URL oder Text-Zeile.',

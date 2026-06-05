@@ -582,6 +582,10 @@ class SubDomains extends ApiCommand implements ResourceEntity
 			Response::standardError('pathmaynotcontaincolon', '', true);
 		}
 
+		if (file_exists($customer['documentroot'] . '/' . $path) && !is_dir($customer['documentroot'] . '/' . $path)) {
+			Response::standardError('pathexistsasfile', '', true);
+		}
+
 		return FileDir::makeCorrectDir($customer['documentroot'] . '/' . $path, $customer['documentroot']);
 	}
 
