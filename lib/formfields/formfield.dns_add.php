@@ -47,6 +47,7 @@ return [
 							'DNAME' => 'DNAME',
 							'LOC' => 'LOC',
 							'MX' => 'MX',
+							'NAPTR' => 'NAPTR',
 							'NS' => 'NS',
 							'RP' => 'RP',
 							'SRV' => 'SRV',

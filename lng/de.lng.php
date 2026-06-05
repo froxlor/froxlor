@@ -986,6 +986,8 @@ return [
 		'domain_nopunycode' => 'Die Eingabe von Punycode (IDNA) ist nicht notwendig. Die Domain wird automatisch konvertiert.',
 		'domain_noipaddress' => 'Eine IP-Adresse kann nicht als Domain angelegt werden',
 		'dns_record_toolong' => 'Records/Labels können maximal 63 Zeichen lang sein',
+		'dns_invalid_recordlabel' => 'Record/Label enthält ungültige Zeichen',
+		'dns_unknown_type' => 'Nicht unterstützter DNS-Eintrag Typ',
 		'noipportgiven' => 'Keine IP/Port angegeben',
 		'nosslippportgiven' => 'Wenn SSL aktiviert ist, muss eine SSL IP/Port angegeben werden',
 		'jsonextensionnotfound' => 'Diese Funktion benötigt die PHP json-Erweiterung.',

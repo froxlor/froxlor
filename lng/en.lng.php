@@ -758,6 +758,7 @@ return [
 			alt:    [-100000.00 .. 42849672.95] BY .01 (altitude in meters)
 			siz, hp, vp: [0 .. 90000000.00] (size/precision in meters)</code><br>Example: <code>52 22 23.000 N 4 53 32.000 E -2.00m 0.00m 10000m 10m</code>',
 			'MX' => 'Mail exchange record, maps a domain name to a mailserver for that domain.<br>Example: <code>10 mail.example.com</code><br>Note: For priority, use field above',
+			'NAPTR' => 'Naming Authority Pointer, allows regular expression based rewriting of domain names which can then be used as URIs, further domain names to lookups, etc. (RFC 3403)',
 			'NS' => 'Delegates a DNS zone to use the given authoritative name servers.',
 			'RP' => 'Responsible Person record<br>Structure: <code>mailbox[replace @ with a dot] txt-record-name</code><br>Example: <code>team.froxlor.org. froxlor.org.</code>',
 			'SRV' => 'Service location record, used for newer protocols instead of creating protocol-specific records such as MX.<br>Structure: <code>priority weight port target</code><br>Example: <code>0 5 5060 sipserver.example.com.</code><br>Note: For priority, use field above',
@@ -1057,6 +1058,8 @@ return [
 		'domain_nopunycode' => 'You must not specify punycode (IDNA). The domain will automatically be converted',
 		'domain_noipaddress' => 'Cannot add an IP address as domain',
 		'dns_record_toolong' => 'Records/labels can only be up to 63 characters',
+		'dns_invalid_recordlabel' => 'Record/label contains illegal characters',
+		'dns_unknown_type' => 'Unsupported dns-entry type',
 		'noipportgiven' => 'No IP/port given',
 		'nosslippportgiven' => 'When enabling SSL you need to select a SSL IP/port',
 		'jsonextensionnotfound' => 'This feature requires the php json-extension.',

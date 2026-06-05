@@ -120,6 +120,28 @@ class DomainZones extends ApiCommand implements ResourceEntity
 		}
 
 		$record = trim(strtolower($record));
+		// remove invalid control characters (printable ASCII) from record
+		$record = preg_replace('/[^\x20-\x7E]/', '', $record);
+
+		$type = trim(strtoupper($type));
+		if (!in_array($type, [
+			'A',
+			'AAAA',
+			'CAA',
+			'CNAME',
+			'DNAME',
+			'LOC',
+			'MX',
+			'NAPTR',
+			'NS',
+			'RP',
+			'SRV',
+			'SSHFP',
+			'TLSA',
+			'TXT'
+		])) {
+			$errors[] = lng('error.dns_unknown_type');
+		}
 
 		if ($record != '@' && $record != '*') {
 			// validate record
@@ -134,6 +156,10 @@ class DomainZones extends ApiCommand implements ResourceEntity
 				}
 				// convert entry
 				$record = $idna_convert->encode($record);
+
+				if (Validate::validateDomain($record . '.froxlor.test', true) === false) {
+					$errors[] = lng('error.dns_invalid_recordlabel');
+				}
 
 				if ($add_wildcard_again) {
 					$record = '*.' . $record;
@@ -154,7 +180,7 @@ class DomainZones extends ApiCommand implements ResourceEntity
 			$errors[] = lng('error.dns_content_empty');
 		}
 
-		// remove invalid control characters (allow tab + printable ASCII)
+		// remove invalid control characters (allow tab + printable ASCII) from content
 		$content = preg_replace('/[^\x09\x20-\x7E]/', '', $content);
 		// collapse excessive whitespace
 		$content = preg_replace('/\s+/', ' ', $content);
