@@ -62,8 +62,8 @@ class ExportCron extends FroxlorCron
 
 		if (is_array($row['data'])) {
 			if (isset($row['data']['customerid']) && isset($row['data']['loginname']) && isset($row['data']['destdir'])) {
-				$row['data']['destdir'] = FileDir::makeCorrectDir($row['data']['destdir']);
 				$customerdocroot = FileDir::makeCorrectDir(Settings::Get('system.documentroot_prefix') . '/' . $row['data']['loginname'] . '/');
+				$row['data']['destdir'] = FileDir::makeCorrectDir($row['data']['destdir'], $customerdocroot);
 
 				// create folder if not exists
 				if (!file_exists($row['data']['destdir']) && $row['data']['destdir'] != '/' && $row['data']['destdir'] != Settings::Get('system.documentroot_prefix') && $row['data']['destdir'] != $customerdocroot) {
@@ -95,7 +95,7 @@ class ExportCron extends FroxlorCron
 		$cronlog->logAction(FroxlorLogger::CRON_ACTION, LOG_NOTICE, 'Creating data export for user "' . $data['loginname'] . '"');
 
 		// create tmp folder
-		$tmpdir = FileDir::makeCorrectDir($data['destdir'] . '/.tmp/');
+		$tmpdir = FileDir::makeCorrectDir($data['destdir'] . '/.tmp/', $customerdocroot);
 		$cronlog->logAction(FroxlorLogger::CRON_ACTION, LOG_DEBUG, 'Creating tmp-folder "' . $tmpdir . '"');
 		$cronlog->logAction(FroxlorLogger::CRON_ACTION, LOG_DEBUG, 'shell> mkdir -p ' . escapeshellarg($tmpdir));
 		FileDir::safe_exec('mkdir -p ' . escapeshellarg($tmpdir));
