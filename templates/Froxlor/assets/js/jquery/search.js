@@ -32,6 +32,9 @@ export default function () {
 					searchtext: query
 				},
 				dataType: "json",
+				beforeSend: function (request) {
+					request.setRequestHeader('X-CSRF-TOKEN', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
+				},
 				success: data => {
 					// Show notification if we got no results
 					if (Object.keys(data).length === 0) {

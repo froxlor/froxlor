@@ -34,6 +34,9 @@ export default function () {
 				url: "lib/ajax.php?action=getConfigDetails",
 				type: "POST",
 				dataType: "json",
+				beforeSend: function (request) {
+					request.setRequestHeader('X-CSRF-TOKEN', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
+				},
 				data: {distro: distro, section: section, daemon: daemon},
 				success: function (data) {
 					$('#configTplShowLabel').html(data.title);
