@@ -104,6 +104,10 @@ class Admins extends ApiCommand implements ResourceEntity
 			Database::pexecute($result_stmt, $query_fields, true, true);
 			$result = [];
 			while ($row = $result_stmt->fetch(PDO::FETCH_ASSOC)) {
+				// unset sensitive data
+				unset($row['password']);
+				unset($row['data_2fa']);
+
 				$result[] = $row;
 			}
 			return $this->response([
@@ -439,6 +443,9 @@ class Admins extends ApiCommand implements ResourceEntity
 			];
 			$result = Database::pexecute_first($result_stmt, $params, true, true);
 			if ($result) {
+				// unset sensitive data
+				unset($result['password']);
+				unset($result['data_2fa']);
 				$this->logger()->logAction(FroxlorLogger::ADM_ACTION, LOG_INFO, "[API] get admin '" . $result['loginname'] . "'");
 				return $this->response($result);
 			}

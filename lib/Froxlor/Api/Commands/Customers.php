@@ -129,6 +129,9 @@ class Customers extends ApiCommand implements ResourceEntity
 						$row['dbspace_used'] = 0;
 					}
 				}
+				// unset sensitive data
+				unset($row['password']);
+				unset($row['data_2fa']);
 				$result[] = $row;
 			}
 			return $this->response([
@@ -969,6 +972,9 @@ class Customers extends ApiCommand implements ResourceEntity
 					$result['dbspace_used'] = 0;
 				}
 			}
+			// unset sensitive data
+			unset($result['password']);
+			unset($result['data_2fa']);
 			$this->logger()->logAction($this->isAdmin() ? FroxlorLogger::ADM_ACTION : FroxlorLogger::USR_ACTION, LOG_INFO, "[API] get customer '" . $result['loginname'] . "'");
 			return $this->response($result);
 		}
