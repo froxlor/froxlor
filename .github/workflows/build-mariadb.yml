@@ -54,7 +54,7 @@ jobs:
     name: Create nightly/testing tarball
     runs-on: ubuntu-latest
     needs: froxlor
-    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/v2' }}
 
     steps:
       - name: Checkout
