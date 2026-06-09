@@ -24,16 +24,16 @@
     ],
     "support": {
         "email": "team@froxlor.org",
-        "issues": "https://github.com/froxlor/framework/issues",
+        "issues": "https://github.com/froxlor/froxlor/issues",
         "forum": "https://forum.froxlor.org/",
-        "source": "https://github.com/froxlor/framework",
+        "source": "https://github.com/froxlor/froxlor",
         "docs": "https://docs.froxlor.org/",
         "chat": "https://discord.froxlor.org/"
     },
     "funding": [
         {
             "type": "github",
-            "url": "https://github.com/sponsors/d00p"
+            "url": "https://github.com/sponsors/froxlor"
         }
     ],
     "require": {
