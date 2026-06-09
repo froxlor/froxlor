@@ -378,7 +378,7 @@ class Ftps extends ApiCommand implements ResourceEntity
 		$result = Database::pexecute_first($result_stmt, $params, true, true);
 		if ($result) {
 			// unset sensitive data
-			unset($row['password']);
+			unset($result['password']);
 			$this->logger()->logAction($this->isAdmin() ? FroxlorLogger::ADM_ACTION : FroxlorLogger::USR_ACTION, LOG_INFO, "[API] get ftp-user '" . $result['username'] . "'");
 			return $this->response($result);
 		}

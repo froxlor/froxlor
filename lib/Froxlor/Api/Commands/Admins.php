@@ -443,9 +443,11 @@ class Admins extends ApiCommand implements ResourceEntity
 			];
 			$result = Database::pexecute_first($result_stmt, $params, true, true);
 			if ($result) {
-				// unset sensitive data
-				unset($result['password']);
-				unset($result['data_2fa']);
+				if (!$this->isInternal()) {
+					// unset sensitive data
+					unset($result['password']);
+					unset($result['data_2fa']);
+				}
 				$this->logger()->logAction(FroxlorLogger::ADM_ACTION, LOG_INFO, "[API] get admin '" . $result['loginname'] . "'");
 				return $this->response($result);
 			}
@@ -550,7 +552,7 @@ class Admins extends ApiCommand implements ResourceEntity
 			$result = $this->apiCall('Admins.get', [
 				'id' => $id,
 				'loginname' => $loginname
-			]);
+			], true);
 			$id = $result['adminid'];
 
 			if ($this->getUserDetail('change_serversettings') == 1 || $result['adminid'] == $this->getUserDetail('adminid')) {

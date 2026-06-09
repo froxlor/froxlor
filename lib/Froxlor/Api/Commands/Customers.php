@@ -972,9 +972,11 @@ class Customers extends ApiCommand implements ResourceEntity
 					$result['dbspace_used'] = 0;
 				}
 			}
-			// unset sensitive data
-			unset($result['password']);
-			unset($result['data_2fa']);
+			if (!$this->isInternal()) {
+				// unset sensitive data
+				unset($result['password']);
+				unset($result['data_2fa']);
+			}
 			$this->logger()->logAction($this->isAdmin() ? FroxlorLogger::ADM_ACTION : FroxlorLogger::USR_ACTION, LOG_INFO, "[API] get customer '" . $result['loginname'] . "'");
 			return $this->response($result);
 		}
@@ -1125,7 +1127,7 @@ class Customers extends ApiCommand implements ResourceEntity
 		$result = $this->apiCall('Customers.get', [
 			'id' => $id,
 			'loginname' => $loginname
-		]);
+		], true);
 		$id = $result['customerid'];
 
 		if ($this->isAdmin()) {
