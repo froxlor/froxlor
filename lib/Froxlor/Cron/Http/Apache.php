@@ -801,7 +801,7 @@ class Apache extends HttpConfigBase
 		if (preg_match('/^https?\:\/\//', $domain['documentroot'])) {
 			$possible_deactivated_webroot = $this->getWebroot($domain);
 			if ($this->deactivated == false) {
-				if (Validate::validateUrl($domain['documentroot'])) {
+				if (($ssl_vhost == false && $domain['ssl'] == '1' && $domain['ssl_redirect'] == '1') || Validate::validateUrl($domain['documentroot'])) {
 					$corrected_docroot = $domain['documentroot'];
 
 					// Get domain's redirect code
