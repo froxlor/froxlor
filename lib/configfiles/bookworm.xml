@@ -2388,7 +2388,7 @@ mailman   unix  -       n       n       -       -       pipe
   ${nexthop} ${user}
 # Dovecot LDA
 dovecot	  unix	-	n	n	-	-	pipe
-	flags=DRhu user=vmail:vmail argv=/usr/lib/dovecot/deliver -d ${recipient}
+	flags=DORhu user=vmail:vmail argv=/usr/lib/dovecot/deliver -f ${sender} -d ${recipient}
 ]]>
 						</content>
 					</file>
