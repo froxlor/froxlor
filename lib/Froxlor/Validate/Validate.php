@@ -218,7 +218,7 @@ class Validate
 			$host = substr($host, 1, -1);
 		}
 
-		foreach (['path', 'query', 'fragment'] as $part) {
+		foreach (['path', 'query', 'fragment', 'user', 'pass'] as $part) {
 			if (!empty($parts[$part])) {
 				$decoded = rawurldecode($parts[$part]);
 				if (preg_match('/[\r\n]|%0a|%0d/i', $parts[$part])) {
