@@ -173,7 +173,7 @@ class Certificates extends ApiCommand implements ResourceEntity
 			// get data from certificate to store in the table
 			$validfromdate = empty($cert_content['validFrom_time_t']) ? null : date("Y-m-d H:i:s", $cert_content['validFrom_time_t']);
 			$validtodate = empty($cert_content['validTo_time_t']) ? null : date("Y-m-d H:i:s", $cert_content['validTo_time_t']);
-			$issuer = $cert_content['issuer']['O'] ?? "";
+			$issuer = preg_replace('/[^\p{L}0-9 ._\/\'&-]+/u', '', $cert_content['issuer']['O'] ?? "");
 		}
 
 		// Add/Update database entry
