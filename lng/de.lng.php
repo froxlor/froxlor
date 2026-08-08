@@ -1013,6 +1013,7 @@ return [
 		'emaildomainstillhasaddresses' => 'Maildomain-Flag kann nicht deaktiviert werden, da für diese Domain noch E-Mail-Adressen vorhanden sind.',
 		'tls13requiredforhttp3' => 'Domain hat http3 Option aktiviert, aber SSL-Protokoll enthält nicht TLSv1.3',
 		'senderdomainnotowned' => 'Die angegebene Domain "%s" kann nicht genutzt werden.',
+		'senderdomainexternal' => 'Die angegebene externe Domain "%s" kann nicht genutzt werden.',
 		'emailhasnoaccount' => 'Die angegebene E-Mail-Adresse "%s" hat kein Konto. Eine Absenderadresse kann nicht hinzugefügt werden.',
 	],
 	'extras' => [

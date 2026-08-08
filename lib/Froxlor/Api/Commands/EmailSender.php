@@ -352,5 +352,9 @@ class EmailSender extends ApiCommand implements ResourceEntity
 			// domain exists in our system but not owned by current user
 			Response::standardError('senderdomainnotowned', $domain, true);
 		}
+		elseif (!$domain_result && Settings::Get('mail.allow_external_domains') != '1') {
+			// domain is not known to the system, assuming external, and external is not allowed
+			Response::standardError('senderdomainexternal', $domain, true);
+		}
 	}
 }
