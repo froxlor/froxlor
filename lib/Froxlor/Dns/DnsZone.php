@@ -40,7 +40,7 @@ class DnsZone
 	 * @param string $serial
 	 * @param array|null $records
 	 */
-	public function __construct(int $ttl = 0, string $origin = '', string $serial = '', array $records = null)
+	public function __construct(int $ttl = 0, string $origin = '', string $serial = '', ?array $records = null)
 	{
 		$this->ttl = ($ttl <= 0 ? Settings::Get('system.defaultttl') : $ttl);
 		$this->origin = $origin;

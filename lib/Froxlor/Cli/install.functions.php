@@ -30,7 +30,7 @@ function lng(string $identifier, array $arguments = [])
 	return Language::getTranslation($identifier, $arguments);
 }
 
-function old(string $identifier, string $default = null, string $session = null)
+function old(string $identifier, ?string $default = null, ?string $session = null)
 {
 	return $default;
 }

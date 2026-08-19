@@ -38,7 +38,7 @@ class Traffic
 	 * @return array
 	 * @throws \Exception
 	 */
-	public static function getCustomerStats(array $userinfo, string $range = null, bool $overview = false): array
+	public static function getCustomerStats(array $userinfo, ?string $range = null, bool $overview = false): array
 	{
 		$trafficCollectionObj = (new Collection(TrafficAPI::class, $userinfo,
 			self::getParamsByRange($range, ['customer_traffic' => true])));
@@ -165,7 +165,7 @@ class Traffic
 	 * @return array
 	 * @throws \Exception
 	 */
-	private static function getParamsByRange(string $range = null, array $params = []): array
+	private static function getParamsByRange(?string $range = null, array $params = []): array
 	{
 		$dateParams = [];
 

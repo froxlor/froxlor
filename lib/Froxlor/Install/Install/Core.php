@@ -467,7 +467,7 @@ class Core
 	 * @param string|null $varname
 	 * @param string|null $value
 	 */
-	private function updateSetting(PDOStatement &$stmt = null, string $value = null, string $group = null, string $varname = null)
+	private function updateSetting(?PDOStatement &$stmt = null, ?string $value = null, ?string $group = null, ?string $varname = null)
 	{
 		$stmt->execute([
 			'group' => $group,

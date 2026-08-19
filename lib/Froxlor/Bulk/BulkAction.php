@@ -76,7 +76,7 @@ abstract class BulkAction
 	 *
 	 * @return object BulkAction instance
 	 */
-	protected function __construct(string $import_file = null, array $userinfo = [])
+	protected function __construct(?string $import_file = null, array $userinfo = [])
 	{
 		if (!empty($import_file)) {
 			$this->impFile = FileDir::makeCorrectFile($import_file);

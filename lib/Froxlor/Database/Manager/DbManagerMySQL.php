@@ -60,7 +60,7 @@ class DbManagerMySQL
 	 *
 	 * @param string|null $dbname
 	 */
-	public function createDatabase(string $dbname = null)
+	public function createDatabase(?string $dbname = null)
 	{
 		Database::query("CREATE DATABASE `" . $dbname . "`");
 	}
@@ -80,7 +80,7 @@ class DbManagerMySQL
 	 *            optional, whether the given user will have access to all databases starting with the username, default false
 	 * @throws \Exception
 	 */
-	public function grantPrivilegesTo(string $username, $password, string $access_host = null, bool $p_encrypted = false, bool $update = false, bool $grant_access_prefix = false)
+	public function grantPrivilegesTo(string $username, $password, ?string $access_host = null, bool $p_encrypted = false, bool $update = false, bool $grant_access_prefix = false)
 	{
 		// this is required for mysql8
 		$pwd_plugin = 'caching_sha2_password';

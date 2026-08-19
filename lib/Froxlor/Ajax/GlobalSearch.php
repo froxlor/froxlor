@@ -374,7 +374,7 @@ class GlobalSearch
 		return $result;
 	}
 
-	private static function getFieldFromResult(array $resultset, string $field = null)
+	private static function getFieldFromResult(array $resultset, ?string $field = null)
 	{
 		return $resultset[$field] ?? '';
 	}

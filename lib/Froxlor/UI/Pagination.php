@@ -167,7 +167,7 @@ class Pagination
 	 *
 	 * @return Pagination
 	 */
-	public function addSearch(?string $searchtext = null, string $field = null, string $operator = null): Pagination
+	public function addSearch(?string $searchtext = null, ?string $field = null, ?string $operator = null): Pagination
 	{
 		if (!isset($this->data['sql_search'])) {
 			$this->data['sql_search'] = [];

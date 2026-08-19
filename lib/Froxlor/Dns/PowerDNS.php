@@ -39,7 +39,7 @@ class PowerDNS
 	 *
 	 * @param string|null $domain
 	 */
-	public static function cleanDomainZone(string $domain = null)
+	public static function cleanDomainZone(?string $domain = null)
 	{
 		if (!empty($domain)) {
 			$pdns_domains_stmt = self::getDB()->prepare("SELECT `id`, `name` FROM `domains` WHERE `name` = :domain");

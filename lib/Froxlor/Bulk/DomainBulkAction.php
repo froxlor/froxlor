@@ -39,7 +39,7 @@ class DomainBulkAction extends BulkAction
 	 *
 	 * @return DomainBulkAction
 	 */
-	public function __construct(string $import_file = null, array $userinfo = [])
+	public function __construct(?string $import_file = null, array $userinfo = [])
 	{
 		parent::__construct($import_file, $userinfo);
 		$this->setApiCall('Domains.add');

@@ -174,7 +174,7 @@ class DbManager
 	 * @return string|bool $username if successful or false of username is equal to the password
 	 * @throws Exception
 	 */
-	public function createDatabase(string $loginname = null, string $password = null, int $dbserver = 0, int $last_accnumber = 0, string $global_user = "")
+	public function createDatabase(?string $loginname = null, ?string $password = null, int $dbserver = 0, int $last_accnumber = 0, string $global_user = "")
 	{
 		Database::needRoot(true, $dbserver, false);
 

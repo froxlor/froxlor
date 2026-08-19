@@ -44,7 +44,7 @@ class DnsEntry
 	 * @param int $ttl
 	 * @param string $class
 	 */
-	public function __construct(string $record = '', string $type = 'A', string $content = null, int $prio = 0, int $ttl = 0, string $class = 'IN')
+	public function __construct(string $record = '', string $type = 'A', ?string $content = null, int $prio = 0, int $ttl = 0, string $class = 'IN')
 	{
 		$this->record = $record;
 		$this->type = $type;
