@@ -224,7 +224,7 @@ if (is_array($_themeoptions) && (!array_key_exists('variants', $_themeoptions) |
 	$themevariant = "default";
 }
 
-if (array_key_exists('global', $_themeoptions)) {
+if (is_array($_themeoptions) && array_key_exists('global', $_themeoptions)) {
 	$_themeoptions['variants'][$themevariant] = PhpHelper::array_merge_recursive_distinct($_themeoptions['global'], $_themeoptions['variants'][$themevariant]);
 }
 

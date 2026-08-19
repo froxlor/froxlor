@@ -798,6 +798,12 @@ class Apache extends HttpConfigBase
 		// avoid using any whitespaces
 		$domain['documentroot'] = trim($domain['documentroot']);
 
+		// defence in depth: never write a documentroot containing control characters into the vhost config
+		if (preg_match('/[\x00-\x1F\x7F]/', $domain['documentroot'])) {
+			FroxlorLogger::getInstanceOf()->logAction(FroxlorLogger::CRON_ACTION, LOG_ERR, $domain['domain'] . ' :: documentroot contains invalid control characters');
+			return '# invalid document-root/redirect-url for this domain, therefore no explicit vhost is being generated';
+		}
+
 		if (preg_match('/^https?\:\/\//', $domain['documentroot'])) {
 			$possible_deactivated_webroot = $this->getWebroot($domain);
 			if ($this->deactivated == false) {

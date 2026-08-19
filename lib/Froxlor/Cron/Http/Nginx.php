@@ -606,6 +606,12 @@ class Nginx extends HttpConfigBase
 		// avoid using any whitespaces
 		$domain['documentroot'] = trim($domain['documentroot']);
 
+		// defence in depth: never write a documentroot containing control characters into the vhost config
+		if (preg_match('/[\x00-\x1F\x7F]/', $domain['documentroot'])) {
+			FroxlorLogger::getInstanceOf()->logAction(FroxlorLogger::CRON_ACTION, LOG_ERR, $domain['domain'] . ' :: documentroot contains invalid control characters');
+			return '# invalid document-root/redirect-url for this domain, therefore no explicit vhost is being generated' . "\n";
+		}
+
 		// create ssl settings first since they are required for normal and redirect vhosts
 		if ($ssl_vhost === true && $domain['ssl'] == '1' && Settings::Get('system.use_ssl') == '1') {
 			$vhost_content .= "\n" . $this->composeSslSettings($domain) . "\n";

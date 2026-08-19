@@ -197,6 +197,11 @@ class Validate
 	 */
 	public static function validateUrl(string $url, bool $allow_private_ip = false): bool
 	{
+		// reject raw control characters before parse_url() can mask them (e.g. to '_')
+		if (preg_match('/[\x00-\x1F\x7F]/', $url)) {
+			return false;
+		}
+
 		if (strtolower(substr($url, 0, 7)) != "http://" && strtolower(substr($url, 0, 8)) != "https://") {
 			$url = 'http://' . $url;
 		}
