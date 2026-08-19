@@ -573,6 +573,14 @@ class SubDomains extends ApiCommand implements ResourceEntity
 		// path mode: regular directory path
 		$path = Validate::validate($path, 'path', Validate::REGEX_DIR, '', [], true);
 
+		// $path may already be an absolute, previously-resolved documentroot - e.g.
+		// update() defaults to the currently stored documentroot when no new path is
+		// given. Strip the customer's own homedir prefix so it isn't prepended a second
+		// time below, which would otherwise duplicate it on every no-op update (#1415)
+		if (!empty($customer['documentroot']) && strpos($path, $customer['documentroot']) === 0) {
+			$path = substr($path, strlen($customer['documentroot']));
+		}
+
 		// default path if empty and setting active
 		if (($path === '' || $path === '/') && Settings::Get('system.documentroot_use_default_value') == 1) {
 			return FileDir::makeCorrectDir($customer['documentroot'] . '/' . $completedomain, $customer['documentroot']);
