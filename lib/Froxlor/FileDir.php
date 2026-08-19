@@ -153,6 +153,11 @@ class FileDir
 							// relative directory, prepend link_dir
 							$check_dir = $link_dir . '/' . $check_dir;
 						}
+						// resolve any '..'/'.' segments lexically (no filesystem access, so this
+						// also works for dangling targets) - otherwise a symlink target like
+						// '../../other_customer' would still lexically start with $fixed_homedir
+						// and slip past the prefix check below
+						$check_dir = self::resolveDotSegments($check_dir);
 						if (substr($check_dir, 0, strlen($fixed_homedir)) != $fixed_homedir) {
 							throw new Exception("Found symlink pointing outside of customer home directory: " . substr($original_target, strlen($fixed_homedir)));
 						}
@@ -167,6 +172,32 @@ class FileDir
 			return self::makeSecurePath($dir);
 		}
 		throw new Exception("Cannot validate directory in " . __FUNCTION__ . " which is very dangerous.");
+	}
+
+	/**
+	 * Lexically resolves '..' and '.' segments in a path without touching the filesystem
+	 * (so it also works for symlink targets that don't exist (yet)). Unlike realpath()
+	 * this is a pure string operation and never returns false.
+	 *
+	 * @param string $path
+	 *
+	 * @return string the resolved path
+	 */
+	private static function resolveDotSegments(string $path): string
+	{
+		$absolute = substr($path, 0, 1) === '/';
+		$resolved = [];
+		foreach (explode('/', $path) as $part) {
+			if ($part === '' || $part === '.') {
+				continue;
+			}
+			if ($part === '..') {
+				array_pop($resolved);
+				continue;
+			}
+			$resolved[] = $part;
+		}
+		return ($absolute ? '/' : '') . implode('/', $resolved);
 	}
 
 	/**
