@@ -37,4 +37,26 @@ class IPToolsTest extends TestCase
 		$result = IPTools::ip_in_range([0=>'2620:0:2d0:200::1',1=>64], '2620:0:2d0:200::fff1');
 		$this->assertTrue($result);
 	}
+
+	/**
+	 * regression test / defense-in-depth: an out-of-range netmask must never be
+	 * treated as a wildcard match. Previously, a garbage netmask (e.g. one that
+	 * slipped through Validate::validate_ip2()'s now-fixed length-check bug) made
+	 * pow(2, 32 - $netmask) underflow, collapsing the effective netmask to 0 and
+	 * matching every address; the IPv6 path threw an uncaught gmp error instead of
+	 * failing closed.
+	 */
+	public function testValidateIPinRangeRejectsOutOfRangeNetmask()
+	{
+		$result = IPTools::ip_in_range([0 => '1.2.3.4', 1 => 12345], '203.0.113.99');
+		$this->assertFalse($result);
+		$result = IPTools::ip_in_range([0 => '1.2.3.4', 1 => 0], '203.0.113.99');
+		$this->assertFalse($result);
+		$result = IPTools::ip_in_range([0 => '1.2.3.4', 1 => -1], '203.0.113.99');
+		$this->assertFalse($result);
+		$result = IPTools::ip_in_range([0 => '2001:db8::1', 1 => 99999], 'fe80::dead:beef');
+		$this->assertFalse($result);
+		$result = IPTools::ip_in_range([0 => '2001:db8::1', 1 => 0], 'fe80::dead:beef');
+		$this->assertFalse($result);
+	}
 }

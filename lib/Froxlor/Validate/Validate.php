@@ -143,8 +143,12 @@ class Validate
 				if (IPTools::is_ipv6($ip_cidr[0])) {
 					$cidr_range_max = 128;
 				}
-				if (strlen($ip_cidr[1]) <= 3 && in_array((int)$ip_cidr[1], array_values(range(1, $cidr_range_max)),
-						true) === false) {
+				// the strlen() <= 3 guard this used to have made the check a no-op for any
+				// CIDR suffix longer than 3 characters (e.g. "/12345") - such values passed
+				// through unvalidated and, downstream in IPTools::ip_in_range(), collapse to
+				// a netmask of 0 that matches every address, silently defeating an
+				// allowed_from IP restriction
+				if (in_array((int)$ip_cidr[1], array_values(range(1, $cidr_range_max)), true) === false) {
 					if ($return_bool) {
 						return false;
 					}
@@ -373,7 +377,7 @@ class Validate
 
 			$interval_parts = explode(' ', $interval);
 
-			if (count($interval_parts) == 2 && preg_match('/[0-9]+/',
+			if (count($interval_parts) == 2 && preg_match('/^[0-9]+$/',
 					$interval_parts[0]) && in_array(strtoupper($interval_parts[1]), $valid_expr)) {
 				return true;
 			}

@@ -63,6 +63,12 @@ class IPTools
 			return self::ipv6_in_range($ip_cidr, $ip);
 		}
 		$netmask = $ip_cidr[1];
+		// defense in depth: an out-of-range netmask must never be treated as a
+		// wildcard match - e.g. netmask 12345 underflows pow(2, 32 - $netmask) to a
+		// wildcard of ~0, so ~$wildcard_decimal becomes 0 and matches every address
+		if (!is_numeric($netmask) || $netmask < 1 || $netmask > 32) {
+			return false;
+		}
 		$range_decimal = ip2long($netip);
 		$ip_decimal = ip2long($ip);
 		$wildcard_decimal = pow(2, (32 - $netmask)) - 1;
@@ -93,6 +99,13 @@ class IPTools
 	private static function ipv6_in_range(array $ip_cidr, string $ip): bool
 	{
 		$in_range = false;
+
+		// defense in depth: reject an out-of-range prefix length up front instead of
+		// letting it reach gmp_init()/inet6_prefix_to_mask(), which throws/uncaughtly
+		// errors on invalid input rather than failing closed with a clean false
+		if (!is_numeric($ip_cidr[1]) || $ip_cidr[1] < 1 || $ip_cidr[1] > 128) {
+			return false;
+		}
 
 		$size = 128 - $ip_cidr[1];
 		if ($size == 0) {
