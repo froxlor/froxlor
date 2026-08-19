@@ -349,7 +349,17 @@ class TasksCron extends FroxlorCron
 					FroxlorLogger::getInstanceOf()->logAction(FroxlorLogger::CRON_ACTION, LOG_ERR, 'FATAL: Task7 asks to delete a email account but emailpath field is empty!');
 				}
 
-				$maildir = FileDir::makeCorrectDir($email_full);
+				// re-validate at write-time, scoped to this customer's own portion of
+				// vmail_homedir: the stored emailpath was checked when the account was
+				// created, but a customer-controlled path component could have been swapped
+				// for a symlink any time since then - this call runs rm -rf as root
+				$customermaildir = FileDir::makeCorrectDir(Settings::Get('system.vmail_homedir') . '/' . $row['data']['loginname'] . '/');
+				try {
+					$maildir = FileDir::makeCorrectDir($email_full, $customermaildir);
+				} catch (Exception $e) {
+					FroxlorLogger::getInstanceOf()->logAction(FroxlorLogger::CRON_ACTION, LOG_ERR, 'TasksCron: Task7 emailpath "' . $email_full . '" is unsafe, skipping deletion: ' . $e->getMessage());
+					return;
+				}
 
 				if ($maildir != '/' && !empty($maildir) && $maildir != Settings::Get('system.vmail_homedir') && substr($maildir, 0, strlen(Settings::Get('system.vmail_homedir'))) == Settings::Get('system.vmail_homedir') && is_dir($maildir) && fileowner($maildir) == Settings::Get('system.vmail_uid') && filegroup($maildir) == Settings::Get('system.vmail_gid')) {
 					FroxlorLogger::getInstanceOf()->logAction(FroxlorLogger::CRON_ACTION, LOG_NOTICE, 'Running: rm -rf ' . escapeshellarg($maildir));
@@ -375,8 +385,17 @@ class TasksCron extends FroxlorCron
 		if (is_array($row['data'])) {
 			if (isset($row['data']['loginname']) && isset($row['data']['homedir'])) {
 				// remove specific homedir
-				$ftphomedir = FileDir::makeCorrectDir($row['data']['homedir']);
 				$customerdocroot = FileDir::makeCorrectDir(Settings::Get('system.documentroot_prefix') . '/' . $row['data']['loginname'] . '/');
+
+				// re-validate at write-time: the stored homedir was checked when the ftp
+				// account was created, but a customer-controlled path component could have
+				// been swapped for a symlink any time since then - this call runs rm -rf as root
+				try {
+					$ftphomedir = FileDir::makeCorrectDir($row['data']['homedir'], $customerdocroot);
+				} catch (Exception $e) {
+					FroxlorLogger::getInstanceOf()->logAction(FroxlorLogger::CRON_ACTION, LOG_ERR, 'TasksCron: Task8 ftp homedir "' . $row['data']['homedir'] . '" is unsafe, skipping deletion: ' . $e->getMessage());
+					return;
+				}
 
 				if (file_exists($ftphomedir) && $ftphomedir != '/' && $ftphomedir != Settings::Get('system.documentroot_prefix') && $ftphomedir != $customerdocroot) {
 					FroxlorLogger::getInstanceOf()->logAction(FroxlorLogger::CRON_ACTION, LOG_NOTICE, 'Running: rm -rf ' . escapeshellarg($ftphomedir));
