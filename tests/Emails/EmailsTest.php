@@ -7,6 +7,7 @@ use Froxlor\Api\Commands\Customers;
 use Froxlor\Api\Commands\Emails;
 use Froxlor\Api\Commands\EmailForwarders;
 use Froxlor\Api\Commands\EmailAccounts;
+use Froxlor\Api\Commands\EmailSender;
 
 /**
  *
@@ -506,6 +507,59 @@ class MailsTest extends TestCase
 		global $admin_userdata;
 		$this->expectExceptionCode(303);
 		EmailAccounts::getLocal($admin_userdata)->listing();
+	}
+
+	/**
+	 * regression test for GHSA-m9j6-9856-68xf: EmailSender::add() used to silently
+	 * treat any domain it didn't recognize as "external" and allow it unconditionally.
+	 * An unknown domain must now be rejected unless mail.allow_external_domains is set.
+	 *
+	 * @depends testCustomerEmailAccountsAdd
+	 */
+	public function testCustomerEmailSenderRejectsUnknownExternalDomainByDefault()
+	{
+		global $admin_userdata;
+
+		Settings::Set('mail.enable_allow_sender', 1, true);
+		Settings::Set('mail.allow_external_domains', 0, true);
+
+		$customer_userdata = json_decode(Customers::getLocal($admin_userdata, [
+			'loginname' => 'test1'
+		])->get(), true)['data'];
+
+		// "external domain" (not just "domain") is the distinguishing part of this
+		// specific error, as opposed to the pre-existing senderdomainnotowned error
+		$this->expectExceptionMessageMatches('/external domain/');
+		EmailSender::getLocal($customer_userdata, [
+			'emailaddr' => 'info@test2.local',
+			'allowed_sender' => 'someone@totally-unrelated-external-domain.example'
+		])->add();
+	}
+
+	/**
+	 * @depends testCustomerEmailAccountsAdd
+	 */
+	public function testCustomerEmailSenderAcceptsExternalDomainWhenExplicitlyAllowed()
+	{
+		global $admin_userdata;
+
+		Settings::Set('mail.enable_allow_sender', 1, true);
+		Settings::Set('mail.allow_external_domains', 1, true);
+
+		$customer_userdata = json_decode(Customers::getLocal($admin_userdata, [
+			'loginname' => 'test1'
+		])->get(), true)['data'];
+
+		$json_result = EmailSender::getLocal($customer_userdata, [
+			'emailaddr' => 'info@test2.local',
+			'allowed_sender' => 'someone@totally-unrelated-external-domain.example'
+		])->add();
+		$result = json_decode($json_result, true)['data'];
+		$this->assertEquals('someone@totally-unrelated-external-domain.example', $result['allowed_sender']);
+
+		// reset settings back to defaults for any later test
+		Settings::Set('mail.allow_external_domains', 0, true);
+		Settings::Set('mail.enable_allow_sender', 0, true);
 	}
 
 	public function testCustomerEmailAccountsDelete()

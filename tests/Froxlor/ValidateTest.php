@@ -150,6 +150,57 @@ class ValidateTest extends TestCase
 		$this->assertTrue($result);
 	}
 
+	/**
+	 * regression test: parse_url() rewrites raw control characters in path/query/fragment
+	 * to '_' before the per-component regex ever sees them, so a check that only inspects
+	 * $parts[...] (the already-masked value) never catches a raw CRLF - only the
+	 * percent-encoded form. validateUrl() must reject the raw bytes on the full, unparsed
+	 * $url string before parse_url() runs.
+	 */
+	public function testValidateUrlRejectsRawControlCharacters()
+	{
+		$LF = "\n";
+		$CR = "\r";
+		$TAB = "\t";
+
+		// raw CRLF in the path, as used to inject e.g. an Include directive into a
+		// generated vhost config (GHSA-c3p2 bypass)
+		$result = Validate::validateUrl("http://example.com/a" . $LF . "Include" . $TAB . "evil.conf", true);
+		$this->assertFalse($result);
+
+		$result = Validate::validateUrl("http://example.com/a" . $CR . $LF . "b", true);
+		$this->assertFalse($result);
+
+		// control: the percent-encoded form was already correctly rejected before this fix
+		// and must remain rejected
+		$result = Validate::validateUrl("http://example.com/a%0ab", true);
+		$this->assertFalse($result);
+
+		// a plain, unremarkable URL must still be accepted
+		$result = Validate::validateUrl("http://example.com/a/b?x=1", true);
+		$this->assertTrue($result);
+	}
+
+	/**
+	 * regression test: the per-component symlink/CRLF checks originally only covered
+	 * path/query/fragment, leaving the URL's userinfo (user:pass@host) unchecked -
+	 * raw or percent-encoded CRLF there must be rejected the same way.
+	 */
+	public function testValidateUrlRejectsControlCharactersInUserinfo()
+	{
+		$LF = "\n";
+
+		$result = Validate::validateUrl("http://evil" . $LF . "Include:secret@example.com/", true);
+		$this->assertFalse($result);
+
+		$result = Validate::validateUrl("http://user:evil%0dpass@example.com/", true);
+		$this->assertFalse($result);
+
+		// a plain userinfo-bearing URL must still be accepted
+		$result = Validate::validateUrl("http://user:pass@example.com/", true);
+		$this->assertTrue($result);
+	}
+
 	public function testValidateDomain()
 	{
 		$result = Validate::validateDomain('froxlor.org');

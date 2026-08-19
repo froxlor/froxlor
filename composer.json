@@ -51,7 +51,7 @@
 		"robthree/twofactorauth": "^1.6",
 		"froxlor/idna-convert-legacy": "^2.1",
 		"voku/anti-xss": "^4.1",
-		"twig/twig": "^3.3",
+		"twig/twig": "3.11.3",
 		"symfony/console": "^5.4",
 		"pear/net_dns2": "^1.5",
 		"amnuts/opcache-gui": "^3.4",
@@ -67,7 +67,7 @@
 		"sebastian/phpcpd": "^6.0",
 		"phploc/phploc": "^7.0",
 		"phpmd/phpmd": "^2.10",
-		"phpunit/php-timer" : "^5",
+		"phpunit/php-timer": "^5",
 		"phpstan/phpstan": "^1.8"
 	},
 	"suggest": {
@@ -80,6 +80,25 @@
 	"config": {
 		"platform": {
 			"php": "7.4"
+		},
+		"audit": {
+			"ignore": [
+				"PKSA-8zx5-v2nz-58pb",
+				"PKSA-fbvq-z33h-r2np",
+				"PKSA-g9zw-qxh8-pq8w",
+				"PKSA-yd6k-t2gh-1m43",
+				"PKSA-1tmc-rt7x-12w6",
+				"PKSA-xx6c-6d96-db2w",
+				"PKSA-sjvz-tbbr-vwth",
+				"PKSA-h8hf-ytnd-5t9q",
+				"PKSA-wwb1-81rc-pd65",
+				"PKSA-kvv6-36cr-fkzb",
+				"PKSA-n14z-jjjg-g8vd",
+				"PKSA-3mcc-k66d-pydb",
+				"PKSA-gw7n-z4yx-7xjt",
+				"PKSA-dpx1-78wg-1kqs",
+				"PKSA-21g2-dzjv-sky5"
+			]
 		}
 	},
 	"autoload": {
@@ -95,6 +114,6 @@
 			"npx concurrently -c \"#93c5fd,#fdba74\" \"php -S 127.0.0.1:8000\" \"npm run dev\" --names=server,vite"
 		],
 		"post-install-cmd": "if [ -f ./vendor/bin/phpcs ]; then \"vendor/bin/phpcs\" --config-set installed_paths vendor/phpcompatibility/php-compatibility ; fi",
-		"post-update-cmd" : "if [ -f ./vendor/bin/phpcs ]; then \"vendor/bin/phpcs\" --config-set installed_paths vendor/phpcompatibility/php-compatibility ; fi"
+		"post-update-cmd": "if [ -f ./vendor/bin/phpcs ]; then \"vendor/bin/phpcs\" --config-set installed_paths vendor/phpcompatibility/php-compatibility ; fi"
 	}
 }

@@ -80,6 +80,54 @@ class CertificatesTest extends TestCase
 		$this->assertEquals($domainid, $result['domainid']);
 	}
 
+	/**
+	 * regression test for GHSA-89vj-gqqr-73p8: the certificate's issuer organization
+	 * name is attacker-controlled (a customer can upload/self-sign any certificate for
+	 * their own domain) and was stored verbatim, allowing a stored-XSS payload to reach
+	 * the admin panel wherever the issuer is displayed. It must be sanitized to a safe
+	 * character set before being stored.
+	 */
+	public function testCustomerCertificatesAddSanitizesIssuerOrganization()
+	{
+		global $admin_userdata;
+
+		$customer_userdata = json_decode(Customers::getLocal($admin_userdata, [
+			'loginname' => 'test1'
+		])->get(), true)['data'];
+
+		// dedicated subdomain so this test doesn't depend on fixtures from other test
+		// files/classes (e.g. mysub.test2.local is created and later deleted again
+		// within SubDomainsTest.php itself)
+		SubDomains::getLocal($admin_userdata, [
+			'subdomain' => 'issuertest',
+			'domain' => 'test2.local',
+			'customerid' => $customer_userdata['customerid']
+		])->add();
+		$json_result = SubDomains::getLocal($admin_userdata, array(
+			'domainname' => 'issuertest.test2.local'
+		))->get();
+		$domain = json_decode($json_result, true)['data'];
+		$domainid = $domain['id'];
+
+		$certdata = $this->generateKey('<script>alert(document.cookie)</script>;rm -rf /');
+		$json_result = Certificates::getLocal($admin_userdata, array(
+			'domainname' => 'issuertest.test2.local',
+			'ssl_cert_file' => $certdata['cert'],
+			'ssl_key_file' => $certdata['key']
+		))->add();
+		$result = json_decode($json_result, true)['data'];
+		$this->assertEquals($domainid, $result['domainid']);
+		$this->assertStringNotContainsString('<', $result['issuer']);
+		$this->assertStringNotContainsString('>', $result['issuer']);
+		$this->assertStringNotContainsString(';', $result['issuer']);
+
+		// cleanup: cert is deleted along with the domain
+		SubDomains::getLocal($admin_userdata, array(
+			'domainname' => 'issuertest.test2.local',
+			'customerid' => $customer_userdata['customerid']
+		))->delete();
+	}
+
 	public function testAdminCertificatesList()
 	{
 		global $admin_userdata;
@@ -183,13 +231,13 @@ class CertificatesTest extends TestCase
 		$this->assertTrue(isset($result['domainid']) && $result['domainid'] > 0);
 	}
 
-	private function generateKey()
+	private function generateKey($organizationName = "Froxlor")
 	{
 		$dn = array(
 			"countryName" => "DE",
 			"stateOrProvinceName" => "Hessen",
 			"localityName" => "Frankfurt",
-			"organizationName" => "Froxlor",
+			"organizationName" => $organizationName,
 			"organizationalUnitName" => "Testing",
 			"commonName" => "test2.local",
 			"emailAddress" => "team@froxlor.org"
