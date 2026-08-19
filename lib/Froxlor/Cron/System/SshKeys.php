@@ -25,6 +25,7 @@
 
 namespace Froxlor\Cron\System;
 
+use Exception;
 use Froxlor\Database\Database;
 use Froxlor\FileDir;
 use Froxlor\FroxlorLogger;
@@ -56,11 +57,24 @@ class SshKeys
 			$userHomeDir = FileDir::makeCorrectDir($usr['homedir'] . '/.ssh', $usr['homedir']);
 			$authkeysfile = FileDir::makeCorrectFile($userHomeDir . '/authorized_keys', $usr['homedir']);
 			$cronlog->logAction(FroxlorLogger::CRON_ACTION, LOG_NOTICE, 'Creating file ' . $authkeysfile);
+
+			// re-check immediately before every sensitive filesystem operation below: the
+			// customer controls their own homedir until this cron runs, and a symlink
+			// swapped in after the check above (or between two of the checks below) would
+			// otherwise redirect the write. This narrows the TOCTOU window per operation but,
+			// without fd-pinning (openat2(RESOLVE_NO_SYMLINKS)/O_NOFOLLOW - not available in
+			// PHP), does not close it completely.
+			if (!self::isStillContained($usr, $authkeysfile, $cronlog)) {
+				continue;
+			}
 			// remove all entries with 'froxlor:id=...'
 			self::removeFroxlorKeys($authkeysfile, $cronlog);
 			// get keys
 			Database::pexecute($sshkeys_sel_stmt, ['fuid' => $usr['id'], 'cid' => $usr['customerid']]);
 			if ($sshkeys_sel_stmt->rowCount() > 0) {
+				if (!self::isStillContained($usr, $authkeysfile, $cronlog)) {
+					continue;
+				}
 				if (!file_exists(dirname($authkeysfile))) {
 					@mkdir(dirname($authkeysfile), 0700);
 				}
@@ -95,10 +109,17 @@ class SshKeys
 						continue;
 					}
 
+					if (!self::isStillContained($usr, $authkeysfile, $cronlog)) {
+						continue 2;
+					}
+
 					// add key
 					$cronlog->logAction(FroxlorLogger::CRON_ACTION, LOG_NOTICE, 'Adding ssh-key for user ' . $usr['username']);
 					file_put_contents($authkeysfile, trim($sshkey['ssh_pubkey']) . " froxlor:id=" . $sshkey['id'] . "\n", FILE_APPEND | LOCK_EX);
 				}
+			}
+			if (!self::isStillContained($usr, $authkeysfile, $cronlog)) {
+				continue;
 			}
 			@chmod(dirname($authkeysfile), 0700);
 			@chown(dirname($authkeysfile), $usr['uid']);
@@ -106,6 +127,23 @@ class SshKeys
 			@chmod($authkeysfile, 0600);
 			@chown($authkeysfile, $usr['uid']);
 			@chgrp($authkeysfile, $usr['gid']);
+		}
+	}
+
+	/**
+	 * Re-runs the symlink-containment check for the given user's .ssh directory and
+	 * authorized_keys file. See the comment at the call sites in generateFiles(): this
+	 * narrows but does not fully close the TOCTOU window between check and use.
+	 */
+	private static function isStillContained(array $usr, string $authkeysfile, &$cronlog): bool
+	{
+		try {
+			$userHomeDir = FileDir::makeCorrectDir($usr['homedir'] . '/.ssh', $usr['homedir']);
+			FileDir::makeCorrectFile($userHomeDir . '/authorized_keys', $usr['homedir']);
+			return true;
+		} catch (Exception $e) {
+			$cronlog->logAction(FroxlorLogger::CRON_ACTION, LOG_ERR, 'SshKeys: path for user ' . $usr['username'] . ' is unsafe, skipping: ' . $e->getMessage());
+			return false;
 		}
 	}
 
