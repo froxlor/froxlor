@@ -151,7 +151,9 @@ class DirProtectionsTest extends TestCase
 		];
 		$json_result = DirProtections::getLocal($customer_userdata, $data)->update();
 		$result = json_decode($json_result, true)['data'];
-		$this->assertTrue($data_old['password'] != $result['password']);
+		// the password hash is intentionally not exposed via the external API (GHSA-8wfc-9qp5-gjxf)
+		$this->assertArrayNotHasKey('password', $data_old);
+		$this->assertArrayNotHasKey('password', $result);
 		$this->assertTrue($data_old['authname'] != $result['authname']);
 		$this->assertEquals('test1337', $result['authname']);
 	}
