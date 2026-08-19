@@ -25,6 +25,7 @@
 
 namespace Froxlor\Cron\Http;
 
+use Exception;
 use Froxlor\Cron\Http\Php\PhpInterface;
 use Froxlor\Cron\TaskId;
 use Froxlor\Customer\Customer;
@@ -965,7 +966,17 @@ class Apache extends HttpConfigBase
 			$webroot_text .= '  </Directory>' . "\n";
 			$this->deactivated = true;
 		} else {
-			$webroot_text .= '  DocumentRoot "' . rtrim($domain['documentroot'], "/") . "\"\n";
+			// re-validate at write-time: the stored documentroot was checked when it was
+			// set, but a customer-controlled path component could have been swapped for
+			// a symlink any time since then
+			try {
+				FileDir::makeCorrectDir($domain['documentroot'], $domain['customerroot']);
+				$safe_documentroot = $domain['documentroot'];
+			} catch (Exception $e) {
+				FroxlorLogger::getInstanceOf()->logAction(FroxlorLogger::CRON_ACTION, LOG_ERR, 'apache::getWebroot: documentroot for "' . $domain['domain'] . '" is unsafe, falling back to customer home directory: ' . $e->getMessage());
+				$safe_documentroot = $domain['customerroot'];
+			}
+			$webroot_text .= '  DocumentRoot "' . rtrim($safe_documentroot, "/") . "\"\n";
 			$this->deactivated = false;
 		}
 
@@ -1212,7 +1223,15 @@ class Apache extends HttpConfigBase
 		}
 
 		foreach ($diroptions as $row_diroptions) {
-			$row_diroptions['path'] = FileDir::makeCorrectDir($row_diroptions['path']);
+			// re-validate at write-time: the stored path was checked when it was set, but
+			// a customer-controlled path component could have been swapped for a symlink
+			// any time since then - mkDirWithCorrectOwnership() below runs a root chown -R
+			try {
+				$row_diroptions['path'] = FileDir::makeCorrectDir($row_diroptions['path'], $row_diroptions['customerroot']);
+			} catch (Exception $e) {
+				FroxlorLogger::getInstanceOf()->logAction(FroxlorLogger::CRON_ACTION, LOG_ERR, 'apache::createFileDirOptions: path "' . $row_diroptions['path'] . '" is unsafe, skipping: ' . $e->getMessage());
+				continue;
+			}
 			FileDir::mkDirWithCorrectOwnership($row_diroptions['customerroot'], $row_diroptions['path'], $row_diroptions['guid'], $row_diroptions['guid']);
 			$diroptions_filename = FileDir::makeCorrectFile(Settings::Get('system.apacheconf_diroptions') . '/40_froxlor_diroption_' . md5($row_diroptions['path']) . '.conf');
 

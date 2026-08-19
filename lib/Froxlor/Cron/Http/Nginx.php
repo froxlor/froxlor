@@ -25,6 +25,7 @@
 
 namespace Froxlor\Cron\Http;
 
+use Exception;
 use Froxlor\Cron\Http\Php\PhpInterface;
 use Froxlor\Cron\TaskId;
 use Froxlor\Customer\Customer;
@@ -819,7 +820,16 @@ class Nginx extends HttpConfigBase
 			$webroot_text .= "\t" . 'root     ' . FileDir::makeCorrectDir(Settings::Get('system.deactivateddocroot')) . ';' . "\n";
 			$this->deactivated = true;
 		} else {
-			$webroot_text .= "\t" . 'root     ' . FileDir::makeCorrectDir($domain['documentroot']) . ';' . "\n";
+			// re-validate at write-time: the stored documentroot was checked when it was
+			// set, but a customer-controlled path component could have been swapped for
+			// a symlink any time since then
+			try {
+				$safe_documentroot = FileDir::makeCorrectDir($domain['documentroot'], $domain['customerroot']);
+			} catch (Exception $e) {
+				FroxlorLogger::getInstanceOf()->logAction(FroxlorLogger::CRON_ACTION, LOG_ERR, 'nginx::getWebroot: documentroot for "' . $domain['domain'] . '" is unsafe, falling back to customer home directory: ' . $e->getMessage());
+				$safe_documentroot = FileDir::makeCorrectDir($domain['customerroot']);
+			}
+			$webroot_text .= "\t" . 'root     ' . $safe_documentroot . ';' . "\n";
 			$this->deactivated = false;
 		}
 

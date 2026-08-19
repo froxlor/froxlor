@@ -34,7 +34,10 @@ use Froxlor\UI\Response;
 class Validate
 {
 
-	const REGEX_DIR = '/^|(\/[\w-]+)+$/';
+	// empty string or a sequence of safe path characters (word chars, dots, slashes,
+	// hyphens); a bare '^' alternative previously made this match any input at all,
+	// and '..' is explicitly excluded to block directory traversal
+	const REGEX_DIR = '/^((?!\.\.)[\w.\/-])*$/D';
 
 	const REGEX_PORT = '/^(([1-9])|([1-9][0-9])|([1-9][0-9][0-9])|([1-9][0-9][0-9][0-9])|([1-5][0-9][0-9][0-9][0-9])|(6[0-4][0-9][0-9][0-9])|(65[0-4][0-9][0-9])|(655[0-2][0-9])|(6553[0-5]))$/Di';
 

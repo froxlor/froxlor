@@ -90,7 +90,20 @@ class FileDir
 			sort($subdirs);
 			foreach ($subdirs as $sdir) {
 				if (!is_dir($sdir)) {
-					$sdir = self::makeCorrectDir($sdir);
+					// re-validate right before mkdir/chown -R: a customer-controlled path
+					// component could have been swapped for a symlink after $dirToCreate was
+					// first stored/validated. Skip only this component if it now escapes
+					// $homeDir - do not touch it, do not abort sibling directories.
+					if ($within_homedir) {
+						try {
+							$sdir = self::makeCorrectDir($sdir, $homeDir);
+						} catch (Exception $e) {
+							FroxlorLogger::getInstanceOf()->logAction(FroxlorLogger::CRON_ACTION, LOG_ERR, 'mkDirWithCorrectOwnership: "' . $sdir . '" is unsafe, skipping mkdir/chown: ' . $e->getMessage());
+							continue;
+						}
+					} else {
+						$sdir = self::makeCorrectDir($sdir);
+					}
 					self::safe_exec('mkdir -p ' . escapeshellarg($sdir));
 					// place index
 					if ($placeindex) {

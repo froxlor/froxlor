@@ -229,4 +229,39 @@ class FileDirTest extends TestCase
 		$result = FileDir::makeCorrectFile($this->workdir . 'a/export.tar.gz', $this->workdir);
 		$this->assertEquals($this->workdir . 'a/export.tar.gz', $result);
 	}
+
+	/**
+	 * mkDirWithCorrectOwnership() (used e.g. by TasksCron for FTP homedirs, and by the
+	 * vhost generators) builds on makeCorrectDir() for its own containment check before
+	 * running mkdir -p / chown -R as root. The legitimate, no-symlink case must keep
+	 * working exactly as before.
+	 */
+	public function testMkDirWithCorrectOwnershipCreatesLegitimateNestedDir()
+	{
+		$target = $this->workdir . 'ftpuser/';
+		$ok = FileDir::mkDirWithCorrectOwnership($this->workdir, $target, posix_getuid(), posix_getgid());
+		$this->assertTrue($ok);
+		$this->assertDirectoryExists($target);
+	}
+
+	/**
+	 * regression test: a symlinked intermediate path component must not be traversed by
+	 * the mkdir -p / chown -R that mkDirWithCorrectOwnership() runs as root. This is the
+	 * write-time consumer of the fixed containment check, exercised directly rather than
+	 * through the cron that calls it (e.g. TasksCron::createNewFtpHome()).
+	 *
+	 * Note: this hits the error-logging branch (FroxlorLogger -> Settings -> DB), so it
+	 * only runs meaningfully under the project's normal DB-backed test bootstrap.
+	 */
+	public function testMkDirWithCorrectOwnershipDoesNotTraverseSymlinkedComponent()
+	{
+		symlink($this->outsidedir, $this->workdir . 'evil');
+		$before = scandir($this->outsidedir);
+
+		$target = $this->workdir . 'evil/newsubdir/';
+		FileDir::mkDirWithCorrectOwnership($this->workdir, $target, posix_getuid(), posix_getgid());
+
+		$this->assertEquals($before, scandir($this->outsidedir));
+		$this->assertDirectoryDoesNotExist($this->outsidedir . 'newsubdir');
+	}
 }
