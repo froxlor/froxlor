@@ -221,6 +221,16 @@ class ExportCron extends FroxlorCron
 				$cronlog->logAction(FroxlorLogger::CRON_ACTION, LOG_DEBUG, 'shell> tar cfz ' . escapeshellarg($export_file) . ' -C ' . escapeshellarg($tmpdir) . ' ' . trim($create_export_tar_data));
 				FileDir::safe_exec('tar cfz ' . escapeshellarg($export_file) . ' -C ' . escapeshellarg($tmpdir) . ' ' . trim($create_export_tar_data));
 			}
+			// re-validate the destination immediately before writing to it: a path component
+			// could have been swapped for a symlink after this job was scheduled, or even while
+			// the dump above was running - the mv and chown below must never follow such a link
+			try {
+				FileDir::makeCorrectDir($data['destdir'], $customerdocroot);
+			} catch (Exception $e) {
+				$cronlog->logAction(FroxlorLogger::CRON_ACTION, LOG_ERR, 'Export destination is unsafe, aborting export for security: ' . $e->getMessage());
+				FileDir::safe_exec('rm -rf ' . escapeshellarg($tmpdir));
+				return;
+			}
 			// move to destination directory
 			$cronlog->logAction(FroxlorLogger::CRON_ACTION, LOG_DEBUG, 'shell> mv ' . escapeshellarg($export_file) . ' ' . escapeshellarg($data['destdir']));
 			FileDir::safe_exec('mv ' . escapeshellarg($export_file) . ' ' . escapeshellarg($data['destdir']));
@@ -229,11 +239,7 @@ class ExportCron extends FroxlorCron
 			FileDir::safe_exec('rm -rf ' . escapeshellarg($tmpdir));
 			// set owner to customer
 			$cronlog->logAction(FroxlorLogger::CRON_ACTION, LOG_DEBUG, 'shell> chown -R ' . (int)$data['uid'] . ':' . (int)$data['gid'] . ' ' . escapeshellarg($data['destdir']));
-			if (is_link(rtrim($data['destdir'], '/'))) {
-				$cronlog->logAction(FroxlorLogger::CRON_ACTION, LOG_ERR, 'Export destination is a symlink, skipping chown for security: ' . $data['destdir']);
-			} else {
-				FileDir::safe_exec('chown -R ' . (int)$data['uid'] . ':' . (int)$data['gid'] . ' ' . escapeshellarg($data['destdir']));
-			}
+			FileDir::safe_exec('chown -R ' . (int)$data['uid'] . ':' . (int)$data['gid'] . ' ' . escapeshellarg($data['destdir']));
 		}
 	}
 }

@@ -132,7 +132,14 @@ class FileDir
 			// by checking each folder for being a symlink and whether it targets
 			// the customers homedir or points outside of it
 			if (!empty($fixed_homedir)) {
-				$to_check = explode("/", substr($dir, strlen($fixed_homedir) + 1), -1);
+				// normalize to exactly one trailing slash and no double-slashes, regardless of
+				// what the caller passed in - the offset below relies on this being unambiguous
+				$fixed_homedir = rtrim(preg_replace('#/+#', '/', $fixed_homedir), '/') . '/';
+				// also collapse double-slashes in $dir itself so re-validating an already
+				// normalized path (e.g. cron re-checking a stored destination) can't shift
+				// the split point and skip a path component
+				$dir_to_check = preg_replace('#/+#', '/', $dir);
+				$to_check = explode("/", substr($dir_to_check, strlen($fixed_homedir)), -1);
 				$check_dir = substr($fixed_homedir, 0, -1);
 				// Symlink check
 				foreach ($to_check as $sub_dir) {
@@ -152,7 +159,7 @@ class FileDir
 					}
 				}
 				// check for the path to be within the given homedir
-				if (substr($dir, 0, strlen($fixed_homedir)) != $fixed_homedir) {
+				if (substr($dir_to_check, 0, strlen($fixed_homedir)) != $fixed_homedir) {
 					throw new Exception("Target path not within the required customer home directory");
 				}
 			}
