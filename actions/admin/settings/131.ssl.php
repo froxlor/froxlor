@@ -192,11 +192,13 @@ return [
 					'settinggroup' => 'system',
 					'varname' => 'letsencryptchallengepath',
 					'type' => 'text',
+					'string_type' => 'dir',
 					'string_emptyallowed' => false,
 					'default' => Froxlor::getInstallDir(),
 					'save_method' => 'storeSettingField',
 					'advanced_mode' => true,
-					'requires_reconf' => ['http']
+					'requires_reconf' => ['http'],
+					'required_otp' => true
 				],
 				'system_letsencryptkeysize' => [
 					'label' => lng('serversettings.letsencryptkeysize'),

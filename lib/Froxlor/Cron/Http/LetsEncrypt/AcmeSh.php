@@ -585,7 +585,7 @@ EOC;
 		if (!empty($domains)) {
 			$acmesh_cmd = self::getAcmeSh() . " --server " . self::$apiserver . " --issue -d " . implode(" -d ", $domains);
 			// challenge path
-			$acmesh_cmd .= " -w " . Settings::Get('system.letsencryptchallengepath');
+			$acmesh_cmd .= " -w " . escapeshellarg(Settings::Get('system.letsencryptchallengepath'));
 			if (Settings::Get('system.leecc') > 0) {
 				// ecc certificate
 				$acmesh_cmd .= " --keylength ec-" . Settings::Get('system.leecc');
