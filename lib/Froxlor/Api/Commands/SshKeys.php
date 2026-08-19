@@ -426,6 +426,14 @@ class SshKeys extends ApiCommand implements ResourceEntity
 
 	private function isValidSshPublicKey(string $key): bool
 	{
+		// reject multi-line input outright: PublicKeyLoader only parses the first key
+		// token and folds everything after the first newline into the comment, so a
+		// value like "<valid-key>\n<attacker-controlled authorized_keys line>" would
+		// otherwise validate and later be written verbatim into authorized_keys as an
+		// independent, fully honored entry
+		if (trim($key) !== str_replace(["\r", "\n"], '', trim($key))) {
+			return false;
+		}
 		try {
 			$loaded = PublicKeyLoader::loadPublicKey($key);
 			return $loaded !== null;
