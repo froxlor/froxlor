@@ -264,4 +264,34 @@ class FileDirTest extends TestCase
 		$this->assertEquals($before, scandir($this->outsidedir));
 		$this->assertDirectoryDoesNotExist($this->outsidedir . 'newsubdir');
 	}
+
+	/**
+	 * regression test for froxlor/froxlor#1416: makeCorrectFile() used the *normalized*
+	 * length of $fixed_homedir to compute the offset into $filename, but compared against
+	 * the *raw* $fixed_homedir everywhere else. A $fixed_homedir with a legacy double
+	 * slash (e.g. a homedir value stored before some cleanup) made those two disagree,
+	 * so an entirely legitimate path was rejected as "not within the required customer
+	 * home directory" - a false positive that could abort an entire cron run.
+	 */
+	public function testMakeCorrectFileAcceptsLegitimatePathWithDoubleSlashHomedir()
+	{
+		$homedir = rtrim($this->workdir, '/') . '//';
+		mkdir($this->workdir . '.ssh', 0777, true);
+
+		$result = FileDir::makeCorrectFile($this->workdir . '.ssh/authorized_keys', $homedir);
+		$this->assertEquals($this->workdir . '.ssh/authorized_keys', $result);
+	}
+
+	/**
+	 * companion to the double-slash regression above: the symlink containment check
+	 * itself must keep working correctly even when $fixed_homedir has a double slash.
+	 */
+	public function testMakeCorrectFileRejectsSymlinkEscapeWithDoubleSlashHomedir()
+	{
+		$homedir = rtrim($this->workdir, '/') . '//';
+		symlink($this->outsidedir, $this->workdir . 'evil');
+
+		$this->expectExceptionMessage('Found symlink pointing outside of customer home directory: evil');
+		FileDir::makeCorrectFile($this->workdir . 'evil/secret.txt', $homedir);
+	}
 }

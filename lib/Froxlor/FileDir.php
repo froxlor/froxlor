@@ -448,8 +448,13 @@ class FileDir
 		// by checking each folder and the file for being a symlink and whether it targets
 		// the customers homedir or points outside of it
 		if (!empty($fixed_homedir)) {
-			$to_check = explode("/", substr($filename, strlen(self::makeCorrectDir($fixed_homedir))), -1);
-			$check_dir = substr($fixed_homedir, -1) == '/' ? substr($fixed_homedir, 0, -1) : $fixed_homedir;
+			// normalize once so every check below (offset calculation, symlink-walk base,
+			// and the prefix comparisons) agrees on the same string - a $fixed_homedir with
+			// e.g. a legacy double-slash would otherwise mismatch a normalized $filename and
+			// reject an entirely legitimate path
+			$fixed_homedir = self::makeCorrectDir($fixed_homedir);
+			$to_check = explode("/", substr($filename, strlen($fixed_homedir)), -1);
+			$check_dir = substr($fixed_homedir, 0, -1);
 			// Symlink check
 			foreach ($to_check as $sub_dir) {
 				$check_dir .= '/' . $sub_dir;
