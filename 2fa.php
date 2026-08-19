@@ -57,6 +57,13 @@ $tfa = new FroxlorTwoFactorAuth('Froxlor ' . Settings::Get('system.hostname'));
 
 // do the delete and then just show a success-message
 if ($action == 'delete') {
+	// disabling 2fa is a state change and must go through the global CSRF guard in
+	// lib/init.php, which only validates the token for POST/PUT/PATCH/DELETE - a plain
+	// GET (e.g. from a cross-site link, allowed through by the SameSite=Lax session
+	// cookie) must not be able to silently strip a user's 2fa
+	if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+		Response::dynamicError('This action requires a POST request');
+	}
 	Database::pexecute($upd_stmt, [
 		't2fa' => 0,
 		'd2fa' => "",
