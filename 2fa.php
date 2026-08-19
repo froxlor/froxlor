@@ -62,6 +62,11 @@ if ($action == 'delete') {
 		'd2fa' => "",
 		'id' => $uid
 	]);
+	// purge "remember this device" tokens so a 2fa reset can't be bypassed by a surviving cookie
+	$del_stmt = Database::prepare("DELETE FROM `" . TABLE_PANEL_2FA_TOKENS . "` WHERE `userid` = :id");
+	Database::pexecute($del_stmt, [
+		'id' => $uid
+	]);
 	Response::standardSuccess('2fa.2fa_removed');
 } elseif ($action == 'preadd') {
 	$type = Request::post('type_2fa', '0');

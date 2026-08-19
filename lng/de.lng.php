@@ -541,6 +541,7 @@ return [
 		'also_change_ftp' => 'Auch Passwort des Haupt-FTP-Zugangs ändern',
 		'also_change_stats' => ' Auch Passwort der Statistikseite ändern',
 		'also_change_global_mysql' => 'Auch Passwort des globalen MySQL-Zugangs ändern',
+		'apikeys_hint' => 'Ihr Passwort wurde erfolgreich geändert. Für diesen Account existieren noch %s aktive API-Schlüssel, die mit dem alten Passwort erstellt wurden. Falls Sie Ihr Passwort geändert haben, weil es kompromittiert sein könnte, sollten Sie diese auf der API-Schlüssel-Seite erneuern.',
 	],
 	'cron' => [
 		'cronname' => 'Cronjob-Name',

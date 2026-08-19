@@ -1577,6 +1577,16 @@ class Customers extends ApiCommand implements ResourceEntity
 		$upd_stmt = Database::prepare($upd_query);
 		Database::pexecute($upd_stmt, $upd_data);
 
+		if ($password != $result['password']) {
+			// password has been changed - purge 2fa "remember this device" tokens so a
+			// credential rotation actually locks out anyone holding a surviving cookie.
+			// api-keys are intentionally left untouched here; the UI hints at rotating them instead.
+			$del_stmt = Database::prepare("DELETE FROM `" . TABLE_PANEL_2FA_TOKENS . "` WHERE `userid` = :id");
+			Database::pexecute($del_stmt, [
+				'id' => $id
+			], true, true);
+		}
+
 		if ($this->isAdmin()) {
 			// Using filesystem - quota, insert a task which cleans the filesystem - quota
 			Cronjob::inserttask(TaskId::CREATE_QUOTA);

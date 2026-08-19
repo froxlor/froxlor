@@ -788,6 +788,16 @@ class Admins extends ApiCommand implements ResourceEntity
 					Database::pexecute($upd_stmt, $upd_data, true, true);
 					$this->logger()->logAction(FroxlorLogger::ADM_ACTION, LOG_NOTICE, "[API] edited admin '" . $result['loginname'] . "'");
 
+					if ($password != $result['password']) {
+						// password has been changed - purge 2fa "remember this device" tokens so a
+						// credential rotation actually locks out anyone holding a surviving cookie.
+						// api-keys are intentionally left untouched here; the UI hints at rotating them instead.
+						$del_stmt = Database::prepare("DELETE FROM `" . TABLE_PANEL_2FA_TOKENS . "` WHERE `userid` = :id");
+						Database::pexecute($del_stmt, [
+							'id' => $id
+						], true, true);
+					}
+
 					// get all admin-data for return-array
 					$result = $this->apiCall('Admins.get', [
 						'id' => $result['adminid']

@@ -587,6 +587,7 @@ return [
 		'also_change_ftp' => ' also change password of the main FTP account',
 		'also_change_stats' => ' also change password for the statistics page',
 		'also_change_global_mysql' => 'also change password for global MySQL account',
+		'apikeys_hint' => 'Your password has been changed successfully. This account still has %s active API key(s) issued under the old password - if you changed your password because it may have been compromised, consider rotating them on the API keys page.',
 	],
 	'cron' => [
 		'cronname' => 'cronjob-name',

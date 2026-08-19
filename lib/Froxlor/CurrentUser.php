@@ -79,6 +79,13 @@ class CurrentUser
 			"loginname" => self::getField('loginname')
 		]);
 		if ($userinfo) {
+			// the password has been changed since this session was created (e.g. after a
+			// credential compromise) - force logout instead of keeping the session alive
+			if (self::getField('password') != '' && $userinfo['password'] != self::getField('password')) {
+				unset($_SESSION['userinfo']);
+				self::setData([]);
+				return false;
+			}
 			// don't just set the data, we need to merge with current data
 			// array_merge is a right-reduction - value existing in getData() will be overwritten with $userinfo,
 			// other than the union-operator (+) which would keep the values already existing from getData()
