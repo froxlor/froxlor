@@ -132,6 +132,7 @@ class Customers extends ApiCommand implements ResourceEntity
 				// unset sensitive data
 				unset($row['password']);
 				unset($row['data_2fa']);
+				unset($row['leprivatekey']);
 				$result[] = $row;
 			}
 			return $this->response([
@@ -977,6 +978,7 @@ class Customers extends ApiCommand implements ResourceEntity
 				unset($result['password']);
 				unset($result['data_2fa']);
 			}
+			unset($result['leprivatekey']);
 			$this->logger()->logAction($this->isAdmin() ? FroxlorLogger::ADM_ACTION : FroxlorLogger::USR_ACTION, LOG_INFO, "[API] get customer '" . $result['loginname'] . "'");
 			return $this->response($result);
 		}
