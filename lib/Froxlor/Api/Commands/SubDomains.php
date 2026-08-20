@@ -507,6 +507,8 @@ class SubDomains extends ApiCommand implements ResourceEntity
 				$result['ipsandports'] = $this->getIpsForDomain($result['id']);
 			}
 			$result['domain_hascert'] = $this->getHasCertValueForDomain((int)$result['id'], (int)$result['parentdomainid']);
+			// unset sensitive data
+			unset($result['dkim_privkey']);
 			$this->logger()->logAction($this->isAdmin() ? FroxlorLogger::ADM_ACTION : FroxlorLogger::USR_ACTION, LOG_INFO, "[API] get subdomain '" . $result['domain'] . "'");
 			return $this->response($result);
 		}
@@ -1036,6 +1038,8 @@ class SubDomains extends ApiCommand implements ResourceEntity
 				$row['ipsandports'] = $this->getIpsForDomain($row['id']);
 			}
 			$row['domain_hascert'] = $this->getHasCertValueForDomain((int)$row['id'], (int)$row['parentdomainid']);
+			// unset sensitive data
+			unset($row['dkim_privkey']);
 			$result[] = $row;
 		}
 		return $this->response([
