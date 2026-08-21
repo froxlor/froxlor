@@ -232,3 +232,17 @@ if (Froxlor::isFroxlorVersion('2.3.9')) {
 	Update::showUpdateStep("Updating from 2.3.9 to 2.3.10", false);
 	Froxlor::updateToVersion('2.3.10');
 }
+
+if (Froxlor::isDatabaseVersion('202603100')) {
+
+	Update::showUpdateStep("Adding account-type namespace to 2fa remember-tokens");
+	Database::query("ALTER TABLE `" . TABLE_PANEL_2FA_TOKENS . "` ADD `admin` tinyint(1) unsigned NOT NULL default '0' AFTER `userid`;");
+	// admin- and customer-ids are separate namespaces that can collide (e.g. both id 1);
+	// existing tokens can't be attributed to either after the fact, so purge them rather
+	// than risk a stale token matching the wrong account type - affected users are just
+	// prompted for 2fa again on their next login
+	Database::query("DELETE FROM `" . TABLE_PANEL_2FA_TOKENS . "`;");
+	Update::lastStepStatus(0);
+
+	Froxlor::updateToDbVersion('202608210');
+}

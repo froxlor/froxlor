@@ -126,12 +126,14 @@ if ($action == '2fa_entercode') {
 				`selector` = :selector,
 				`token` = :authenticator,
 				`userid` = :userid,
+				`admin` = :isadmin,
 				`valid_until` = :valid_until
 			");
 			Database::pexecute($ins_stmt, [
 				'selector' => $selector,
 				'authenticator' => hash('sha256', $authenticator),
 				'userid' => $uid,
+				'isadmin' => $isadmin ? 1 : 0,
 				'valid_until' => $valid_until
 			]);
 			$cookie_params = [
@@ -385,8 +387,11 @@ if ($action == '2fa_entercode') {
 			// check for remember cookie
 			if (!empty($_COOKIE['frx_2fa_remember'])) {
 				list($selector, $authenticator) = explode(':', $_COOKIE['frx_2fa_remember']);
-				$sel_stmt = Database::prepare("SELECT `token` FROM `".TABLE_PANEL_2FA_TOKENS."` WHERE `selector` = :selector AND `userid` = :uid AND `valid_until` >= UNIX_TIMESTAMP()");
-				$token_check = Database::pexecute_first($sel_stmt, ['selector' => $selector, 'uid' => $userinfo[$uid]]);
+				// admin- and customer-ids are separate namespaces that can collide (e.g. both id 1),
+				// so the lookup must also match the account type the token was issued for, not just
+				// the numeric id, or a remembered customer token could satisfy an admin's 2fa step
+				$sel_stmt = Database::prepare("SELECT `token` FROM `".TABLE_PANEL_2FA_TOKENS."` WHERE `selector` = :selector AND `userid` = :uid AND `admin` = :isadmin AND `valid_until` >= UNIX_TIMESTAMP()");
+				$token_check = Database::pexecute_first($sel_stmt, ['selector' => $selector, 'uid' => $userinfo[$uid], 'isadmin' => $adminsession]);
 				if ($token_check && hash_equals($token_check['token'], hash('sha256', base64_decode($authenticator)))) {
 					if (!finishLogin($userinfo)) {
 						Response::redirectTo('index.php', [

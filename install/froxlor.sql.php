@@ -749,7 +749,7 @@ opcache.validate_timestamps'),
 	('panel', 'settings_mode', '0'),
 	('panel', 'menu_collapsed', '1'),
 	('panel', 'version', '2.3.10'),
-	('panel', 'db_version', '202603100');
+	('panel', 'db_version', '202608210');
 
 
 DROP TABLE IF EXISTS `panel_tasks`;
@@ -1075,6 +1075,7 @@ CREATE TABLE `panel_2fa_tokens` (
   `selector` varchar(200) NOT NULL,
   `token` varchar(200) NOT NULL,
   `userid` int(11) NOT NULL default '0',
+  `admin` tinyint(1) unsigned NOT NULL default '0',
   `valid_until` int(15) NOT NULL,
   PRIMARY KEY  (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;

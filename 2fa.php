@@ -47,9 +47,11 @@ if (Settings::Get('2fa.enabled') != '1') {
 if (AREA == 'admin') {
 	$upd_stmt = Database::prepare("UPDATE `" . TABLE_PANEL_ADMINS . "` SET `type_2fa` = :t2fa, `data_2fa` = :d2fa WHERE adminid = :id");
 	$uid = $userinfo['adminid'];
+	$isadmin = 1;
 } elseif (AREA == 'customer') {
 	$upd_stmt = Database::prepare("UPDATE `" . TABLE_PANEL_CUSTOMERS . "` SET `type_2fa` = :t2fa, `data_2fa` = :d2fa WHERE customerid = :id");
 	$uid = $userinfo['customerid'];
+	$isadmin = 0;
 }
 $success_message = "";
 
@@ -69,10 +71,12 @@ if ($action == 'delete') {
 		'd2fa' => "",
 		'id' => $uid
 	]);
-	// purge "remember this device" tokens so a 2fa reset can't be bypassed by a surviving cookie
-	$del_stmt = Database::prepare("DELETE FROM `" . TABLE_PANEL_2FA_TOKENS . "` WHERE `userid` = :id");
+	// purge "remember this device" tokens so a 2fa reset can't be bypassed by a surviving cookie;
+	// scope by account type too, since admin- and customer-ids can collide (e.g. both id 1)
+	$del_stmt = Database::prepare("DELETE FROM `" . TABLE_PANEL_2FA_TOKENS . "` WHERE `userid` = :id AND `admin` = :isadmin");
 	Database::pexecute($del_stmt, [
-		'id' => $uid
+		'id' => $uid,
+		'isadmin' => $isadmin
 	]);
 	Response::standardSuccess('2fa.2fa_removed');
 } elseif ($action == 'preadd') {
