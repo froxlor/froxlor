@@ -72,12 +72,16 @@ if ($action == 'delete') {
 		'id' => $uid
 	]);
 	// purge "remember this device" tokens so a 2fa reset can't be bypassed by a surviving cookie;
-	// scope by account type too, since admin- and customer-ids can collide (e.g. both id 1)
-	$del_stmt = Database::prepare("DELETE FROM `" . TABLE_PANEL_2FA_TOKENS . "` WHERE `userid` = :id AND `admin` = :isadmin");
-	Database::pexecute($del_stmt, [
-		'id' => $uid,
-		'isadmin' => $isadmin
-	]);
+	// scope by account type too, since admin- and customer-ids can collide (e.g. both id 1) -
+	// guarded by db_version since the `admin` column might not exist yet if this code has been
+	// deployed but the db update hasn't run yet (which itself purges all tokens once it does)
+	if (Settings::Get('panel.db_version') >= 202608210) {
+		$del_stmt = Database::prepare("DELETE FROM `" . TABLE_PANEL_2FA_TOKENS . "` WHERE `userid` = :id AND `admin` = :isadmin");
+		Database::pexecute($del_stmt, [
+			'id' => $uid,
+			'isadmin' => $isadmin
+		]);
+	}
 	Response::standardSuccess('2fa.2fa_removed');
 } elseif ($action == 'preadd') {
 	$type = Request::post('type_2fa', '0');

@@ -62,7 +62,7 @@ if ($action == '2fa_entercode') {
 	// show template to enter code
 	UI::view('login/enter2fa.html.twig', [
 		'pagetitle' => lng('login.2fa'),
-		'remember_me' => (Settings::Get('panel.db_version') >= 202407200) ? true : false,
+		'remember_me' => (Settings::Get('panel.db_version') >= 202608210) ? true : false,
 		'message' => $message
 	]);
 } elseif ($action == '2fa_verify') {
@@ -116,8 +116,10 @@ if ($action == '2fa_entercode') {
 			]);
 		}
 
-		// when remember is activated, set the cookie
-		if ($remember) {
+		// when remember is activated, set the cookie - guarded by db_version since the
+		// `admin` column (needed to scope tokens to the admin/customer namespace) might
+		// not exist yet if this code has been deployed but the db update hasn't run yet
+		if ($remember && Settings::Get('panel.db_version') >= 202608210) {
 			$selector = base64_encode(Froxlor::genSessionId(9));
 			$authenticator = Froxlor::genSessionId(33);
 			$valid_until = time()+60*60*24*30;
@@ -384,8 +386,10 @@ if ($action == '2fa_entercode') {
 		// 2FA activated
 		if (Settings::Get('2fa.enabled') == '1' && $userinfo['type_2fa'] > 0) {
 
-			// check for remember cookie
-			if (!empty($_COOKIE['frx_2fa_remember'])) {
+			// check for remember cookie - guarded by db_version since the `admin` column
+			// might not exist yet if this code has been deployed but the db update hasn't
+			// run yet; skipping just falls through to the normal 2fa code-entry prompt
+			if (!empty($_COOKIE['frx_2fa_remember']) && Settings::Get('panel.db_version') >= 202608210) {
 				list($selector, $authenticator) = explode(':', $_COOKIE['frx_2fa_remember']);
 				// admin- and customer-ids are separate namespaces that can collide (e.g. both id 1),
 				// so the lookup must also match the account type the token was issued for, not just
