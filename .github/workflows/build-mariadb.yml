@@ -12,7 +12,7 @@ jobs:
         mariadb-version: [ 10.11, 11.7 ]
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup PHP, with composer and extensions
         uses: shivammathur/setup-php@v2
@@ -30,7 +30,7 @@ jobs:
           sudo ufw allow in 3306/tcp
 
       - name: Setup MariaDB
-        uses: shogo82148/actions-setup-mysql@v1.47.0
+        uses: shogo82148/actions-setup-mysql@v1.53.1
         with:
           distribution: "mariadb"
           mysql-version: ${{ matrix.mariadb-version }}
@@ -58,7 +58,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup PHP with PECL extension
         uses: shivammathur/setup-php@v2
