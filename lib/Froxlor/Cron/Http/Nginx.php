@@ -625,7 +625,14 @@ class Nginx extends HttpConfigBase
 
 		// if the documentroot is an URL we just redirect
 		if (preg_match('/^https?\:\/\//', $domain['documentroot'])) {
-			$possible_deactivated_webroot = $this->getWebroot($domain);
+			// documentroot is a redirect-target URL here, not a filesystem path - only call
+			// getWebroot() (which re-validates documentroot as a path) when its result is
+			// actually going to be used, i.e. for the deactivated-docroot fallback below
+			$possible_deactivated_webroot = '';
+			$this->deactivated = false;
+			if (($domain['deactivated'] == '1' || $domain['customer_deactivated'] == '1') && Settings::Get('system.deactivateddocroot') != '') {
+				$possible_deactivated_webroot = $this->getWebroot($domain);
+			}
 			if ($this->deactivated == false) {
 				if (($ssl_vhost == false && $domain['ssl'] == '1' && $domain['ssl_redirect'] == '1') || Validate::validateUrl($domain['documentroot'])) {
 					$uri = $domain['documentroot'];
@@ -822,12 +829,21 @@ class Nginx extends HttpConfigBase
 		} else {
 			// re-validate at write-time: the stored documentroot was checked when it was
 			// set, but a customer-controlled path component could have been swapped for
-			// a symlink any time since then
-			try {
-				$safe_documentroot = FileDir::makeCorrectDir($domain['documentroot'], $domain['customerroot']);
-			} catch (Exception $e) {
-				FroxlorLogger::getInstanceOf()->logAction(FroxlorLogger::CRON_ACTION, LOG_ERR, 'nginx::getWebroot: documentroot for "' . $domain['domain'] . '" is unsafe, falling back to customer home directory: ' . $e->getMessage());
-				$safe_documentroot = FileDir::makeCorrectDir($domain['customerroot']);
+			// a symlink any time since then. this only applies to documentroots that are
+			// actually meant to live within the customer's home directory - an admin with
+			// change_serversettings is allowed to point documentroot at an absolute path
+			// outside of it (see Domains::add()/update()), which is a trusted, admin-only
+			// escape hatch with no customer-writable containment to protect
+			$customerroot_prefix = rtrim(preg_replace('#/+#', '/', $domain['customerroot']), '/') . '/';
+			if (substr(preg_replace('#/+#', '/', $domain['documentroot']), 0, strlen($customerroot_prefix)) == $customerroot_prefix) {
+				try {
+					$safe_documentroot = FileDir::makeCorrectDir($domain['documentroot'], $domain['customerroot']);
+				} catch (Exception $e) {
+					FroxlorLogger::getInstanceOf()->logAction(FroxlorLogger::CRON_ACTION, LOG_ERR, 'nginx::getWebroot: documentroot for "' . $domain['domain'] . '" is unsafe, falling back to customer home directory: ' . $e->getMessage());
+					$safe_documentroot = FileDir::makeCorrectDir($domain['customerroot']);
+				}
+			} else {
+				$safe_documentroot = FileDir::makeCorrectDir($domain['documentroot']);
 			}
 			$webroot_text .= "\t" . 'root     ' . $safe_documentroot . ';' . "\n";
 			$this->deactivated = false;
