@@ -54,6 +54,14 @@ if ($action == '' || $action == 'view') {
 		Response::dynamicError("There are no ssl-certificates for email only domains.");
 	}
 
+	if ($result_domain['letsencrypt']) {
+		// mirrors Domain::canEditSSL(), which hides the editor link/button for these
+		// domains in the UI - certificates (and their private key) are managed fully
+		// automatically for Let's Encrypt enabled domains and must not be editable or
+		// viewable here
+		Response::dynamicError("SSL certificates for Let's Encrypt enabled domains are managed automatically and cannot be edited manually.");
+	}
+
 	if (Request::post('send') == 'send') {
 		$do_insert = Request::post('do_insert', 0) == 1;
 		try {

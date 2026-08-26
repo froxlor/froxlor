@@ -325,6 +325,12 @@ class Certificates extends ApiCommand implements ResourceEntity
 					}
 				}
 			}
+			// the private key for a Let's Encrypt managed domain is generated and stored
+			// server-side only - froxlor's own UI never shows it for such domains either
+			// (see Domain::canEditSSL()), so it must not round-trip through the API
+			if ($cert['letsencrypt'] == '1') {
+				unset($cert['ssl_key_file']);
+			}
 			$result[] = $cert;
 		}
 		return $this->response([
@@ -368,6 +374,12 @@ class Certificates extends ApiCommand implements ResourceEntity
 		]);
 		if (!$result) {
 			throw new Exception("Domain '" . $domain['domain'] . "' does not have a certificate.", 412);
+		}
+		// the private key for a Let's Encrypt managed domain is generated and stored
+		// server-side only - froxlor's own UI never shows it for such domains either
+		// (see Domain::canEditSSL()), so it must not round-trip through the API
+		if ($domain['letsencrypt'] == '1') {
+			unset($result['ssl_key_file']);
 		}
 		return $this->response($result);
 	}
