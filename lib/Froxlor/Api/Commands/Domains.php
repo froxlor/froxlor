@@ -433,7 +433,12 @@ class Domains extends ApiCommand implements ResourceEntity
 				}
 				$_documentroot = FileDir::makeCorrectDir($customer['documentroot'] . $path_suffix);
 
-				$documentroot = Validate::validate($documentroot, 'documentroot', Validate::REGEX_DIR, '', [], true);
+				// documentroot may also be a redirect-URL (checked/validated further down via
+				// Validate::validateUrl()); REGEX_DIR would reject it due to the "://", so only
+				// apply the directory-path validation to actual paths
+				if (!preg_match('/^https?\:\/\//', $documentroot)) {
+					$documentroot = Validate::validate($documentroot, 'documentroot', Validate::REGEX_DIR, '', [], true);
+				}
 
 				// If path is empty and 'Use domain name as default value for DocumentRoot path' is enabled in settings,
 				// set default path to subdomain or domain name
@@ -1428,7 +1433,12 @@ class Domains extends ApiCommand implements ResourceEntity
 				$serveraliasoption = $p_serveraliasoption;
 			}
 
-			$documentroot = Validate::validate($documentroot, 'documentroot', Validate::REGEX_DIR, '', [], true);
+			// documentroot may also be a redirect-URL (checked/validated further down via
+			// Validate::validateUrl()); REGEX_DIR would reject it due to the "://", so only
+			// apply the directory-path validation to actual paths
+			if (!preg_match('/^https?\:\/\//', $documentroot)) {
+				$documentroot = Validate::validate($documentroot, 'documentroot', Validate::REGEX_DIR, '', [], true);
+			}
 
 			if (!empty($documentroot) && $documentroot != $result['documentroot'] && substr($documentroot, 0, 1) == '/' && substr($documentroot, 0, strlen($customer['documentroot'])) != $customer['documentroot'] && $this->getUserDetail('change_serversettings') != '1') {
 				Response::standardError('pathmustberelative', '', true);
