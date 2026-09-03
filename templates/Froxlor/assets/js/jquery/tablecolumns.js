@@ -8,6 +8,12 @@ export default function () {
 				url: 'lib/ajax.php?action=updatetablelisting&listing=' + $(this).data('listing') + '&theme=' + window.$theme,
 				type: 'POST',
 				dataType: 'json',
+				beforeSend: function(request) {
+					request.setRequestHeader(
+						'X-CSRF-TOKEN',
+						document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+					);
+				},
 				data: $(this).serialize(),
 				success: function () {
 					window.location.href = '';
@@ -25,6 +31,12 @@ export default function () {
 				url: 'lib/ajax.php?action=resettablelisting&listing=' + form.data('listing') + '&theme=' + window.$theme,
 				type: 'POST',
 				dataType: 'json',
+				beforeSend: function(request) {
+					request.setRequestHeader(
+						'X-CSRF-TOKEN',
+						document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+					);
+				},
 				data: {},
 				success: function () {
 					window.location.href = '';
