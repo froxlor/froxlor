@@ -293,26 +293,47 @@ if ($page == 'overview' && $userinfo['change_serversettings'] == '1') {
 		header('Content-type: application/json');
 		echo $json_export;
 		exit();
-	} elseif (Request::get('action') == "import") {
+	} elseif (Request::get('action') == "import" && Request::post('send') == 'send') {
 		// import
-		if (Request::post('send') == 'send') {
-			// get uploaded file
-			if (isset($_FILES["import_file"]["tmp_name"])) {
-				$imp_content = file_get_contents($_FILES["import_file"]["tmp_name"]);
-				try {
-					Froxlor::getLocal($userinfo, [
-						'json_str' => $imp_content
-					])->importSettings();
-				} catch (Exception $e) {
-					Response::dynamicError($e->getMessage());
-				}
-				Response::standardSuccess('settingsimported', '', [
-					'filename' => 'admin_settings.php'
-				]);
-			}
+		// An imported setting may require an OTP confirmation, which sends the
+		// browser through another form. A file input cannot be repopulated, so
+		// the upload would be lost on the way back. Keep the content in the
+		// session and pick it up again when the confirmation returns.
+		$imp_content = null;
+		if (isset($_FILES["import_file"]["tmp_name"]) && is_uploaded_file($_FILES["import_file"]["tmp_name"])) {
+			$imp_content = file_get_contents($_FILES["import_file"]["tmp_name"]);
+			$_SESSION['settings_import_content'] = $imp_content;
+		} elseif (!empty($_SESSION['settings_import_content'])) {
+			$imp_content = $_SESSION['settings_import_content'];
+		}
+
+		if ($imp_content === null || $imp_content === false) {
+			unset($_SESSION['settings_import_content']);
 			Response::dynamicError("Upload failed");
 		}
+
+		try {
+			// The third argument marks this as an internal call, which is what tells
+			// the import a browser is driving it and can answer an OTP prompt.
+			// Carry the code the user has already entered, otherwise the check that
+			// asked for it never sees the answer and asks again.
+			Froxlor::getLocal($userinfo, [
+				'json_str' => $imp_content,
+				'otp_verification' => Request::post('otp_verification', '')
+			], true)->importSettings();
+		} catch (Exception $e) {
+			unset($_SESSION['settings_import_content']);
+			Response::dynamicError($e->getMessage());
+		}
+		unset($_SESSION['settings_import_content']);
+		Response::standardSuccess('settingsimported', '', [
+			'filename' => 'admin_settings.php'
+		]);
 	} else {
+		// Reaching the form means any earlier attempt was abandoned; do not keep
+		// its upload sitting in the session.
+		unset($_SESSION['settings_import_content']);
+
 		$settings_data = include_once dirname(__FILE__) . '/lib/formfields/admin/settings/formfield.settings_import.php';
 
 		UI::view('user/form.html.twig', [

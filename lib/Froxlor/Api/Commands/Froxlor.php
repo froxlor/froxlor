@@ -35,6 +35,7 @@ use Froxlor\Install\AutoUpdate;
 use Froxlor\Install\Update;
 use Froxlor\Settings;
 use Froxlor\SImExporter;
+use Froxlor\UI\Form;
 use Froxlor\System\Cronjob;
 use Froxlor\System\Crypt;
 use Froxlor\Validate\Validate;
@@ -134,6 +135,10 @@ class Froxlor extends ApiCommand
 	 *
 	 * @param string $json_str
 	 *            content of exported froxlor-settings json file
+	 * @param string $otp_verification
+	 *            optional, a one-time password the user has already entered; the
+	 *            form data is built from the settings file, so without this the
+	 *            check that asked for it never sees the answer
 	 *
 	 * @access admin
 	 * @return string json-encoded bool
@@ -143,16 +148,33 @@ class Froxlor extends ApiCommand
 	{
 		if ($this->isAdmin() && $this->getUserDetail('change_serversettings')) {
 			$json_str = $this->getParam('json_str');
-			$this->logger()->logAction(FroxlorLogger::ADM_ACTION, LOG_WARNING, "User " . $this->getUserDetail('loginname') . " imported settings");
+			// Only the panel can answer an OTP prompt, and it is the only caller
+			// that reaches this internally. Everything else gets the problem
+			// reported back instead of a rendered page.
+			$interactive = $this->isInternal();
+			$otp = (string)$this->getParam('otp_verification', true, '');
 			try {
-				SImExporter::import($json_str);
+				SImExporter::import($json_str, $interactive, $otp);
+				// Logged only once the import actually succeeded; logging before
+				// the attempt recorded failed imports as successful ones.
+				$this->logger()->logAction(FroxlorLogger::ADM_ACTION, LOG_WARNING, "User " . $this->getUserDetail('loginname') . " imported settings");
 				Cronjob::inserttask(TaskId::REBUILD_VHOST);
 				Cronjob::inserttask(TaskId::CREATE_QUOTA);
 				// Using nameserver, insert a task which rebuilds the server config
 				Cronjob::inserttask(TaskId::REBUILD_DNS);
 				// cron.d file
 				Cronjob::inserttask(TaskId::REBUILD_CRON);
-				return $this->response(true);
+
+				// Settings whose one-time password could not be verified here were
+				// left untouched. Say so rather than reporting a clean import.
+				$skipped = Form::getSkippedFields();
+				if (!empty($skipped)) {
+					$this->logger()->logAction(FroxlorLogger::ADM_ACTION, LOG_WARNING, "Settings not applied by the import because they require a one-time password: " . implode(', ', $skipped));
+				}
+				return $this->response([
+					'imported' => true,
+					'skipped' => $skipped
+				]);
 			} catch (Exception $e) {
 				throw new Exception($e->getMessage(), 406);
 			}

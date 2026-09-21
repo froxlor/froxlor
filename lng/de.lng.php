@@ -1007,6 +1007,7 @@ return [
 		'invalidcronjobintervalvalue' => 'Cronjob Intervall muss einer der folgenden Werte sein: %s',
 		'phpgdextensionnotavailable' => 'Die PHP GD Extension ist nicht verfügbar. Bild-Daten können nicht validiert werden.',
 		'2fa_wrongcode' => 'Der angegebene Code ist nicht korrekt',
+		'otpnotvalidated' => 'Das Einmalpasswort konnte nicht verifiziert werden. Bitte versuchen Sie es mit einem aktuellen Code erneut.',
 		'gnupgextensionnotavailable' => 'Die PHP GnuPG Extension ist nicht verfügbar. PGP Schlüssel können nicht validiert werden.',
 		'invalidpgppublickey' => 'Der angegebene PGP Public Key ist ungültig',
 		'invalid_validtime' => 'Wert der valid_time in Sekunden muss zwischen 10 und 120 liegen.',
