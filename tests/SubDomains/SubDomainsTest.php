@@ -168,6 +168,39 @@ class SubDomainsTest extends TestCase
 	}
 
 	/**
+	 * regression test for #1415: calling update() without a 'path' parameter defaults
+	 * to the currently stored (already absolute) documentroot, which
+	 * validateDomainDocumentRoot() must not treat as a *relative* path and prepend the
+	 * customer's homedir onto a second time - that duplicated the documentroot on every
+	 * no-op update and kept compounding on repeated calls.
+	 *
+	 * @depends testAdminSubDomainsUpdate
+	 */
+	public function testAdminSubDomainsUpdateWithoutPathDoesNotDuplicateDocumentroot()
+	{
+		global $admin_userdata;
+		// get customer
+		$json_result = Customers::getLocal($admin_userdata, array(
+			'loginname' => 'test1'
+		))->get();
+		$customer_userdata = json_decode($json_result, true)['data'];
+		$expected_documentroot = $customer_userdata['documentroot'] . 'mysub.test2.local/';
+
+		// call update() twice in a row without 'path' - a duplicating/compounding bug
+		// would grow the documentroot on each call
+		for ($i = 0; $i < 2; $i++) {
+			$data = [
+				'domainname' => 'mysub.test2.local',
+				'isemaildomain' => 1,
+				'customerid' => $customer_userdata['customerid']
+			];
+			$json_result = SubDomains::getLocal($admin_userdata, $data)->update();
+			$result = json_decode($json_result, true)['data'];
+			$this->assertEquals($expected_documentroot, $result['documentroot']);
+		}
+	}
+
+	/**
 	 *
 	 * @depends testAdminSubDomainsUpdate
 	 */

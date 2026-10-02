@@ -1,8 +1,8 @@
 <?php
 
 /**
- * This file is part of the Froxlor project.
- * Copyright (c) 2010 the Froxlor Team (see authors).
+ * This file is part of the froxlor project.
+ * Copyright (c) 2010 the froxlor Team (see authors).
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,7 +19,7 @@
  * https://files.froxlor.org/misc/COPYING.txt
  *
  * @copyright  the authors
- * @author     Froxlor team <team@froxlor.org>
+ * @author     froxlor team <team@froxlor.org>
  * @license    https://files.froxlor.org/misc/COPYING.txt GPLv2
  */
 
@@ -63,7 +63,7 @@ return [
 					'varname' => 'ssl_cipher_list',
 					'type' => 'text',
 					'string_emptyallowed' => false,
-					'default' => 'ECDH+AESGCM:ECDH+AES256:!aNULL:!MD5:!DSS:!DH:!AES128',
+					'default' => 'ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:DHE-RSA-CHACHA20-POLY1305',
 					'save_method' => 'storeSettingField',
 					'advanced_mode' => true
 				],
@@ -192,11 +192,13 @@ return [
 					'settinggroup' => 'system',
 					'varname' => 'letsencryptchallengepath',
 					'type' => 'text',
+					'string_type' => 'dir',
 					'string_emptyallowed' => false,
 					'default' => Froxlor::getInstallDir(),
 					'save_method' => 'storeSettingField',
 					'advanced_mode' => true,
-					'requires_reconf' => ['http']
+					'requires_reconf' => ['http'],
+					'required_otp' => true
 				],
 				'system_letsencryptkeysize' => [
 					'label' => lng('serversettings.letsencryptkeysize'),
@@ -265,10 +267,11 @@ return [
 					'select_var' => [
 						'' => lng('panel.none_value'),
 						'postfix' => 'postfix (smtp)',
-						'dovecot' => 'dovecot (imap/pop3)',
+						'dovecot' => 'dovecot <2.4 (imap/pop3)',
+						'dovecot24' => 'dovecot >=2.4 (imap/pop3)',
 						'proftpd' => 'proftpd (ftp)',
 					],
-					'save_method' => 'storeSettingField',
+					'save_method' => 'storeSettingFieldInsertUpdateServicesTask',
 					'advanced_mode' => true
 				],
 				'system_le_renew_hook' => [
@@ -278,7 +281,7 @@ return [
 					'type' => 'text',
 					'string_regexp' => '/^[a-z0-9\/\._\- ]+$/i',
 					'default' => 'systemctl restart postfix dovecot proftpd',
-					'save_method' => 'storeSettingField',
+					'save_method' => 'storeSettingFieldInsertUpdateServicesTask',
 					'advanced_mode' => true,
 					'required_otp' => true
 				],

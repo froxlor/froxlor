@@ -1,8 +1,8 @@
 <?php
 
 /**
- * This file is part of the Froxlor project.
- * Copyright (c) 2010 the Froxlor Team (see authors).
+ * This file is part of the froxlor project.
+ * Copyright (c) 2010 the froxlor Team (see authors).
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,7 +19,7 @@
  * https://files.froxlor.org/misc/COPYING.txt
  *
  * @copyright  the authors
- * @author     Froxlor team <team@froxlor.org>
+ * @author     froxlor team <team@froxlor.org>
  * @license    https://files.froxlor.org/misc/COPYING.txt GPLv2
  */
 
@@ -67,9 +67,9 @@ class Data
 			$newfieldvalue = str_replace("\t", " ", $newfieldvalue);
 
 			if (isset($fielddata['string_type']) && $fielddata['string_type'] == 'mail') {
-				$returnvalue = Validate::validateEmail($newfieldvalue);
+				$returnvalue = ($newfieldvalue == Validate::validateEmail($newfieldvalue));
 			} elseif (isset($fielddata['string_type']) && $fielddata['string_type'] == 'url') {
-				$returnvalue = Validate::validateUrl($newfieldvalue);
+				$returnvalue = ($newfieldvalue == Validate::validateUrl($newfieldvalue));
 			} elseif (isset($fielddata['string_type']) && $fielddata['string_type'] == 'dir') {
 				// check for empty value (it might be allowed)
 				if (trim($newfieldvalue) == '') {
@@ -166,13 +166,13 @@ class Data
 
 	public static function validateFormFieldEmail($fieldname, $fielddata, $newfieldvalue)
 	{
-		$fielddata['string_type'] == 'mail';
+		$fielddata['string_type'] = 'mail';
 		return self::validateFormFieldString($fieldname, $fielddata, $newfieldvalue);
 	}
 
 	public static function validateFormFieldUrl($fieldname, $fielddata, $newfieldvalue)
 	{
-		$fielddata['string_type'] == 'url';
+		$fielddata['string_type'] = 'url';
 		return self::validateFormFieldString($fieldname, $fielddata, $newfieldvalue);
 	}
 

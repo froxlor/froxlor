@@ -1,8 +1,8 @@
 <?php
 
 /**
- * This file is part of the Froxlor project.
- * Copyright (c) 2010 the Froxlor Team (see authors).
+ * This file is part of the froxlor project.
+ * Copyright (c) 2010 the froxlor Team (see authors).
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,7 +19,7 @@
  * https://files.froxlor.org/misc/COPYING.txt
  *
  * @copyright  the authors
- * @author     Froxlor team <team@froxlor.org>
+ * @author     froxlor team <team@froxlor.org>
  * @license    https://files.froxlor.org/misc/COPYING.txt GPLv2
  */
 
@@ -49,6 +49,10 @@ if ($userinfo['change_serversettings'] == '1') {
 	if (empty($distribution)) {
 		$distribution = Settings::Get('system.distribution') ?? "";
 	}
+	if ($reselect == 2) {
+		Settings::Set('system.distro_mismatch', '2');
+		$reselect = 1;
+	}
 	if ($reselect == 1) {
 		$distribution = '';
 	}
@@ -68,6 +72,7 @@ if ($userinfo['change_serversettings'] == '1') {
 		// update setting if different
 		if ($distribution != Settings::Get('system.distribution')) {
 			Settings::Set('system.distribution', $distribution);
+			Settings::Set('system.distro_mismatch', '0');
 		}
 
 		// create configparser object

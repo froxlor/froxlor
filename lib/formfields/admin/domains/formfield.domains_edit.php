@@ -1,8 +1,8 @@
 <?php
 
 /**
- * This file is part of the Froxlor project.
- * Copyright (c) 2010 the Froxlor Team (see authors).
+ * This file is part of the froxlor project.
+ * Copyright (c) 2010 the froxlor Team (see authors).
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,7 +19,7 @@
  * https://files.froxlor.org/misc/COPYING.txt
  *
  * @copyright  the authors
- * @author     Froxlor team <team@froxlor.org>
+ * @author     froxlor team <team@froxlor.org>
  * @license    https://files.froxlor.org/misc/COPYING.txt GPLv2
  */
 
@@ -34,7 +34,6 @@ return [
 		'sections' => [
 			'section_a' => [
 				'title' => lng('domains.domainsettings'),
-				'image' => 'icons/domain_edit.png',
 				'fields' => [
 					'domain' => [
 						'label' => 'Domain',
@@ -108,7 +107,6 @@ return [
 			],
 			'section_e' => [
 				'title' => lng('admin.mailserversettings'),
-				'image' => 'icons/domain_edit.png',
 				'fields' => [
 					'isemaildomain' => [
 						'label' => lng('admin.emaildomain'),
@@ -139,7 +137,6 @@ return [
 			],
 			'section_b' => [
 				'title' => lng('admin.webserversettings'),
-				'image' => 'icons/domain_edit.png',
 				'fields' => [
 					'documentroot' => [
 						'label' => 'DocumentRoot',
@@ -213,11 +210,14 @@ return [
 						'type' => 'hidden',
 						'value' => '0'
 					],
+					'emaildomainverified' => [
+						'type' => 'hidden',
+						'value' => '0'
+					],
 				]
 			],
 			'section_bssl' => [
 				'title' => lng('admin.webserversettings_ssl'),
-				'image' => 'icons/domain_edit.png',
 				'visible' => Settings::Get('system.use_ssl') == '1',
 				'fields' => [
 					'sslenabled' => [
@@ -259,12 +259,20 @@ return [
 						'checked' => $result['letsencrypt']
 					],
 					'http2' => [
-						'visible' => !empty($ssl_ipsandports) && Settings::Get('system.webserver') != 'lighttpd' && Settings::Get('system.http2_support') == '1',
+						'visible' => !empty($ssl_ipsandports) && Settings::Get('system.http2_support') == '1',
 						'label' => lng('admin.domain_http2.title'),
 						'desc' => lng('admin.domain_http2.description'),
 						'type' => 'checkbox',
 						'value' => '1',
 						'checked' => $result['http2']
+					],
+					'http3' => [
+						'visible' => !empty($ssl_ipsandports) && Settings::Get('system.webserver') == 'nginx' && Settings::Get('system.http3_support') == '1',
+						'label' => lng('admin.domain_http3.title'),
+						'desc' => lng('admin.domain_http3.description') . lng('admin.domain_http3.nginx_version_warning'),
+						'type' => 'checkbox',
+						'value' => '1',
+						'checked' => $result['http3']
 					],
 					'override_tls' => [
 						'visible' => !empty($ssl_ipsandports) && $userinfo['change_serversettings'] == '1',
@@ -274,7 +282,7 @@ return [
 						'checked' => $result['override_tls']
 					],
 					'ssl_protocols' => [
-						'visible' => !empty($ssl_ipsandports) && $userinfo['change_serversettings'] == '1' && Settings::Get('system.webserver') != 'lighttpd',
+						'visible' => !empty($ssl_ipsandports) && $userinfo['change_serversettings'] == '1',
 						'label' => lng('serversettings.ssl.ssl_protocols.title'),
 						'desc' => lng('serversettings.ssl.ssl_protocols.description').lng('admin.domain_override_tls_addinfo'),
 						'type' => 'checkbox',
@@ -355,7 +363,7 @@ return [
 						'checked' => $result['hsts_preload']
 					],
 					'ocsp_stapling' => [
-						'visible' => !empty($ssl_ipsandports) && Settings::Get('system.webserver') != 'lighttpd',
+						'visible' => !empty($ssl_ipsandports),
 						'label' => lng('admin.domain_ocsp_stapling.title'),
 						'desc' => lng('admin.domain_ocsp_stapling.description') . (Settings::Get('system.webserver') == 'nginx' ? lng('admin.domain_ocsp_stapling.nginx_version_warning') : ""),
 						'type' => 'checkbox',
@@ -370,7 +378,7 @@ return [
 						'checked' => $result['ssl_honorcipherorder']
 					],
 					'sessiontickets' => [
-						'visible' => !empty($ssl_ipsandports) && Settings::Get('system.webserver') != 'lighttpd' && Settings::Get('system.sessionticketsenabled' != '1'),
+						'visible' => !empty($ssl_ipsandports) && Settings::Get('system.sessionticketsenabled' != '1'),
 						'label' => lng('admin.domain_sessiontickets'),
 						'type' => 'checkbox',
 						'value' => '1',
@@ -380,7 +388,6 @@ return [
 			],
 			'section_c' => [
 				'title' => lng('admin.phpserversettings'),
-				'image' => 'icons/domain_edit.png',
 				'visible' => $userinfo['change_serversettings'] == '1' || $userinfo['caneditphpsettings'] == '1',
 				'fields' => [
 					'openbasedir' => [
@@ -432,35 +439,36 @@ return [
 			],
 			'section_d' => [
 				'title' => lng('admin.nameserversettings'),
-				'image' => 'icons/domain_edit.png',
-				'visible' => Settings::Get('system.bind_enable') == '1' && $userinfo['change_serversettings'] == '1',
+				'visible' => ($userinfo['change_serversettings'] == '1' && Settings::Get('system.bind_enable') == '1') || ($result['isemaildomain'] == '1' && (Settings::Get('spf.use_spf') == '1' || Settings::Get('dmarc.use_dmarc') == '1') || Settings::Get('antispam.activated') == '1' && $result['dkim'] == '1' && $result['dkim_pubkey'] != ''),
 				'fields' => [
 					'isbinddomain' => [
+						'visible' => $userinfo['change_serversettings'] == '1' && Settings::Get('system.bind_enable') == '1',
 						'label' => lng('admin.createzonefile'),
 						'type' => 'checkbox',
 						'value' => '1',
 						'checked' => $result['isbinddomain']
 					],
 					'zonefile' => [
+						'visible' => $userinfo['change_serversettings'] == '1' && Settings::Get('system.bind_enable') == '1',
 						'label' => lng('admin.custombindzone'),
 						'desc' => lng('admin.bindzonewarning'),
 						'type' => 'text',
 						'value' => $result['zonefile']
 					],
 					'spf_entry' => [
-						'visible' => (Settings::Get('system.bind_enable') == '0' && Settings::Get('spf.use_spf') == '1' && $result['isemaildomain'] == '1'),
+						'visible' => (Settings::Get('spf.use_spf') == '1' && $result['isemaildomain'] == '1'),
 						'label' => lng('antispam.required_spf_dns'),
 						'type' => 'longtext',
 						'value' => (string)(new \Froxlor\Dns\DnsEntry('@', 'TXT', \Froxlor\Dns\Dns::encloseTXTContent(Settings::Get('spf.spf_entry'))))
 					],
 					'dmarc_entry' => [
-						'visible' => (Settings::Get('system.bind_enable') == '0' && Settings::Get('dmarc.use_dmarc') == '1' && $result['isemaildomain'] == '1'),
+						'visible' => (Settings::Get('dmarc.use_dmarc') == '1' && $result['isemaildomain'] == '1'),
 						'label' => lng('antispam.required_dmarc_dns'),
 						'type' => 'longtext',
 						'value' => (string)(new \Froxlor\Dns\DnsEntry('_dmarc', 'TXT', \Froxlor\Dns\Dns::encloseTXTContent(Settings::Get('dmarc.dmarc_entry'))))
 					],
 					'dkim_entry' => [
-						'visible' => (Settings::Get('system.bind_enable') == '0' && Settings::Get('antispam.activated') == '1' && $result['dkim'] == '1' && $result['dkim_pubkey'] != ''),
+						'visible' => (Settings::Get('antispam.activated') == '1' && $result['dkim'] == '1' && $result['dkim_pubkey'] != ''),
 						'label' => lng('antispam.required_dkim_dns'),
 						'type' => 'longtext',
 						'value' => (string)(new \Froxlor\Dns\DnsEntry('dkim' . $result['dkim_id'] . '._domainkey', 'TXT', \Froxlor\Dns\Dns::encloseTXTContent('v=DKIM1; k=rsa; p='.trim($result['dkim_pubkey']))))

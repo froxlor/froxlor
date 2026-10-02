@@ -1,8 +1,8 @@
 <?php
 
 /**
- * This file is part of the Froxlor project.
- * Copyright (c) 2010 the Froxlor Team (see authors).
+ * This file is part of the froxlor project.
+ * Copyright (c) 2010 the froxlor Team (see authors).
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,7 +19,7 @@
  * https://files.froxlor.org/misc/COPYING.txt
  *
  * @copyright  the authors
- * @author     Froxlor team <team@froxlor.org>
+ * @author     froxlor team <team@froxlor.org>
  * @license    https://files.froxlor.org/misc/COPYING.txt GPLv2
  */
 
@@ -29,11 +29,10 @@ use Froxlor\System\Crypt;
 return [
 	'emails_accountchangepasswd' => [
 		'title' => lng('menue.main.changepassword'),
-		'image' => 'icons/email_edit.png',
+		'image' => 'fa-solid fa-pen',
 		'sections' => [
 			'section_a' => [
 				'title' => lng('menue.main.changepassword'),
-				'image' => 'icons/email_edit.png',
 				'fields' => [
 					'emailaddr' => [
 						'label' => lng('emails.emailaddress'),
@@ -43,7 +42,7 @@ return [
 					'email_password' => [
 						'label' => lng('login.password'),
 						'type' => 'password',
-						'autocomplete' => 'off',
+						'autocomplete' => 'new-password',
 						'next_to' => [
 							'email_password_suggestion' => [
 								'next_to_prefix' => lng('customer.generated_pwd') . ':',

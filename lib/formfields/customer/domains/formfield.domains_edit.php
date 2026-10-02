@@ -1,8 +1,8 @@
 <?php
 
 /**
- * This file is part of the Froxlor project.
- * Copyright (c) 2010 the Froxlor Team (see authors).
+ * This file is part of the froxlor project.
+ * Copyright (c) 2010 the froxlor Team (see authors).
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,7 +19,7 @@
  * https://files.froxlor.org/misc/COPYING.txt
  *
  * @copyright  the authors
- * @author     Froxlor team <team@froxlor.org>
+ * @author     froxlor team <team@froxlor.org>
  * @license    https://files.froxlor.org/misc/COPYING.txt GPLv2
  */
 
@@ -34,7 +34,6 @@ return [
 		'sections' => [
 			'section_a' => [
 				'title' => lng('domains.subdomain_edit'),
-				'image' => 'icons/domain_edit.png',
 				'fields' => [
 					'domain' => [
 						'label' => lng('domains.domainname'),
@@ -140,7 +139,6 @@ return [
 			],
 			'section_bssl' => [
 				'title' => lng('admin.webserversettings_ssl'),
-				'image' => 'icons/domain_edit.png',
 				'visible' => Settings::Get('system.use_ssl') == '1' && $ssl_ipsandports && Domain::domainHasSslIpPort($result['id']) && (int)$result['email_only'] == 0,
 				'fields' => [
 					'sslenabled' => [
@@ -165,12 +163,20 @@ return [
 						'checked' => $result['letsencrypt']
 					],
 					'http2' => [
-						'visible' => $ssl_ipsandports && Settings::Get('system.webserver') != 'lighttpd' && Settings::Get('system.http2_support') == '1',
+						'visible' => $ssl_ipsandports && Settings::Get('system.http2_support') == '1',
 						'label' => lng('admin.domain_http2.title'),
 						'desc' => lng('admin.domain_http2.description'),
 						'type' => 'checkbox',
 						'value' => '1',
 						'checked' => $result['http2']
+					],
+					'http3' => [
+						'visible' => $ssl_ipsandports && Settings::Get('system.webserver') == 'nginx' && Settings::Get('system.http3_support') == '1',
+						'label' => lng('admin.domain_http3.title'),
+						'desc' => lng('admin.domain_http3.description'),
+						'type' => 'checkbox',
+						'value' => '1',
+						'checked' => $result['http3']
 					],
 					'hsts_maxage' => [
 						'label' => lng('admin.domain_hsts_maxage.title'),

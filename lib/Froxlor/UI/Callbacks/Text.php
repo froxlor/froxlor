@@ -1,8 +1,8 @@
 <?php
 
 /**
- * This file is part of the Froxlor project.
- * Copyright (c) 2010 the Froxlor Team (see authors).
+ * This file is part of the froxlor project.
+ * Copyright (c) 2010 the froxlor Team (see authors).
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,7 +19,7 @@
  * https://files.froxlor.org/misc/COPYING.txt
  *
  * @copyright  the authors
- * @author     Froxlor team <team@froxlor.org>
+ * @author     froxlor team <team@froxlor.org>
  * @license    https://files.froxlor.org/misc/COPYING.txt GPLv2
  */
 
@@ -92,7 +92,17 @@ class Text
 
 	public static function wordwrap(array $attributes): string
 	{
-		return wordwrap($attributes['data'], 100, '<br>', true);
+		return wordwrap(htmlspecialchars($attributes['data']), 100, '<br>', true);
+	}
+
+	/**
+	 * plain-field columns are rendered via {{ td.data|raw }} in table.html.twig, so any column
+	 * carrying user-controlled text (as opposed to internally-built HTML/macros) needs this as
+	 * its callback instead of relying on the default un-escaped pass-through
+	 */
+	public static function escape(array $attributes): string
+	{
+		return htmlspecialchars((string)$attributes['data']);
 	}
 
 	public static function customerNoteDetailModal(array $attributes): array

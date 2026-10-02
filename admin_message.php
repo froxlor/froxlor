@@ -1,8 +1,8 @@
 <?php
 
 /**
- * This file is part of the Froxlor project.
- * Copyright (c) 2010 the Froxlor Team (see authors).
+ * This file is part of the froxlor project.
+ * Copyright (c) 2010 the froxlor Team (see authors).
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,7 +19,7 @@
  * https://files.froxlor.org/misc/COPYING.txt
  *
  * @copyright  the authors
- * @author     Froxlor team <team@froxlor.org>
+ * @author     froxlor team <team@froxlor.org>
  * @license    https://files.froxlor.org/misc/COPYING.txt GPLv2
  */
 
@@ -130,7 +130,7 @@ if ($page == 'message') {
 	UI::view('user/form-note.html.twig', [
 		'formaction' => $linker->getLink(['section' => 'message', 'action' => '']),
 		'formdata' => $messages_add_data['messages_add'],
-		'actions_links' => [
+		'actions_links' => ($userinfo['change_serversettings'] == '1' ? [
 			[
 				'href' => $linker->getLink([
 					'section' => 'settings',
@@ -142,7 +142,7 @@ if ($page == 'message') {
 				'icon' => 'fa-solid fa-gears',
 				'class' => 'btn-outline-secondary'
 			]
-		],
+		] : []),
 		// alert-box
 		'type' => $note_type,
 		'alert_msg' => $note_msg

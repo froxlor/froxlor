@@ -1,8 +1,8 @@
 <?php
 
 /**
- * This file is part of the Froxlor project.
- * Copyright (c) 2010 the Froxlor Team (see authors).
+ * This file is part of the froxlor project.
+ * Copyright (c) 2010 the froxlor Team (see authors).
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,7 +19,7 @@
  * https://files.froxlor.org/misc/COPYING.txt
  *
  * @copyright  the authors
- * @author     Froxlor team <team@froxlor.org>
+ * @author     froxlor team <team@froxlor.org>
  * @license    https://files.froxlor.org/misc/COPYING.txt GPLv2
  */
 
@@ -80,6 +80,9 @@ class SubDomains extends ApiCommand implements ResourceEntity
 	 * @param bool $http2
 	 *            optional, whether to enable http/2 for this subdomain (requires to be enabled in the settings),
 	 *            default 0 (false)
+	 * @param bool $http3
+	 *            optional, whether to enable http/3 for this subdomain (requires to be enabled in the settings),
+	 *            default 0 (false)
 	 * @param int $hsts_maxage
 	 *            optional max-age value for HSTS header, default 0
 	 * @param bool $hsts_sub
@@ -116,6 +119,7 @@ class SubDomains extends ApiCommand implements ResourceEntity
 				$ssl_redirect = $this->getBoolParam('ssl_redirect', true, 0);
 				$letsencrypt = $this->getBoolParam('letsencrypt', true, 0);
 				$http2 = $this->getBoolParam('http2', true, 0);
+				$http3 = $this->getBoolParam('http3', true, 0);
 				$hsts_maxage = $this->getParam('hsts_maxage', true, 0);
 				$hsts_sub = $this->getBoolParam('hsts_sub', true, 0);
 				$hsts_preload = $this->getBoolParam('hsts_preload', true, 0);
@@ -124,6 +128,7 @@ class SubDomains extends ApiCommand implements ResourceEntity
 				$ssl_redirect = 0;
 				$letsencrypt = 0;
 				$http2 = 0;
+				$http3 = 0;
 				$hsts_maxage = 0;
 				$hsts_sub = 0;
 				$hsts_preload = 0;
@@ -163,7 +168,6 @@ class SubDomains extends ApiCommand implements ResourceEntity
 				WHERE `domain` = :domain
 				AND `customerid` = :customerid
 				AND `email_only` = '0'
-				AND `caneditdomain` = '1'
 			");
 			$completedomain_check = Database::pexecute_first($completedomain_stmt, [
 				"domain" => $completedomain,
@@ -216,7 +220,6 @@ class SubDomains extends ApiCommand implements ResourceEntity
 				AND `customerid` = :customerid
 				AND `parentdomainid` = '0'
 				AND `email_only` = '0'
-				AND `caneditdomain` = '1'
 			");
 			$domain_check = Database::pexecute_first($domain_stmt, [
 				"domain" => $domain,
@@ -341,6 +344,7 @@ class SubDomains extends ApiCommand implements ResourceEntity
 				`phpsettingid` = :phpsettingid,
 				`letsencrypt` = :letsencrypt,
 				`http2` = :http2,
+				`http3` = :http3,
 				`hsts` = :hsts,
 				`hsts_sub` = :hsts_sub,
 				`hsts_preload` = :hsts_preload,
@@ -349,7 +353,8 @@ class SubDomains extends ApiCommand implements ResourceEntity
 				`ssl_protocols` = :ssl_protocols,
 				`ssl_cipher_list` = :ssl_cipher_list,
 				`tlsv13_cipher_list` = :tlsv13_cipher_list,
-				`ssl_enabled` = :sslenabled
+				`ssl_enabled` = :sslenabled,
+				`dkim` = :dkim
 			");
 			$params = [
 				"customerid" => $customer['customerid'],
@@ -373,6 +378,7 @@ class SubDomains extends ApiCommand implements ResourceEntity
 				"phpsettingid" => $phpsid_result['phpsettingid'],
 				"letsencrypt" => $letsencrypt,
 				"http2" => $http2,
+				"http3" => $http3,
 				"hsts" => $hsts_maxage,
 				"hsts_sub" => $hsts_sub,
 				"hsts_preload" => $hsts_preload,
@@ -381,7 +387,8 @@ class SubDomains extends ApiCommand implements ResourceEntity
 				"ssl_protocols" => $domain_check['ssl_protocols'],
 				"ssl_cipher_list" => $domain_check['ssl_cipher_list'],
 				"tlsv13_cipher_list" => $domain_check['tlsv13_cipher_list'],
-				"sslenabled" => $sslenabled
+				"sslenabled" => $sslenabled,
+				"dkim" => $domain_check['dkim'],
 			];
 			Database::pexecute($stmt, $params, true, true);
 			$subdomain_id = Database::lastInsertId();
@@ -483,7 +490,7 @@ class SubDomains extends ApiCommand implements ResourceEntity
 				throw new Exception("You cannot access this resource", 405);
 			}
 			$result_stmt = Database::prepare("
-				SELECT d.*, pd.`subcanemaildomain`, pd.`isbinddomain` as subisbinddomain
+				SELECT d.*, pd.`subcanemaildomain`, pd.`isbinddomain` as subisbinddomain, pd.`domain` as parentdomain
 				FROM `" . TABLE_PANEL_DOMAINS . "` d, `" . TABLE_PANEL_DOMAINS . "` pd
 				WHERE d.`customerid`= :customerid AND " . ($id > 0 ? "d.`id` = :iddn" : "d.`domain` = :iddn") . "
 				AND ((d.`parentdomainid`!='0' AND pd.`id` = d.`parentdomainid`) OR (d.`parentdomainid`='0' AND pd.`id` = d.`id`))
@@ -500,11 +507,12 @@ class SubDomains extends ApiCommand implements ResourceEntity
 				$result['ipsandports'] = $this->getIpsForDomain($result['id']);
 			}
 			$result['domain_hascert'] = $this->getHasCertValueForDomain((int)$result['id'], (int)$result['parentdomainid']);
+			// unset sensitive data
+			unset($result['dkim_privkey']);
 			$this->logger()->logAction($this->isAdmin() ? FroxlorLogger::ADM_ACTION : FroxlorLogger::USR_ACTION, LOG_INFO, "[API] get subdomain '" . $result['domain'] . "'");
 			return $this->response($result);
 		}
-		$key = ($id > 0 ? "id #" . $id : "domainname '" . $domainname . "'");
-		throw new Exception("Subdomain with " . $key . " could not be found", 404);
+		throw new Exception("Requested subdomain could not be found", 404);
 	}
 
 	private function getHasCertValueForDomain(int $domainid, int $parentdomainid): int
@@ -550,32 +558,45 @@ class SubDomains extends ApiCommand implements ResourceEntity
 	 */
 	private function validateDomainDocumentRoot($path = null, $url = null, $customer = null, $completedomain = null, &$_doredirect = false)
 	{
-		// check whether an URL was specified
 		$_doredirect = false;
-		if (!empty($url) && Validate::validateUrl($url, true)) {
-			$path = $url;
+		$idna = new IdnaWrapper();
+
+		// url mode: either $url or $path begins with http:// or https://
+		$maybeUrl = !empty($url) ? $url : (preg_match('/^https?\:\/\//', $path) ? $path : '');
+		if ($maybeUrl !== '') {
+			$encoded = $idna->encode($maybeUrl);
+			if (!Validate::validateUrl($encoded, true)) {
+				Response::standardError('invaliddocumentrooturl', '', true);
+			}
 			$_doredirect = true;
-		} else {
-			$path = Validate::validate($path, 'path', '', '', [], true);
+			return $encoded;
 		}
 
-		// check whether path is a real path
-		if (!preg_match('/^https?\:\/\//', $path) || !Validate::validateUrl($path, true)) {
-			if (strstr($path, ":") !== false) {
-				Response::standardError('pathmaynotcontaincolon', '', true);
-			}
-			// If path is empty or '/' and 'Use domain name as default value for DocumentRoot path' is enabled in settings,
-			// set default path to subdomain or domain name
-			if ((($path == '') || ($path == '/')) && Settings::Get('system.documentroot_use_default_value') == 1) {
-				$path = FileDir::makeCorrectDir($customer['documentroot'] . '/' . $completedomain, $customer['documentroot']);
-			} else {
-				$path = FileDir::makeCorrectDir($customer['documentroot'] . '/' . $path, $customer['documentroot']);
-			}
-		} else {
-			// no it's not, create a redirect
-			$_doredirect = true;
+		// path mode: regular directory path
+		$path = Validate::validate($path, 'path', Validate::REGEX_DIR, '', [], true);
+
+		// $path may already be an absolute, previously-resolved documentroot - e.g.
+		// update() defaults to the currently stored documentroot when no new path is
+		// given. Strip the customer's own homedir prefix so it isn't prepended a second
+		// time below, which would otherwise duplicate it on every no-op update (#1415)
+		if (!empty($customer['documentroot']) && strpos($path, $customer['documentroot']) === 0) {
+			$path = substr($path, strlen($customer['documentroot']));
 		}
-		return $path;
+
+		// default path if empty and setting active
+		if (($path === '' || $path === '/') && Settings::Get('system.documentroot_use_default_value') == 1) {
+			return FileDir::makeCorrectDir($customer['documentroot'] . '/' . $completedomain, $customer['documentroot']);
+		}
+		// check if path does not contain a colon
+		if (strpos($path, ':') !== false) {
+			Response::standardError('pathmaynotcontaincolon', '', true);
+		}
+
+		if (file_exists($customer['documentroot'] . '/' . $path) && !is_dir($customer['documentroot'] . '/' . $path)) {
+			Response::standardError('pathexistsasfile', '', true);
+		}
+
+		return FileDir::makeCorrectDir($customer['documentroot'] . '/' . $path, $customer['documentroot']);
 	}
 
 	/**
@@ -617,6 +638,9 @@ class SubDomains extends ApiCommand implements ResourceEntity
 	 *            SSL to be enabled
 	 * @param bool $http2
 	 *            optional, whether to enable http/2 for this domain (requires to be enabled in the settings), default
+	 *            0 (false)
+	 * @param bool $http3
+	 *            optional, whether to enable http/3 for this domain (requires to be enabled in the settings), default
 	 *            0 (false)
 	 * @param int $hsts_maxage
 	 *            optional max-age value for HSTS header
@@ -671,6 +695,7 @@ class SubDomains extends ApiCommand implements ResourceEntity
 			$ssl_redirect = $this->getBoolParam('ssl_redirect', true, $result['ssl_redirect']);
 			$letsencrypt = $this->getBoolParam('letsencrypt', true, $result['letsencrypt']);
 			$http2 = $this->getBoolParam('http2', true, $result['http2']);
+			$http3 = $this->getBoolParam('http3', true, $result['http3']);
 			$hsts_maxage = $this->getParam('hsts_maxage', true, $result['hsts']);
 			$hsts_sub = $this->getBoolParam('hsts_sub', true, $result['hsts_sub']);
 			$hsts_preload = $this->getBoolParam('hsts_preload', true, $result['hsts_preload']);
@@ -679,6 +704,7 @@ class SubDomains extends ApiCommand implements ResourceEntity
 			$ssl_redirect = 0;
 			$letsencrypt = 0;
 			$http2 = 0;
+			$http3 = 0;
 			$hsts_maxage = 0;
 			$hsts_sub = 0;
 			$hsts_preload = 0;
@@ -817,6 +843,7 @@ class SubDomains extends ApiCommand implements ResourceEntity
 			|| $iswildcarddomain != $result['iswildcarddomain']
 			|| $aliasdomain != (int)$result['aliasdomain']
 			|| $openbasedir_path != $result['openbasedir_path']
+			|| $sslenabled != $result['ssl_enabled']
 			|| $ssl_redirect != $result['ssl_redirect']
 			|| $letsencrypt != $result['letsencrypt']
 			|| $hsts_maxage != $result['hsts']
@@ -824,6 +851,7 @@ class SubDomains extends ApiCommand implements ResourceEntity
 			|| $hsts_preload != $result['hsts_preload']
 			|| $phpsettingid != $result['phpsettingid']
 			|| $http2 != $result['http2']
+			|| $http3 != $result['http3']
 			|| ($speciallogfile != $result['speciallogfile'] && $speciallogverified == '1')
 		) {
 			$stmt = Database::prepare("
@@ -838,6 +866,7 @@ class SubDomains extends ApiCommand implements ResourceEntity
 					`ssl_redirect` = :ssl_redirect,
 					`letsencrypt` = :letsencrypt,
 					`http2` = :http2,
+					`http3` = :http3,
 					`hsts` = :hsts,
 					`hsts_sub` = :hsts_sub,
 					`hsts_preload` = :hsts_preload,
@@ -856,6 +885,7 @@ class SubDomains extends ApiCommand implements ResourceEntity
 				"ssl_redirect" => $ssl_redirect,
 				"letsencrypt" => $letsencrypt,
 				"http2" => $http2,
+				"http3" => $http3,
 				"hsts" => $hsts_maxage,
 				"hsts_sub" => $hsts_sub,
 				"hsts_preload" => $hsts_preload,
@@ -1008,6 +1038,8 @@ class SubDomains extends ApiCommand implements ResourceEntity
 				$row['ipsandports'] = $this->getIpsForDomain($row['id']);
 			}
 			$row['domain_hascert'] = $this->getHasCertValueForDomain((int)$row['id'], (int)$row['parentdomainid']);
+			// unset sensitive data
+			unset($row['dkim_privkey']);
 			$result[] = $row;
 		}
 		return $this->response([
@@ -1095,13 +1127,14 @@ class SubDomains extends ApiCommand implements ResourceEntity
 		}
 
 		if (!empty($customer_ids)) {
+			$query_fields = [];
 			// prepare select statement
 			$domains_stmt = Database::prepare("
 				SELECT COUNT(*) as num_subdom
 				FROM `" . TABLE_PANEL_DOMAINS . "` `d`
 				WHERE `d`.`customerid` IN (" . implode(', ', $customer_ids) . ")
-			");
-			$result = Database::pexecute_first($domains_stmt, null, true, true);
+			" . $this->getSearchWhere($query_fields, true));
+			$result = Database::pexecute_first($domains_stmt, $query_fields, true, true);
 			if ($result) {
 				return $this->response($result['num_subdom']);
 			}

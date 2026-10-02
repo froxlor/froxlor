@@ -1,8 +1,8 @@
 <?php
 
 /**
- * This file is part of the Froxlor project.
- * Copyright (c) 2010 the Froxlor Team (see authors).
+ * This file is part of the froxlor project.
+ * Copyright (c) 2010 the froxlor Team (see authors).
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,7 +19,7 @@
  * https://files.froxlor.org/misc/COPYING.txt
  *
  * @copyright  the authors
- * @author     Froxlor team <team@froxlor.org>
+ * @author     froxlor team <team@froxlor.org>
  * @license    https://files.froxlor.org/misc/COPYING.txt GPLv2
  */
 
@@ -62,7 +62,7 @@ if ($action == '2fa_entercode') {
 	// show template to enter code
 	UI::view('login/enter2fa.html.twig', [
 		'pagetitle' => lng('login.2fa'),
-		'remember_me' => (Settings::Get('panel.db_version') >= 202407200) ? true : false,
+		'remember_me' => (Settings::Get('panel.db_version') >= 202608210) ? true : false,
 		'message' => $message
 	]);
 } elseif ($action == '2fa_verify') {
@@ -116,8 +116,10 @@ if ($action == '2fa_entercode') {
 			]);
 		}
 
-		// when remember is activated, set the cookie
-		if ($remember) {
+		// when remember is activated, set the cookie - guarded by db_version since the
+		// `admin` column (needed to scope tokens to the admin/customer namespace) might
+		// not exist yet if this code has been deployed but the db update hasn't run yet
+		if ($remember && Settings::Get('panel.db_version') >= 202608210) {
 			$selector = base64_encode(Froxlor::genSessionId(9));
 			$authenticator = Froxlor::genSessionId(33);
 			$valid_until = time()+60*60*24*30;
@@ -126,12 +128,14 @@ if ($action == '2fa_entercode') {
 				`selector` = :selector,
 				`token` = :authenticator,
 				`userid` = :userid,
+				`admin` = :isadmin,
 				`valid_until` = :valid_until
 			");
 			Database::pexecute($ins_stmt, [
 				'selector' => $selector,
 				'authenticator' => hash('sha256', $authenticator),
 				'userid' => $uid,
+				'isadmin' => $isadmin ? 1 : 0,
 				'valid_until' => $valid_until
 			]);
 			$cookie_params = [
@@ -382,11 +386,16 @@ if ($action == '2fa_entercode') {
 		// 2FA activated
 		if (Settings::Get('2fa.enabled') == '1' && $userinfo['type_2fa'] > 0) {
 
-			// check for remember cookie
-			if (!empty($_COOKIE['frx_2fa_remember'])) {
+			// check for remember cookie - guarded by db_version since the `admin` column
+			// might not exist yet if this code has been deployed but the db update hasn't
+			// run yet; skipping just falls through to the normal 2fa code-entry prompt
+			if (!empty($_COOKIE['frx_2fa_remember']) && Settings::Get('panel.db_version') >= 202608210) {
 				list($selector, $authenticator) = explode(':', $_COOKIE['frx_2fa_remember']);
-				$sel_stmt = Database::prepare("SELECT `token` FROM `".TABLE_PANEL_2FA_TOKENS."` WHERE `selector` = :selector AND `userid` = :uid AND `valid_until` >= UNIX_TIMESTAMP()");
-				$token_check = Database::pexecute_first($sel_stmt, ['selector' => $selector, 'uid' => $userinfo[$uid]]);
+				// admin- and customer-ids are separate namespaces that can collide (e.g. both id 1),
+				// so the lookup must also match the account type the token was issued for, not just
+				// the numeric id, or a remembered customer token could satisfy an admin's 2fa step
+				$sel_stmt = Database::prepare("SELECT `token` FROM `".TABLE_PANEL_2FA_TOKENS."` WHERE `selector` = :selector AND `userid` = :uid AND `admin` = :isadmin AND `valid_until` >= UNIX_TIMESTAMP()");
+				$token_check = Database::pexecute_first($sel_stmt, ['selector' => $selector, 'uid' => $userinfo[$uid], 'isadmin' => $adminsession]);
 				if ($token_check && hash_equals($token_check['token'], hash('sha256', base64_decode($authenticator)))) {
 					if (!finishLogin($userinfo)) {
 						Response::redirectTo('index.php', [

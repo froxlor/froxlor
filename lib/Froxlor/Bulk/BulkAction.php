@@ -1,8 +1,8 @@
 <?php
 
 /**
- * This file is part of the Froxlor project.
- * Copyright (c) 2010 the Froxlor Team (see authors).
+ * This file is part of the froxlor project.
+ * Copyright (c) 2010 the froxlor Team (see authors).
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,7 +19,7 @@
  * https://files.froxlor.org/misc/COPYING.txt
  *
  * @copyright  the authors
- * @author     Froxlor team <team@froxlor.org>
+ * @author     froxlor team <team@froxlor.org>
  * @license    https://files.froxlor.org/misc/COPYING.txt GPLv2
  */
 
@@ -76,7 +76,7 @@ abstract class BulkAction
 	 *
 	 * @return object BulkAction instance
 	 */
-	protected function __construct(string $import_file = null, array $userinfo = [])
+	protected function __construct(?string $import_file = null, array $userinfo = [])
 	{
 		if (!empty($import_file)) {
 			$this->impFile = FileDir::makeCorrectFile($import_file);

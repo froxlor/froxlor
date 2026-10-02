@@ -1,8 +1,8 @@
 <?php
 
 /**
- * This file is part of the Froxlor project.
- * Copyright (c) 2010 the Froxlor Team (see authors).
+ * This file is part of the froxlor project.
+ * Copyright (c) 2010 the froxlor Team (see authors).
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,7 +19,7 @@
  * https://files.froxlor.org/misc/COPYING.txt
  *
  * @copyright  the authors
- * @author     Froxlor team <team@froxlor.org>
+ * @author     froxlor team <team@froxlor.org>
  * @license    https://files.froxlor.org/misc/COPYING.txt GPLv2
  */
 
@@ -29,6 +29,7 @@ use Exception;
 use Froxlor\Cron\FroxlorCron;
 use Froxlor\Cron\Http\ConfigIO;
 use Froxlor\Cron\Http\HttpConfigBase;
+use Froxlor\Cron\Http\LetsEncrypt\AcmeSh;
 use Froxlor\Cron\Mail\Rspamd;
 use Froxlor\Cron\TaskId;
 use Froxlor\Database\Database;
@@ -125,6 +126,17 @@ class TasksCron extends FroxlorCron
 				 */
 				FroxlorLogger::getInstanceOf()->logAction(FroxlorLogger::CRON_ACTION, LOG_NOTICE, "Removing Let's Encrypt entries for domain " . $row['data']['domain']);
 				Domain::doLetsEncryptCleanUp($row['data']['domain']);
+			} elseif ($row['type'] == TaskId::UPDATE_LE_SERVICES) {
+				/**
+				 * TYPE=13 set configuration for selected services regarding the use of Let's Encrypt certificate
+				 */
+				FroxlorLogger::getInstanceOf()->logAction(FroxlorLogger::CRON_ACTION, LOG_NOTICE, "Updating Let's Encrypt configuration for selected services");
+				AcmeSh::renewHookConfigs(FroxlorLogger::getInstanceOf());
+			} elseif ($row['type'] == TaskId::REBUILD_NSSUSERS) {
+				/**
+				 * TYPE=14 regenerate libnss users/groups
+				 */
+				self::refreshUsers();
 			}
 		}
 
@@ -149,11 +161,6 @@ class TasksCron extends FroxlorCron
 	{
 		if (Settings::Get('system.webserver') == "apache2") {
 			$websrv = '\\Froxlor\\Cron\\Http\\Apache';
-			if (Settings::Get('system.mod_fcgid') == 1 || Settings::Get('phpfpm.enabled') == 1) {
-				$websrv .= 'Fcgi';
-			}
-		} elseif (Settings::Get('system.webserver') == "lighttpd") {
-			$websrv = '\\Froxlor\\Cron\\Http\\Lighttpd';
 			if (Settings::Get('system.mod_fcgid') == 1 || Settings::Get('phpfpm.enabled') == 1) {
 				$websrv .= 'Fcgi';
 			}
@@ -254,22 +261,8 @@ class TasksCron extends FroxlorCron
 			FroxlorLogger::getInstanceOf()->logAction(FroxlorLogger::CRON_ACTION, LOG_NOTICE, 'Running: chown -R ' . (int)Settings::Get('system.vmail_uid') . ':' . (int)Settings::Get('system.vmail_gid') . ' ' . escapeshellarg($usermaildir));
 			FileDir::safe_exec('chown -R ' . (int)Settings::Get('system.vmail_uid') . ':' . (int)Settings::Get('system.vmail_gid') . ' ' . escapeshellarg($usermaildir));
 
-			if (Settings::Get('system.nssextrausers') == 1) {
-				// explicitly create files after user has been created to avoid unknown user issues for apache/php-fpm when task#1 runs after this
-				$extrausers_log = FroxlorLogger::getInstanceOf();
-				Extrausers::generateFiles($extrausers_log);
-			}
-
-			// clear NSCD cache if using fcgid or fpm, #1570 - not needed for nss-extrausers
-			if ((Settings::Get('system.mod_fcgid') == 1 || (int)Settings::Get('phpfpm.enabled') == 1) && Settings::Get('system.nssextrausers') == 0) {
-				$false_val = false;
-				FileDir::safe_exec('nscd -i passwd 1> /dev/null', $false_val, [
-					'>'
-				]);
-				FileDir::safe_exec('nscd -i group 1> /dev/null', $false_val, [
-					'>'
-				]);
-			}
+			// explicitly create files after user has been created to avoid unknown user issues for apache/php-fpm when task#1 runs after this
+			self::refreshUsers();
 		}
 	}
 
@@ -334,10 +327,11 @@ class TasksCron extends FroxlorCron
 				// webserver logs
 				$logsdir = FileDir::makeCorrectFile(Settings::Get('system.logfiles_directory') . '/' . $row['data']['loginname']);
 
-				if (file_exists($logsdir) && $logsdir != '/' && $logsdir != FileDir::makeCorrectDir(Settings::Get('system.logfiles_directory')) && substr($logsdir, 0, strlen(Settings::Get('system.logfiles_directory'))) == Settings::Get('system.logfiles_directory')) {
+				if (file_exists(dirname($logsdir)) && $logsdir != '/' && $logsdir != FileDir::makeCorrectDir(Settings::Get('system.logfiles_directory')) && substr($logsdir, 0, strlen(Settings::Get('system.logfiles_directory'))) == Settings::Get('system.logfiles_directory')) {
 					// build up wildcard for webX-{access,error}.log{*}
-					$logsdir .= '-*';
-					FileDir::safe_exec('rm -f ' . escapeshellarg($logsdir));
+					$logsdir .= '-*.log';
+					FroxlorLogger::getInstanceOf()->logAction(FroxlorLogger::CRON_ACTION, LOG_NOTICE, 'Running: rm -rf ' . FileDir::makeCorrectFile($logsdir));
+					FileDir::safe_exec('rm -f ' . FileDir::makeCorrectFile($logsdir));
 				}
 			}
 		}
@@ -355,7 +349,17 @@ class TasksCron extends FroxlorCron
 					FroxlorLogger::getInstanceOf()->logAction(FroxlorLogger::CRON_ACTION, LOG_ERR, 'FATAL: Task7 asks to delete a email account but emailpath field is empty!');
 				}
 
-				$maildir = FileDir::makeCorrectDir($email_full);
+				// re-validate at write-time, scoped to this customer's own portion of
+				// vmail_homedir: the stored emailpath was checked when the account was
+				// created, but a customer-controlled path component could have been swapped
+				// for a symlink any time since then - this call runs rm -rf as root
+				$customermaildir = FileDir::makeCorrectDir(Settings::Get('system.vmail_homedir') . '/' . $row['data']['loginname'] . '/');
+				try {
+					$maildir = FileDir::makeCorrectDir($email_full, $customermaildir);
+				} catch (Exception $e) {
+					FroxlorLogger::getInstanceOf()->logAction(FroxlorLogger::CRON_ACTION, LOG_ERR, 'TasksCron: Task7 emailpath "' . $email_full . '" is unsafe, skipping deletion: ' . $e->getMessage());
+					return;
+				}
 
 				if ($maildir != '/' && !empty($maildir) && $maildir != Settings::Get('system.vmail_homedir') && substr($maildir, 0, strlen(Settings::Get('system.vmail_homedir'))) == Settings::Get('system.vmail_homedir') && is_dir($maildir) && fileowner($maildir) == Settings::Get('system.vmail_uid') && filegroup($maildir) == Settings::Get('system.vmail_gid')) {
 					FroxlorLogger::getInstanceOf()->logAction(FroxlorLogger::CRON_ACTION, LOG_NOTICE, 'Running: rm -rf ' . escapeshellarg($maildir));
@@ -381,8 +385,17 @@ class TasksCron extends FroxlorCron
 		if (is_array($row['data'])) {
 			if (isset($row['data']['loginname']) && isset($row['data']['homedir'])) {
 				// remove specific homedir
-				$ftphomedir = FileDir::makeCorrectDir($row['data']['homedir']);
 				$customerdocroot = FileDir::makeCorrectDir(Settings::Get('system.documentroot_prefix') . '/' . $row['data']['loginname'] . '/');
+
+				// re-validate at write-time: the stored homedir was checked when the ftp
+				// account was created, but a customer-controlled path component could have
+				// been swapped for a symlink any time since then - this call runs rm -rf as root
+				try {
+					$ftphomedir = FileDir::makeCorrectDir($row['data']['homedir'], $customerdocroot);
+				} catch (Exception $e) {
+					FroxlorLogger::getInstanceOf()->logAction(FroxlorLogger::CRON_ACTION, LOG_ERR, 'TasksCron: Task8 ftp homedir "' . $row['data']['homedir'] . '" is unsafe, skipping deletion: ' . $e->getMessage());
+					return;
+				}
 
 				if (file_exists($ftphomedir) && $ftphomedir != '/' && $ftphomedir != Settings::Get('system.documentroot_prefix') && $ftphomedir != $customerdocroot) {
 					FroxlorLogger::getInstanceOf()->logAction(FroxlorLogger::CRON_ACTION, LOG_NOTICE, 'Running: rm -rf ' . escapeshellarg($ftphomedir));
@@ -435,5 +448,29 @@ class TasksCron extends FroxlorCron
 	{
 		$antispam = new Rspamd(FroxlorLogger::getInstanceOf());
 		$antispam->writeConfigs();
+	}
+
+	private static function refreshUsers()
+	{
+		if (Settings::Get('system.nssextrausers') == 1) {
+			$cronLog = FroxlorLogger::getInstanceOf();
+			Extrausers::generateFiles($cronLog);
+			// reload crond as shell users might use crontab and the user is only known to crond if reloaded
+			FileDir::safe_exec(escapeshellcmd(Settings::Get('system.crondreload')));
+			return;
+		}
+
+		// clear NSCD cache if using fcgid or fpm, #1570 - not needed for nss-extrausers
+		if ((Settings::Get('system.mod_fcgid') == 1 || (int)Settings::Get('phpfpm.enabled') == 1) && Settings::Get('system.nssextrausers') == 0) {
+			$false_val = false;
+			FileDir::safe_exec('nscd -i passwd 1> /dev/null', $false_val, [
+				'>'
+			]);
+			FileDir::safe_exec('nscd -i group 1> /dev/null', $false_val, [
+				'>'
+			]);
+			// reload crond as shell users might use crontab and the user is only known to crond if reloaded
+			FileDir::safe_exec(escapeshellcmd(Settings::Get('system.crondreload')));
+		}
 	}
 }

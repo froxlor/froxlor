@@ -1,8 +1,8 @@
 <?php
 
 /**
- * This file is part of the Froxlor project.
- * Copyright (c) 2010 the Froxlor Team (see authors).
+ * This file is part of the froxlor project.
+ * Copyright (c) 2010 the froxlor Team (see authors).
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,7 +19,7 @@
  * https://files.froxlor.org/misc/COPYING.txt
  *
  * @copyright  the authors
- * @author     Froxlor team <team@froxlor.org>
+ * @author     froxlor team <team@froxlor.org>
  * @license    https://files.froxlor.org/misc/COPYING.txt GPLv2
  */
 
@@ -108,7 +108,15 @@ if ($page == 'overview' && $userinfo['change_serversettings'] == '1') {
 			UI::view('settings/index.html.twig', ['fields' => $fields]);
 		} else {
 			$em = Request::any('em', '');
-			UI::view('settings/detailpart.html.twig', ['fields' => $fields, 'em' => $em]);
+			UI::view('settings/detailpart.html.twig', [
+				'fields' => $fields,
+				'em' => $em,
+				'part' => $_part,
+				// alert-box
+				'type' => 'warning',
+				'heading' => lng('dns.nis2note.title'),
+				'alert_msg' => lng('dns.nis2note.content')
+			]);
 		}
 	}
 } elseif ($page == 'phpinfo' && $userinfo['change_serversettings'] == '1') {
@@ -396,7 +404,7 @@ if ($page == 'overview' && $userinfo['change_serversettings'] == '1') {
 	UI::view('user/form-note.html.twig', [
 		'formaction' => $linker->getLink(['section' => 'settings']),
 		'formdata' => $mailtest_add_data['mailtest'],
-		'actions_links' => [
+		'actions_links' => ($userinfo['change_serversettings'] == '1' ? [
 			[
 				'href' => $linker->getLink([
 					'section' => 'settings',
@@ -408,7 +416,7 @@ if ($page == 'overview' && $userinfo['change_serversettings'] == '1') {
 				'icon' => 'fa-solid fa-gears',
 				'class' => 'btn-outline-secondary'
 			]
-		],
+		] : []),
 		// alert-box
 		'type' => $note_type,
 		'alert_msg' => $note_msg

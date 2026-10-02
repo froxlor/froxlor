@@ -1,8 +1,8 @@
 <?php
 
 /**
- * This file is part of the Froxlor project.
- * Copyright (c) 2010 the Froxlor Team (see authors).
+ * This file is part of the froxlor project.
+ * Copyright (c) 2010 the froxlor Team (see authors).
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,7 +19,7 @@
  * https://files.froxlor.org/misc/COPYING.txt
  *
  * @copyright  the authors
- * @author     Froxlor team <team@froxlor.org>
+ * @author     froxlor team <team@froxlor.org>
  * @license    https://files.froxlor.org/misc/COPYING.txt GPLv2
  */
 
@@ -44,7 +44,7 @@ class DnsEntry
 	 * @param int $ttl
 	 * @param string $class
 	 */
-	public function __construct(string $record = '', string $type = 'A', string $content = null, int $prio = 0, int $ttl = 0, string $class = 'IN')
+	public function __construct(string $record = '', string $type = 'A', ?string $content = null, int $prio = 0, int $ttl = 0, string $class = 'IN')
 	{
 		$this->record = $record;
 		$this->type = $type;

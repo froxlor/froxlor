@@ -1,8 +1,8 @@
 <?php
 
 /**
- * This file is part of the Froxlor project.
- * Copyright (c) 2010 the Froxlor Team (see authors).
+ * This file is part of the froxlor project.
+ * Copyright (c) 2010 the froxlor Team (see authors).
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,7 +19,7 @@
  * https://files.froxlor.org/misc/COPYING.txt
  *
  * @copyright  the authors
- * @author     Froxlor team <team@froxlor.org>
+ * @author     froxlor team <team@froxlor.org>
  * @license    https://files.froxlor.org/misc/COPYING.txt GPLv2
  */
 
@@ -86,6 +86,16 @@ final class TaskId
 	 * TYPE=12 domain has been deleted, remove from acme.sh/let's encrypt directory if used
 	 */
 	const DELETE_DOMAIN_SSL = 12;
+
+	/**
+	 * TYPE=13 set configuration for selected services regarding the use of Let's Encrypt certificate
+	 */
+	const UPDATE_LE_SERVICES = 13;
+
+	/**
+	 * TYPE=14 regenerate libnss users/groups
+	 */
+	const REBUILD_NSSUSERS = 14;
 
 	/**
 	 * TYPE=20 CUSTUMER DATA DUMP

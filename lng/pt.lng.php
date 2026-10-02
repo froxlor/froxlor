@@ -1,8 +1,8 @@
 <?php
 
 /**
- * This file is part of the Froxlor project.
- * Copyright (c) 2010 the Froxlor Team (see authors).
+ * This file is part of the froxlor project.
+ * Copyright (c) 2010 the froxlor Team (see authors).
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,7 +19,7 @@
  * https://files.froxlor.org/misc/COPYING.txt
  *
  * @copyright  the authors
- * @author     Froxlor team <team@froxlor.org>
+ * @author     froxlor team <team@froxlor.org>
  * @author     Ricardo Luiz Costa <ricardo@winger.com.br>
  * @author     Thiago Goncalves de Castro <thiago@davoi.com.br>
  * @author     Rafael Andrade <slyppp@gmail.com>
@@ -31,7 +31,7 @@ return [
 		'overview' => 'Visão geral',
 		'ressourcedetails' => 'Recursos usados',
 		'systemdetails' => 'Detalhes do sistema',
-		'froxlordetails' => 'Detalhes do Froxlor',
+		'froxlordetails' => 'Detalhes do froxlor',
 		'installedversion' => 'Versão instalada',
 		'latestversion' => 'Ultima Versão',
 		'lookfornewversion' => [
@@ -185,15 +185,15 @@ return [
 		'security_settings' => 'Opções de Segurança',
 		'know_what_youre_doing' => 'Somente altere, se você sabe o que está fazendo',
 		'show_version_login' => [
-			'title' => 'Mostrar versão do Froxlor no login',
-			'description' => 'Mostar a versão do Froxlor no rodapé da página de login',
+			'title' => 'Mostrar versão do froxlor no login',
+			'description' => 'Mostar a versão do froxlor no rodapé da página de login',
 		],
 		'show_version_footer' => [
-			'title' => 'Mostar versão do Froxlor no rodapé',
-			'description' => 'Mostar a versão do Froxlor no rodapé do resto das páginas',
+			'title' => 'Mostar versão do froxlor no rodapé',
+			'description' => 'Mostar a versão do froxlor no rodapé do resto das páginas',
 		],
 		'froxlor_graphic' => [
-			'title' => 'Cabeçalho gráfico do Froxlor',
+			'title' => 'Cabeçalho gráfico do froxlor',
 			'description' => 'Quais gráficos devem aparece no topor',
 		],
 		'phpsettings' => [
@@ -324,7 +324,7 @@ return [
 		'hasaliasdomains' => 'Possui alinhas de domínio(s)',
 		'statstics' => 'Estatísticas de Uso',
 		'isassigneddomain' => 'É um domínio assinado',
-		'add_date' => 'Adicionado no Froxlor',
+		'add_date' => 'Adicionado no froxlor',
 		'registration_date' => 'Adicionado no Registro',
 		'topleveldomain' => 'Top-Level-Domain',
 		'associated_with_domain' => 'Associado',
@@ -491,20 +491,20 @@ return [
 	],
 	'mails' => [
 		'pop_success' => [
-			'mailbody' => 'Olá,\\n\\n sua conta de e-mail {EMAIL}\\n foi criada com sucesso.\\n\\nEsta é uma mensagem automática\\neMail, por favor não responda!\\n\\nAtenciosamente, Equipe de desenvolvimento do Froxlor',
+			'mailbody' => 'Olá,\\n\\n sua conta de e-mail {EMAIL}\\n foi criada com sucesso.\\n\\nEsta é uma mensagem automática\\neMail, por favor não responda!\\n\\nAtenciosamente, Equipe de desenvolvimento do froxlor',
 			'subject' => 'Conta de e-mail criada com sucesso!',
 		],
 		'createcustomer' => [
-			'mailbody' => 'Olá {FIRSTNAME} {NAME},\\n\\nseguem os detalhes de sua nova conta de e-mail:\\n\\nUsuario: {USERNAME}\\nSenha: {PASSWORD}\\n\\nObrigado,\\nEquipe de desenvolvimento do Froxlor',
+			'mailbody' => 'Olá {FIRSTNAME} {NAME},\\n\\nseguem os detalhes de sua nova conta de e-mail:\\n\\nUsuario: {USERNAME}\\nSenha: {PASSWORD}\\n\\nObrigado,\\nEquipe de desenvolvimento do froxlor',
 			'subject' => 'Informações da conta',
 		],
 		'pop_success_alternative' => [
-			'mailbody' => 'Oi,\\n\\nSua conta de email {EMAIL}\\nfoi configurada corretamente.\\nSua senha é{PASSWORD}.\\n\\nEmail criado automaticamente\\n, Por favor não responda!\\n\\nCumprimentos, Equipe Froxlor.',
+			'mailbody' => 'Oi,\\n\\nSua conta de email {EMAIL}\\nfoi configurada corretamente.\\nSua senha é{PASSWORD}.\\n\\nEmail criado automaticamente\\n, Por favor não responda!\\n\\nCumprimentos, Equipe froxlor.',
 			'subject' => 'Conta de email criada com sucesso',
 		],
 		'password_reset' => [
 			'subject' => 'Reset de Senha',
-			'mailbody' => 'Oi {USERNAME},\\n\\nsua senha do Froxlor foi resetada!\\nA nova senha é: {LINK}\\n\\nObrigado,\\nequipe Froxlor',
+			'mailbody' => 'Oi {USERNAME},\\n\\nsua senha do froxlor foi resetada!\\nA nova senha é: {LINK}\\n\\nObrigado,\\nequipe froxlor',
 		],
 	],
 	'menu' => [
@@ -878,7 +878,7 @@ return [
 		],
 		'panel_allow_domain_change_customer' => [
 			'title' => 'Ativa mover domínios entre clientes',
-			'description' => 'Se ativado você pode trocar o cliente de um domínio para administração de outro.<br /><b>Attention:</b> Froxlor não troca nenhum caminho. Isto pode fazer com que domínios parem de funcionar',
+			'description' => 'Se ativado você pode trocar o cliente de um domínio para administração de outro.<br /><b>Attention:</b> froxlor não troca nenhum caminho. Isto pode fazer com que domínios parem de funcionar',
 		],
 	],
 	'traffic' => [

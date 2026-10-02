@@ -67,6 +67,38 @@ export default function () {
 			});
 		}
 
+		// show warning if emaildomain option is set to disabled but was enabled
+		if ($('input[name=emaildomainverified]')) {
+			$('input[name=isemaildomain]').on('click', function () {
+				$('#emaildomainnote').remove();
+				$('#isemaildomain').removeClass('is-invalid');
+				$('#emaildomainverified').val(0);
+				const cFileName = window.location.pathname.substring(window.location.pathname.lastIndexOf("/")+1);
+				$.ajax({
+					url: cFileName + "?page=overview&action=jqEmaildomainNote",
+					type: "POST",
+					data: {
+						id: $('input[name=id]').val(), newval: +$('#isemaildomain').is(':checked')
+					},
+					dataType: "json",
+					async: false,
+					beforeSend: function (request) {
+						request.setRequestHeader('X-CSRF-TOKEN', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
+					},
+					success: function (json) {
+						if (json.changed) {
+							$('#isemaildomain').addClass('is-invalid');
+							$('#isemaildomain').parent().append(json.info);
+							$('#emaildomainverified').val(1);
+						}
+					},
+					error: function (a, b) {
+						console.log(a, b);
+					}
+				});
+			});
+		}
+
 		/**
 		 * email only domain - hide unnecessary/unused sections
 		 */

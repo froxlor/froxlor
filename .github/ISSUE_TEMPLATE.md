@@ -16,7 +16,8 @@ Please provide a concise summary of the problem you're experiencing...
 # System information
 
 * Froxlor version: $version/$gitSHA1
-* Web server: apache2/nginx/lighttpd
+* PHP sapi & version: php-fpm 8.3 / fcgid 8.0 / etc.
+* Web server: apache2/nginx
 * DNS server: Bind/PowerDNS (standalone)/PowerDNS (Bind-backend)
 * POP/IMAP server: Courier/Dovecot
 * SMTP server: postfix/exim

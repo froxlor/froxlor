@@ -1,8 +1,8 @@
 <?php
 
 /**
- * This file is part of the Froxlor project.
- * Copyright (c) 2010 the Froxlor Team (see authors).
+ * This file is part of the froxlor project.
+ * Copyright (c) 2010 the froxlor Team (see authors).
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,7 +19,7 @@
  * https://files.froxlor.org/misc/COPYING.txt
  *
  * @copyright  the authors
- * @author     Froxlor team <team@froxlor.org>
+ * @author     froxlor team <team@froxlor.org>
  * @license    https://files.froxlor.org/misc/COPYING.txt GPLv2
  */
 
@@ -39,7 +39,6 @@ return [
 					'default' => 'apache2',
 					'select_var' => [
 						'apache2' => 'Apache 2',
-						'lighttpd' => 'ligHTTPd',
 						'nginx' => 'Nginx'
 					],
 					'save_method' => 'storeSettingField',
@@ -49,7 +48,7 @@ return [
 					],
 					'requires_reconf' => ['http']
 				],
-				'system_apache_24' => [
+				'system_apache24' => [
 					'label' => lng('serversettings.apache_24'),
 					'settinggroup' => 'system',
 					'varname' => 'apache24',
@@ -86,6 +85,18 @@ return [
 					],
 					'visible' => Settings::Get('system.use_ssl')
 				],
+				'system_http3_support' => [
+					'label' => lng('serversettings.http3_support'),
+					'settinggroup' => 'system',
+					'varname' => 'http3_support',
+					'type' => 'checkbox',
+					'default' => false,
+					'save_method' => 'storeSettingField',
+					'websrv_avail' => [
+						'nginx'
+					],
+					'visible' => Settings::Get('system.use_ssl')
+				],
 				'system_dhparams_file' => [
 					'label' => lng('serversettings.dhparams_file'),
 					'settinggroup' => 'system',
@@ -104,6 +115,10 @@ return [
 					'varname' => 'httpuser',
 					'type' => 'text',
 					'default' => 'www-data',
+					'plausibility_check_method' => [
+						'\\Froxlor\\Validate\\Check',
+						'checkSystemUsername'
+					],
 					'save_method' => 'storeSettingWebserverFcgidFpmUser'
 				],
 				'system_httpgroup' => [
@@ -420,7 +435,24 @@ return [
 					'default' => '1',
 					'option_options_method' => ['\\Froxlor\\Domain\\Domain', 'getRedirectCodes'],
 					'save_method' => 'storeSettingField'
-				]
+				],
+				'system_webserver_serveradmin' => [
+					'label' => lng('admin.webserver_serveradmin.setting'),
+					'settinggroup' => 'system',
+					'varname' => 'webserver_serveradmin',
+					'type' => 'select',
+					'default' => 'customer',
+					'select_var' => [
+						'customer' => lng('admin.webserver_serveradmin.customer'),
+						'admin' => lng('admin.webserver_serveradmin.admin'),
+						'global' => lng('admin.webserver_serveradmin.global'),
+						'none' => lng('admin.webserver_serveradmin.none')
+					],
+					'save_method' => 'storeSettingField',
+					'websrv_avail' => [
+						'apache2',
+					],
+				],
 			]
 		]
 	]

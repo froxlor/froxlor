@@ -1,8 +1,8 @@
 <?php
 
 /**
- * This file is part of the Froxlor project.
- * Copyright (c) 2010 the Froxlor Team (see authors).
+ * This file is part of the froxlor project.
+ * Copyright (c) 2010 the froxlor Team (see authors).
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,19 +19,19 @@
  * https://files.froxlor.org/misc/COPYING.txt
  *
  * @copyright  the authors
- * @author     Froxlor team <team@froxlor.org>
+ * @author     froxlor team <team@froxlor.org>
  * @license    https://files.froxlor.org/misc/COPYING.txt GPLv2
  */
 
 namespace Froxlor\Cron\Http;
 
+use Exception;
 use Froxlor\Cron\Http\Php\PhpInterface;
 use Froxlor\Cron\TaskId;
 use Froxlor\Customer\Customer;
 use Froxlor\Database\Database;
 use Froxlor\Domain\Domain;
 use Froxlor\FileDir;
-use Froxlor\Froxlor;
 use Froxlor\FroxlorLogger;
 use Froxlor\Http\Directory;
 use Froxlor\Http\Statistics;
@@ -132,7 +132,7 @@ class Apache extends HttpConfigBase
 					$is_redirect = true;
 					// check whether froxlor uses Let's Encrypt and not cert is being generated yet
 					// or a renewal is ongoing - disable redirect
-					if (Settings::Get('system.le_froxlor_enabled') && ($this->froxlorVhostHasLetsEncryptCert() == false || $this->froxlorVhostLetsEncryptNeedsRenew())) {
+					if (Settings::Get('system.leenabled') == '1' && Settings::Get('system.le_froxlor_enabled') && ($this->froxlorVhostHasLetsEncryptCert() == false || $this->froxlorVhostLetsEncryptNeedsRenew())) {
 						$this->virtualhosts_data[$vhosts_filename] .= '# temp. disabled ssl-redirect due to Let\'s Encrypt certificate generation.' . PHP_EOL;
 						$is_redirect = false;
 						Cronjob::inserttask(TaskId::REBUILD_VHOST);
@@ -147,7 +147,7 @@ class Apache extends HttpConfigBase
 						$this->virtualhosts_data[$vhosts_filename] .= '  <IfModule mod_rewrite.c>' . "\n";
 						$this->virtualhosts_data[$vhosts_filename] .= '    RewriteEngine On' . "\n";
 						$this->virtualhosts_data[$vhosts_filename] .= '    RewriteCond %{HTTPS} off' . "\n";
-						if (Settings::Get('system.le_froxlor_enabled') == '1') {
+						if (Settings::Get('system.leenabled') == '1' && Settings::Get('system.le_froxlor_enabled') == '1') {
 							$this->virtualhosts_data[$vhosts_filename] .= '    RewriteCond %{REQUEST_URI} !^/\.well-known/acme-challenge' . "\n";
 						}
 						$this->virtualhosts_data[$vhosts_filename] .= '    RewriteRule ^/(.*) ' . $mypath . '$1' . $modrew_red . "\n";
@@ -159,13 +159,8 @@ class Apache extends HttpConfigBase
 				}
 
 				if (!$is_redirect) {
-					if (Settings::Get('system.froxlordirectlyviahostname')) {
-						$relpath = "/";
-					} else {
-						$relpath = "/" . basename(Froxlor::getInstallDir());
-					}
 					// protect lib/userdata.inc.php
-					$this->virtualhosts_data[$vhosts_filename] .= '  <Directory "' . rtrim($relpath, "/") . '/lib/">' . "\n";
+					$this->virtualhosts_data[$vhosts_filename] .= '  <Directory "' . rtrim($mypath, "/") . '/lib/">' . "\n";
 					$this->virtualhosts_data[$vhosts_filename] .= '    <Files "userdata.inc.php">' . "\n";
 					if (Settings::Get('system.apache24') == '1') {
 						$this->virtualhosts_data[$vhosts_filename] .= '    Require all denied' . "\n";
@@ -176,7 +171,7 @@ class Apache extends HttpConfigBase
 					$this->virtualhosts_data[$vhosts_filename] .= '    </Files>' . "\n";
 					$this->virtualhosts_data[$vhosts_filename] .= '  </Directory>' . "\n";
 					// protect bin/
-					$this->virtualhosts_data[$vhosts_filename] .= '  <DirectoryMatch "^' . rtrim($relpath, "/") . '/(bin|cache|logs|tests|vendor)/">' . "\n";
+					$this->virtualhosts_data[$vhosts_filename] .= '  <DirectoryMatch "^' . rtrim($mypath, "/") . '/(bin|cache|logs|tests|vendor)/">' . "\n";
 					if (Settings::Get('system.apache24') == '1') {
 						$this->virtualhosts_data[$vhosts_filename] .= '    Require all denied' . "\n";
 					} else {
@@ -270,6 +265,7 @@ class Apache extends HttpConfigBase
 							$srvName = substr(md5($ipport), 0, 4) . '.ssl-fpm.external';
 						}
 
+						$this->virtualhosts_data[$vhosts_filename] .= '  <Directory "' . $mypath . '">' . "\n";
 						// mod_proxy stuff for apache-2.4
 						if (Settings::Get('system.apache24') == '1' && Settings::Get('phpfpm.use_mod_proxy') == '1') {
 							$filesmatch = $phpconfig['fpm_settings']['limit_extensions'];
@@ -286,9 +282,7 @@ class Apache extends HttpConfigBase
 							$this->virtualhosts_data[$vhosts_filename] .= '    </If>' . "\n";
 							$this->virtualhosts_data[$vhosts_filename] .= '  </FilesMatch>' . "\n";
 							if ($phpconfig['pass_authorizationheader'] == '1') {
-								$this->virtualhosts_data[$vhosts_filename] .= '  <Directory "' . $mypath . '">' . "\n";
-								$this->virtualhosts_data[$vhosts_filename] .= '      CGIPassAuth On' . "\n";
-								$this->virtualhosts_data[$vhosts_filename] .= '  </Directory>' . "\n";
+								$this->virtualhosts_data[$vhosts_filename] .= '    CGIPassAuth On' . "\n";
 							}
 						} else {
 							$addheader = "";
@@ -296,7 +290,6 @@ class Apache extends HttpConfigBase
 								$addheader = " -pass-header Authorization";
 							}
 							$this->virtualhosts_data[$vhosts_filename] .= '  FastCgiExternalServer ' . $php->getInterface()->getAliasConfigDir() . $srvName . ' -socket ' . $php->getInterface()->getSocketFile() . ' -idle-timeout ' . $phpconfig['fpm_settings']['idle_timeout'] . $addheader . "\n";
-							$this->virtualhosts_data[$vhosts_filename] .= '  <Directory "' . $mypath . '">' . "\n";
 							$filesmatch = $phpconfig['fpm_settings']['limit_extensions'];
 							$extensions = explode(" ", $filesmatch);
 							$filesmatch = "";
@@ -310,22 +303,17 @@ class Apache extends HttpConfigBase
 							$this->virtualhosts_data[$vhosts_filename] .= '     Action php-fastcgi /fastcgiphp' . "\n";
 							$this->virtualhosts_data[$vhosts_filename] .= '      Options +ExecCGI' . "\n";
 							$this->virtualhosts_data[$vhosts_filename] .= '    </FilesMatch>' . "\n";
-							// >=apache-2.4 enabled?
-							if (Settings::Get('system.apache24') == '1') {
-								$mypath_dir = new Directory($mypath);
-								// only create the require all granted if there is not active directory-protection
-								// for this path, as this would be the first require and therefore grant all access
-								if ($mypath_dir->isUserProtected() == false) {
-									$this->virtualhosts_data[$vhosts_filename] .= '    Require all granted' . "\n";
-									$this->virtualhosts_data[$vhosts_filename] .= '    AllowOverride All' . "\n";
-								}
-							} else {
-								$this->virtualhosts_data[$vhosts_filename] .= '    Order allow,deny' . "\n";
-								$this->virtualhosts_data[$vhosts_filename] .= '    allow from all' . "\n";
-							}
-							$this->virtualhosts_data[$vhosts_filename] .= '  </Directory>' . "\n";
 							$this->virtualhosts_data[$vhosts_filename] .= '  Alias /fastcgiphp ' . $php->getInterface()->getAliasConfigDir() . $srvName . "\n";
 						}
+						// >=apache-2.4 enabled?
+						if (Settings::Get('system.apache24') == '1') {
+							$this->virtualhosts_data[$vhosts_filename] .= '    Require all granted' . "\n";
+							$this->virtualhosts_data[$vhosts_filename] .= '    AllowOverride All' . "\n";
+						} else {
+							$this->virtualhosts_data[$vhosts_filename] .= '    Order allow,deny' . "\n";
+							$this->virtualhosts_data[$vhosts_filename] .= '    allow from all' . "\n";
+						}
+						$this->virtualhosts_data[$vhosts_filename] .= '  </Directory>' . "\n";
 					} else {
 						// mod_php
 						$domain = [
@@ -811,33 +799,57 @@ class Apache extends HttpConfigBase
 		// avoid using any whitespaces
 		$domain['documentroot'] = trim($domain['documentroot']);
 
+		// defence in depth: never write a documentroot containing control characters into the vhost config
+		if (preg_match('/[\x00-\x1F\x7F]/', $domain['documentroot'])) {
+			FroxlorLogger::getInstanceOf()->logAction(FroxlorLogger::CRON_ACTION, LOG_ERR, $domain['domain'] . ' :: documentroot contains invalid control characters');
+			return '# invalid document-root/redirect-url for this domain, therefore no explicit vhost is being generated';
+		}
+
 		if (preg_match('/^https?\:\/\//', $domain['documentroot'])) {
-			$possible_deactivated_webroot = $this->getWebroot($domain);
+			// documentroot is a redirect-target URL here, not a filesystem path - only call
+			// getWebroot() (which re-validates documentroot as a path) when its result is
+			// actually going to be used, i.e. for the deactivated-docroot fallback below
+			$possible_deactivated_webroot = '';
+			$this->deactivated = false;
+			if (($domain['deactivated'] == '1' || $domain['customer_deactivated'] == '1') && Settings::Get('system.deactivateddocroot') != '') {
+				$possible_deactivated_webroot = $this->getWebroot($domain);
+			}
 			if ($this->deactivated == false) {
-				$corrected_docroot = $domain['documentroot'];
+				if (($ssl_vhost == false && $domain['ssl'] == '1' && $domain['ssl_redirect'] == '1') || Validate::validateUrl($domain['documentroot'])) {
+					$corrected_docroot = $domain['documentroot'];
 
-				// Get domain's redirect code
-				$code = Domain::getDomainRedirectCode($domain['id']);
-				$modrew_red = '';
-				if ($code != '') {
-					$modrew_red = ' [R=' . $code . ';L,NE]';
-				}
+					// Get domain's redirect code
+					$code = Domain::getDomainRedirectCode($domain['id']);
+					$modrew_red = '';
+					if ($code != '') {
+						$modrew_red = ' [R=' . $code . ';L,NE]';
+					}
 
-				$vhost_content .= $this->getLogfiles($domain);
-				// redirect everything, not only root-directory, #541
-				$vhost_content .= '  <IfModule mod_rewrite.c>' . "\n";
-				$vhost_content .= '    RewriteEngine On' . "\n";
-				if (!$ssl_vhost) {
-					$vhost_content .= '    RewriteCond %{HTTPS} off' . "\n";
+					$vhost_content .= $this->getLogfiles($domain);
+					// redirect everything, not only root-directory, #541
+					$vhost_content .= '  <IfModule mod_rewrite.c>' . "\n";
+					$vhost_content .= '    RewriteEngine On' . "\n";
+					if (!$ssl_vhost) {
+						$vhost_content .= '    RewriteCond %{HTTPS} off' . "\n";
+					}
+					if ($domain['letsencrypt'] == '1') {
+						$vhost_content .= '    RewriteCond %{REQUEST_URI} !^/\.well-known/acme-challenge' . "\n";
+					}
+					$vhost_content .= '    RewriteRule ^/(.*) ' . $corrected_docroot . '$1' . $modrew_red . "\n";
+					$vhost_content .= '  </IfModule>' . "\n";
+					$vhost_content .= '  <IfModule !mod_rewrite.c>' . "\n";
+					$vhost_content .= '    Redirect ' . $code . ' / ' . $domain['documentroot_norewrite'] . "\n";
+					$vhost_content .= '  </IfModule>' . "\n";
+				} else {
+					$vhost_content .= '  <IfModule !mod_rewrite.c>' . "\n";
+					$vhost_content .= '  	RedirectMatch 500 ^/' . "\n";
+					$vhost_content .= '  </IfModule>' . "\n";
+					$vhost_content .= 'ErrorDocument 500 "misconfigured redirect url"' . "\n";
+					$vhost_content .= '  <IfModule mod_rewrite.c>' . "\n";
+					$vhost_content .= '    RewriteEngine On' . "\n";
+					$vhost_content .= '    RewriteRule ^ - [R=500,L]' . "\n";
+					$vhost_content .= '  </IfModule>' . "\n";
 				}
-				if ($domain['letsencrypt'] == '1') {
-					$vhost_content .= '    RewriteCond %{REQUEST_URI} !^/\.well-known/acme-challenge' . "\n";
-				}
-				$vhost_content .= '    RewriteRule ^/(.*) ' . $corrected_docroot . '$1' . $modrew_red . "\n";
-				$vhost_content .= '  </IfModule>' . "\n";
-				$vhost_content .= '  <IfModule !mod_rewrite.c>' . "\n";
-				$vhost_content .= '    Redirect ' . $code . ' / ' . $domain['documentroot_norewrite'] . "\n";
-				$vhost_content .= '  </IfModule>' . "\n";
 			} elseif (Settings::Get('system.deactivateddocroot') != '') {
 				$vhost_content .= $possible_deactivated_webroot;
 			}
@@ -919,7 +931,21 @@ class Apache extends HttpConfigBase
 			$servernames_text .= $server_alias . "\n";
 		}
 
-		$servernames_text .= '  ServerAdmin ' . $domain['email'] . "\n";
+		switch (Settings::Get('system.webserver_serveradmin')) {
+			case 'customer':
+				$servernames_text .= '  ServerAdmin ' . $domain['email'] . "\n";
+				break;
+			case 'admin':
+				$servernames_text .= '  ServerAdmin ' . $domain['admin_email'] . "\n";
+				break;
+			case 'global':
+				$servernames_text .= '  ServerAdmin ' . Settings::Get('panel.adminmail') . "\n";
+				break;
+			case 'none':
+			default:
+				// empty
+		}
+
 		return $servernames_text;
 	}
 
@@ -947,7 +973,26 @@ class Apache extends HttpConfigBase
 			$webroot_text .= '  </Directory>' . "\n";
 			$this->deactivated = true;
 		} else {
-			$webroot_text .= '  DocumentRoot "' . rtrim($domain['documentroot'], "/") . "\"\n";
+			// re-validate at write-time: the stored documentroot was checked when it was
+			// set, but a customer-controlled path component could have been swapped for
+			// a symlink any time since then. this only applies to documentroots that are
+			// actually meant to live within the customer's home directory - an admin with
+			// change_serversettings is allowed to point documentroot at an absolute path
+			// outside of it (see Domains::add()/update()), which is a trusted, admin-only
+			// escape hatch with no customer-writable containment to protect
+			$customerroot_prefix = rtrim(preg_replace('#/+#', '/', $domain['customerroot']), '/') . '/';
+			if (substr(preg_replace('#/+#', '/', $domain['documentroot']), 0, strlen($customerroot_prefix)) == $customerroot_prefix) {
+				try {
+					FileDir::makeCorrectDir($domain['documentroot'], $domain['customerroot']);
+					$safe_documentroot = $domain['documentroot'];
+				} catch (Exception $e) {
+					FroxlorLogger::getInstanceOf()->logAction(FroxlorLogger::CRON_ACTION, LOG_ERR, 'apache::getWebroot: documentroot for "' . $domain['domain'] . '" is unsafe, falling back to customer home directory: ' . $e->getMessage());
+					$safe_documentroot = $domain['customerroot'];
+				}
+			} else {
+				$safe_documentroot = $domain['documentroot'];
+			}
+			$webroot_text .= '  DocumentRoot "' . rtrim($safe_documentroot, "/") . "\"\n";
 			$this->deactivated = false;
 		}
 
@@ -1054,6 +1099,7 @@ class Apache extends HttpConfigBase
 			$error_log = FileDir::makeCorrectFile(Settings::Get('system.logfiles_directory') . $domain['loginname'] . $speciallogfile . '-error.log');
 			// Create the logfile if it does not exist (fixes #46)
 			touch($error_log);
+			chmod($error_log, 0640);
 			chown($error_log, Settings::Get('system.httpuser'));
 			chgrp($error_log, Settings::Get('system.httpgroup'));
 			// set error log log-level
@@ -1066,6 +1112,7 @@ class Apache extends HttpConfigBase
 			$access_log = FileDir::makeCorrectFile(Settings::Get('system.logfiles_directory') . $domain['loginname'] . $speciallogfile . '-access.log');
 			// Create the logfile if it does not exist (fixes #46)
 			touch($access_log);
+			chmod($access_log, 0640);
 			chown($access_log, Settings::Get('system.httpuser'));
 			chgrp($access_log, Settings::Get('system.httpgroup'));
 		} else {
@@ -1192,7 +1239,15 @@ class Apache extends HttpConfigBase
 		}
 
 		foreach ($diroptions as $row_diroptions) {
-			$row_diroptions['path'] = FileDir::makeCorrectDir($row_diroptions['path']);
+			// re-validate at write-time: the stored path was checked when it was set, but
+			// a customer-controlled path component could have been swapped for a symlink
+			// any time since then - mkDirWithCorrectOwnership() below runs a root chown -R
+			try {
+				$row_diroptions['path'] = FileDir::makeCorrectDir($row_diroptions['path'], $row_diroptions['customerroot']);
+			} catch (Exception $e) {
+				FroxlorLogger::getInstanceOf()->logAction(FroxlorLogger::CRON_ACTION, LOG_ERR, 'apache::createFileDirOptions: path "' . $row_diroptions['path'] . '" is unsafe, skipping: ' . $e->getMessage());
+				continue;
+			}
 			FileDir::mkDirWithCorrectOwnership($row_diroptions['customerroot'], $row_diroptions['path'], $row_diroptions['guid'], $row_diroptions['guid']);
 			$diroptions_filename = FileDir::makeCorrectFile(Settings::Get('system.apacheconf_diroptions') . '/40_froxlor_diroption_' . md5($row_diroptions['path']) . '.conf');
 

@@ -5,6 +5,7 @@ use Froxlor\Settings;
 use Froxlor\Api\Commands\Admins;
 use Froxlor\Api\Commands\Customers;
 use Froxlor\Api\Commands\Domains;
+use Froxlor\Api\Commands\SubDomains;
 use Froxlor\Database\Database;
 
 /**
@@ -509,5 +510,76 @@ class DomainsTest extends TestCase
 		$this->expectExceptionCode(400);
 		$this->expectExceptionMessage('The domains DNS does not include any of the chosen IP addresses. Let\'s Encrypt certificate generation not possible.');
 		Domains::getLocal($admin_userdata, $data)->add();
+	}
+
+	/**
+	 * regression test: Domains::get()/listing() and SubDomains::get()/listing() used
+	 * to return the raw panel_domains row (wildcard `d`.* SELECT), which includes
+	 * dkim_privkey - the domain's DKIM mail-signing private key. An admin/reseller
+	 * with the delegated customers_see_all flag could pull another tenant's key this
+	 * way. Response payloads must never include it, regardless of caller/command.
+	 */
+	public function testDomainsResponseHidesDkimPrivkey()
+	{
+		global $admin_userdata;
+		// get customer
+		$json_result = Customers::getLocal($admin_userdata, array(
+			'loginname' => 'test1'
+		))->get();
+		$customer_userdata = json_decode($json_result, true)['data'];
+
+		$data = [
+			'domain' => 'dkimtest.local',
+			'customerid' => $customer_userdata['customerid']
+		];
+		$json_result = Domains::getLocal($admin_userdata, $data)->add();
+		$result = json_decode($json_result, true)['data'];
+		$domain_id = $result['id'];
+
+		// simulate a populated DKIM key as Rspamd::writeDkimConfigs() would store it
+		$upd_stmt = Database::prepare("UPDATE `" . TABLE_PANEL_DOMAINS . "` SET `dkim` = '1', `dkim_privkey` = :privkey WHERE `id` = :id");
+		Database::pexecute($upd_stmt, [
+			'privkey' => "-----BEGIN RSA PRIVATE KEY-----\ntest\n-----END RSA PRIVATE KEY-----",
+			'id' => $domain_id
+		]);
+
+		$json_result = Domains::getLocal($admin_userdata, [
+			'id' => $domain_id
+		])->get();
+		$result = json_decode($json_result, true)['data'];
+		$this->assertArrayNotHasKey('dkim_privkey', $result);
+
+		$json_result = Domains::getLocal($admin_userdata)->listing();
+		$result = json_decode($json_result, true)['data'];
+		$found = false;
+		foreach ($result['list'] as $row) {
+			if ($row['id'] == $domain_id) {
+				$found = true;
+				$this->assertArrayNotHasKey('dkim_privkey', $row);
+			}
+		}
+		$this->assertTrue($found);
+
+		$json_result = SubDomains::getLocal($admin_userdata, [
+			'id' => $domain_id
+		])->get();
+		$result = json_decode($json_result, true)['data'];
+		$this->assertArrayNotHasKey('dkim_privkey', $result);
+
+		$json_result = SubDomains::getLocal($admin_userdata)->listing();
+		$result = json_decode($json_result, true)['data'];
+		$found = false;
+		foreach ($result['list'] as $row) {
+			if ($row['id'] == $domain_id) {
+				$found = true;
+				$this->assertArrayNotHasKey('dkim_privkey', $row);
+			}
+		}
+		$this->assertTrue($found);
+
+		// cleanup
+		Domains::getLocal($admin_userdata, [
+			'id' => $domain_id
+		])->delete();
 	}
 }

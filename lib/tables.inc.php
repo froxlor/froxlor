@@ -1,8 +1,8 @@
 <?php
 
 /**
- * This file is part of the Froxlor project.
- * Copyright (c) 2010 the Froxlor Team (see authors).
+ * This file is part of the froxlor project.
+ * Copyright (c) 2010 the froxlor Team (see authors).
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,7 +19,7 @@
  * https://files.froxlor.org/misc/COPYING.txt
  *
  * @copyright  the authors
- * @author     Froxlor team <team@froxlor.org>
+ * @author     froxlor team <team@froxlor.org>
  * @license    https://files.froxlor.org/misc/COPYING.txt GPLv2
  */
 
@@ -27,9 +27,9 @@ const TABLE_FTP_GROUPS = 'ftp_groups';
 const TABLE_FTP_USERS = 'ftp_users';
 const TABLE_FTP_QUOTALIMITS = 'ftp_quotalimits';
 const TABLE_FTP_QUOTATALLIES = 'ftp_quotatallies';
-const TABLE_MAIL_AUTORESPONDER = 'mail_autoresponder';
 const TABLE_MAIL_USERS = 'mail_users';
 const TABLE_MAIL_VIRTUAL = 'mail_virtual';
+const TABLE_MAIL_SENDER_ALIAS = 'mail_sender_aliases';
 const TABLE_PANEL_ACTIVATION = 'panel_activation';
 const TABLE_PANEL_ADMINS = 'panel_admins';
 const TABLE_PANEL_CUSTOMERS = 'panel_customers';
@@ -58,3 +58,4 @@ const TABLE_API_KEYS = 'api_keys';
 const TABLE_PANEL_USERCOLUMNS = 'panel_usercolumns';
 const TABLE_PANEL_LOGINLINKS = 'panel_loginlinks';
 const TABLE_PANEL_2FA_TOKENS = 'panel_2fa_tokens';
+const TABLE_PANEL_USER_SSHKEYS = 'panel_sshkeys';

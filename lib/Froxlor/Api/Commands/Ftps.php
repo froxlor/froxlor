@@ -1,8 +1,8 @@
 <?php
 
 /**
- * This file is part of the Froxlor project.
- * Copyright (c) 2010 the Froxlor Team (see authors).
+ * This file is part of the froxlor project.
+ * Copyright (c) 2010 the froxlor Team (see authors).
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,7 +19,7 @@
  * https://files.froxlor.org/misc/COPYING.txt
  *
  * @copyright  the authors
- * @author     Froxlor team <team@froxlor.org>
+ * @author     froxlor team <team@froxlor.org>
  * @license    https://files.froxlor.org/misc/COPYING.txt GPLv2
  */
 
@@ -102,14 +102,32 @@ class Ftps extends ApiCommand implements ResourceEntity
 			$ftpdomain = $this->getParam('ftp_domain', true, '');
 
 			$additional_members = $this->getParam('additional_members', true, []);
+			foreach ($additional_members as $index => $add_member) {
+				// members end up comma-joined, unsanitized, in the NSS group-file line built by
+				// Extrausers::generateFile() - reject anything but a plain username here so a
+				// newline/colon/comma can't inject or split a line in that root-owned file
+				$additional_members[$index] = Validate::validate($add_member, 'additional_members', '/^[a-zA-Z0-9][a-zA-Z0-9@.\-_]*\$?$/D', '', [], true);
+			}
 
 			// validation
 			$password = Validate::validate($password, 'password', '', '', [], true);
 			$password = Crypt::validatePassword($password, true);
 			$description = Validate::validate(trim($description), 'description', Validate::REGEX_DESC_TEXT, '', [], true);
 
-			if (Settings::Get('system.allow_customer_shell') == '1') {
+			// get needed customer info to reduce the ftp-user-counter by one
+			if ($is_defaultuser) {
+				// no resource check for default user
+				$customer = $this->getCustomerData();
+			} else {
+				$customer = $this->getCustomerData('ftps');
+			}
+
+			if (Settings::Get('system.allow_customer_shell') == '1' && $customer['shell_allowed'] == '1') {
 				$shell = Validate::validate(trim($shell), 'shell', '', '', [], true);
+				$availableshells = explode(',', Settings::Get('system.available_shells'));
+				if (!is_array($availableshells) || empty($availableshells) || !in_array($shell, $availableshells)) {
+					$shell = "/bin/false";
+				}
 			} else {
 				$shell = "/bin/false";
 			}
@@ -123,13 +141,6 @@ class Ftps extends ApiCommand implements ResourceEntity
 			}
 
 			$params = [];
-			// get needed customer info to reduce the ftp-user-counter by one
-			if ($is_defaultuser) {
-				// no resource check for default user
-				$customer = $this->getCustomerData();
-			} else {
-				$customer = $this->getCustomerData('ftps');
-			}
 
 			if ($sendinfomail != 1) {
 				$sendinfomail = 0;
@@ -259,6 +270,7 @@ class Ftps extends ApiCommand implements ResourceEntity
 					// update customer usage
 					Customers::increaseUsage($customer['customerid'], 'ftps_used');
 					Customers::increaseUsage($customer['customerid'], 'ftp_lastaccountnumber');
+					Cronjob::inserttask(TaskId::REBUILD_NSSUSERS);
 				}
 
 				$this->logger()->logAction($this->isAdmin() ? FroxlorLogger::ADM_ACTION : FroxlorLogger::USR_ACTION, LOG_NOTICE, "[API] added ftp-account '" . $username . " (" . $path . ")'");
@@ -288,7 +300,7 @@ class Ftps extends ApiCommand implements ResourceEntity
 					try {
 						$this->mailer()->Subject = $mail_subject;
 						$this->mailer()->AltBody = $mail_body;
-						$this->mailer()->msgHTML(str_replace("\n", "<br />", $mail_body));
+						$this->mailer()->Body = str_replace("\n", "<br />", $mail_body);
 						$this->mailer()->addAddress($customer['email'], User::getCorrectUserSalutation($customer));
 						$this->mailer()->send();
 					} catch (\PHPMailer\PHPMailer\Exception $e) {
@@ -371,6 +383,8 @@ class Ftps extends ApiCommand implements ResourceEntity
 		$params['idun'] = ($id <= 0 ? $username : $id);
 		$result = Database::pexecute_first($result_stmt, $params, true, true);
 		if ($result) {
+			// unset sensitive data
+			unset($result['password']);
 			$this->logger()->logAction($this->isAdmin() ? FroxlorLogger::ADM_ACTION : FroxlorLogger::USR_ACTION, LOG_INFO, "[API] get ftp-user '" . $result['username'] . "'");
 			return $this->response($result);
 		}
@@ -431,8 +445,15 @@ class Ftps extends ApiCommand implements ResourceEntity
 		$password = Validate::validate($password, 'password', '', '', [], true);
 		$description = Validate::validate(trim($description), 'description', Validate::REGEX_DESC_TEXT, '', [], true);
 
-		if (Settings::Get('system.allow_customer_shell') == '1') {
+		// get needed customer info to reduce the ftp-user-counter by one
+		$customer = $this->getCustomerData();
+
+		if (Settings::Get('system.allow_customer_shell') == '1' && $customer['shell_allowed'] == '1') {
 			$shell = Validate::validate(trim($shell), 'shell', '', '', [], true);
+			$availableshells = explode(',', Settings::Get('system.available_shells'));
+			if (!is_array($availableshells) || empty($availableshells) || !in_array($shell, $availableshells)) {
+				$shell = "/bin/false";
+			}
 		} else {
 			$shell = "/bin/false";
 		}
@@ -440,9 +461,6 @@ class Ftps extends ApiCommand implements ResourceEntity
 		if ($login_enabled != 1) {
 			$login_enabled = 0;
 		}
-
-		// get needed customer info to reduce the ftp-user-counter by one
-		$customer = $this->getCustomerData();
 
 		// password update?
 		if ($password != '') {
@@ -488,6 +506,7 @@ class Ftps extends ApiCommand implements ResourceEntity
 		// it's the task for "new ftp" but that will
 		// create all directories and correct their permissions
 		Cronjob::inserttask(TaskId::CREATE_FTP);
+		Cronjob::inserttask(TaskId::REBUILD_NSSUSERS);
 
 		$stmt = Database::prepare("
 			UPDATE `" . TABLE_FTP_USERS . "`
@@ -543,6 +562,8 @@ class Ftps extends ApiCommand implements ResourceEntity
 			WHERE `customerid` IN (" . implode(", ", $customer_ids) . ")" . $this->getSearchWhere($query_fields, true) . $this->getOrderBy() . $this->getLimit());
 		Database::pexecute($result_stmt, $query_fields, true, true);
 		while ($row = $result_stmt->fetch(PDO::FETCH_ASSOC)) {
+			// unset sensitive data
+			unset($row['password']);
 			$result[] = $row;
 		}
 		$this->logger()->logAction($this->isAdmin() ? FroxlorLogger::ADM_ACTION : FroxlorLogger::USR_ACTION, LOG_INFO, "[API] list ftp-users");
@@ -568,11 +589,12 @@ class Ftps extends ApiCommand implements ResourceEntity
 	{
 		$customer_ids = $this->getAllowedCustomerIds('ftp');
 		$result = [];
+		$query_fields = [];
 		$result_stmt = Database::prepare("
 			SELECT COUNT(*) as num_ftps FROM `" . TABLE_FTP_USERS . "`
 			WHERE `customerid` IN (" . implode(", ", $customer_ids) . ")
-		");
-		$result = Database::pexecute_first($result_stmt, null, true, true);
+		" . $this->getSearchWhere($query_fields, true));
+		$result = Database::pexecute_first($result_stmt, $query_fields, true, true);
 		if ($result) {
 			return $this->response($result['num_ftps']);
 		}
@@ -677,6 +699,7 @@ class Ftps extends ApiCommand implements ResourceEntity
 				Cronjob::inserttask(TaskId::CREATE_FTP);
 			}
 		}
+		Cronjob::inserttask(TaskId::REBUILD_NSSUSERS);
 
 		// decrease ftp-user usage for customer
 		$resetaccnumber = ($customer_data['ftps_used'] == '1') ? " , `ftp_lastaccountnumber`='0'" : '';

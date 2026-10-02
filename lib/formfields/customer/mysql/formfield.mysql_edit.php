@@ -1,15 +1,15 @@
 <?php
 
 /**
- * This file is part of the Froxlor project.
- * Copyright (c) 2010 the Froxlor Team (see authors).
+ * This file is part of the froxlor project.
+ * Copyright (c) 2010 the froxlor Team (see authors).
  *
  * For the full copyright and license information, please view the COPYING
  * file that was distributed with this source code. You can also view the
  * COPYING file online at https://files.froxlor.org/misc/COPYING.txt
  *
  * @copyright  (c) the authors
- * @author         Froxlor team <team@froxlor.org> (2010-)
+ * @author         froxlor team <team@froxlor.org> (2010-)
  * @license        GPLv2 https://files.froxlor.org/misc/COPYING.txt
  * @package        Formfields
  */
@@ -20,12 +20,11 @@ use Froxlor\System\Crypt;
 return [
 	'mysql_edit' => [
 		'title' => lng('mysql.database_edit'),
-		'image' => 'icons/mysql_edit.png',
+		'image' => 'fa-solid fa-pen',
 		'self_overview' => ['section' => 'mysql', 'page' => 'mysqls'],
 		'sections' => [
 			'section_a' => [
 				'title' => lng('mysql.database_edit'),
-				'image' => 'icons/mysql_edit.png',
 				'fields' => [
 					'databasename' => [
 						'label' => lng('mysql.databasename'),
@@ -52,7 +51,7 @@ return [
 					'mysql_password' => [
 						'label' => lng('changepassword.new_password_ifnotempty'),
 						'type' => 'password',
-						'autocomplete' => 'off',
+						'autocomplete' => 'new-password',
 						'next_to' => [
 							'mysql_password_suggestion' => [
 								'next_to_prefix' => lng('customer.generated_pwd') . ':',

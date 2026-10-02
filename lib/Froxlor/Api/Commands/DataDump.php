@@ -1,8 +1,8 @@
 <?php
 
 /**
- * This file is part of the Froxlor project.
- * Copyright (c) 2010 the Froxlor Team (see authors).
+ * This file is part of the froxlor project.
+ * Copyright (c) 2010 the froxlor Team (see authors).
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,7 +19,7 @@
  * https://files.froxlor.org/misc/COPYING.txt
  *
  * @copyright  the authors
- * @author     Froxlor team <team@froxlor.org>
+ * @author     froxlor team <team@froxlor.org>
  * @license    https://files.froxlor.org/misc/COPYING.txt GPLv2
  */
 
@@ -85,7 +85,7 @@ class DataDump extends ApiCommand implements ResourceEntity
 		// validation
 		$path = FileDir::makeCorrectDir(Validate::validate($path, 'path', '', '', [], true));
 		$userpath = $path;
-		$path = FileDir::makeCorrectDir($customer['documentroot'] . '/' . $path);
+		$path = FileDir::makeCorrectDir($customer['documentroot'] . '/' . $path, $customer['documentroot']);
 
 		// path cannot be the customers docroot
 		if ($path == FileDir::makeCorrectDir($customer['documentroot'])) {
@@ -239,8 +239,9 @@ class DataDump extends ApiCommand implements ResourceEntity
 
 		// check whether there is a data export job for this customer
 		$result_count = 0;
-		$sel_stmt = Database::prepare("SELECT * FROM `" . TABLE_PANEL_TASKS . "` WHERE `type` = '20'");
-		Database::pexecute($sel_stmt, null, true, true);
+		$query_fields = [];
+		$sel_stmt = Database::prepare("SELECT * FROM `" . TABLE_PANEL_TASKS . "` WHERE `type` = '20' " . $this->getSearchWhere($query_fields, true));
+		Database::pexecute($sel_stmt, $query_fields, true, true);
 		while ($entry = $sel_stmt->fetch(PDO::FETCH_ASSOC)) {
 			$entry['data'] = json_decode($entry['data'], true);
 			if (in_array($entry['data']['customerid'], $customer_ids)) {

@@ -1,8 +1,8 @@
 <?php
 
 /**
- * This file is part of the Froxlor project.
- * Copyright (c) 2010 the Froxlor Team (see authors).
+ * This file is part of the froxlor project.
+ * Copyright (c) 2010 the froxlor Team (see authors).
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,7 +19,7 @@
  * https://files.froxlor.org/misc/COPYING.txt
  *
  * @copyright  the authors
- * @author     Froxlor team <team@froxlor.org>
+ * @author     froxlor team <team@froxlor.org>
  * @license    https://files.froxlor.org/misc/COPYING.txt GPLv2
  */
 
@@ -85,27 +85,31 @@ class Preconfig
 			}
 		}
 	}
+
 	/**
 	 * Function getPreConfig
 	 *
 	 * outputs various form-field-arrays before the update process
 	 * can be continued (asks for agreement whatever is being asked)
 	 *
+	 * @param bool $no_check
 	 * @return array
 	 */
-	public static function getPreConfig(): array
+	public static function getPreConfig(bool $no_check = false): array
 	{
 		$preconfig = new self();
 
 		if ($preconfig->hasPreConfig()) {
-			$agree = [
-				'title' => 'Check',
-				'fields' => [
-					'update_changesagreed' => ['mandatory' => true, 'type' => 'checkrequired', 'value' => 1, 'label' => '<strong>I have read the update notifications above and I am aware of the changes made to my system.</strong>'],
-					'update_preconfig' => ['type' => 'hidden', 'value' => 1]
-				]
-			];
-			$preconfig->addToPreConfig($agree);
+			if (!$no_check) {
+				$agree = [
+					'title' => 'Check',
+					'fields' => [
+						'update_changesagreed' => ['mandatory' => true, 'type' => 'checkrequired', 'value' => 1, 'label' => '<strong>I have read the update notifications above and I am aware of the changes made to my system.</strong>'],
+						'update_preconfig' => ['type' => 'hidden', 'value' => 1]
+					]
+				];
+				$preconfig->addToPreConfig($agree);
+			}
 			return $preconfig->getData();
 		}
 		return [];

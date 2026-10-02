@@ -1,8 +1,8 @@
 <?php
 
 /**
- * This file is part of the Froxlor project.
- * Copyright (c) 2010 the Froxlor Team (see authors).
+ * This file is part of the froxlor project.
+ * Copyright (c) 2010 the froxlor Team (see authors).
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,7 +19,7 @@
  * https://files.froxlor.org/misc/COPYING.txt
  *
  * @copyright  the authors
- * @author     Froxlor team <team@froxlor.org>
+ * @author     froxlor team <team@froxlor.org>
  * @license    https://files.froxlor.org/misc/COPYING.txt GPLv2
  */
 
@@ -58,6 +58,8 @@ class Extrausers
 		@chmod('/var/lib/extrausers/passwd', 0644);
 		@chmod('/var/lib/extrausers/group', 0644);
 		@chmod('/var/lib/extrausers/shadow', 0640);
+
+		SshKeys::generateFiles($cronlog);
 	}
 
 	private static function generateFile($file, $query, &$cronlog, &$result_list = null)
@@ -89,13 +91,16 @@ class Extrausers
 						$u['shell'] = '/bin/false';
 						$u['comment'] = 'Locked Froxlor User';
 					}
+					if (Customer::getCustomerDetail($u['customerid'], 'shell_allowed') == '0') {
+						$u['shell'] = '/bin/false';
+					}
 					$line = $u['username'] . ':' . $u['password'] . ':' . $u['uid'] . ':' . $u['gid'] . ':' . $u['comment'] . ':' . $u['homedir'] . ':' . $u['shell'] . PHP_EOL;
 					if (is_array($result_list)) {
 						$result_list[] = $u['username'];
 					}
 					break;
 				case 'group':
-					$line = $u['groupname'] . ':' . $u['password'] . ':' . $u['gid'] . ':' . $u['members'] . PHP_EOL;
+					$line = $u['groupname'] . ':' . $u['password'] . ':' . $u['gid'] . ':' . self::cleanMembers($u['members']) . PHP_EOL;
 					break;
 				case 'shadow':
 					$line = $u['username'] . ':' . $u['password'] . ':' . floor(time() / 86400 - 1) . ':0:99999:7:::' . PHP_EOL;
@@ -126,6 +131,17 @@ class Extrausers
 	private static function cleanString($string = null)
 	{
 		$allowed = "/[^a-z0-9\\.\\-\\_\\ ]/i";
+		return preg_replace($allowed, "", $string);
+	}
+
+	/**
+	 * defense-in-depth for the group-file 'members' field: same idea as cleanString() but also
+	 * keeps ',' and '@', since members is a comma-joined list of (possibly domain-qualified)
+	 * usernames - the actual validation of each member happens in Ftps::add()
+	 */
+	private static function cleanMembers($string = null)
+	{
+		$allowed = "/[^a-z0-9\\.\\-\\_\\@\\,]/i";
 		return preg_replace($allowed, "", $string);
 	}
 }

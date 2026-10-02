@@ -1,8 +1,8 @@
 <?php
 
 /**
- * This file is part of the Froxlor project.
- * Copyright (c) 2010 the Froxlor Team (see authors).
+ * This file is part of the froxlor project.
+ * Copyright (c) 2010 the froxlor Team (see authors).
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,7 +19,7 @@
  * https://files.froxlor.org/misc/COPYING.txt
  *
  * @copyright  the authors
- * @author     Froxlor team <team@froxlor.org>
+ * @author     froxlor team <team@froxlor.org>
  * @license    https://files.froxlor.org/misc/COPYING.txt GPLv2
  */
 
@@ -31,8 +31,10 @@ use Froxlor\Api\ResourceEntity;
 use Froxlor\Database\Database;
 use Froxlor\FroxlorLogger;
 use Froxlor\Idna\IdnaWrapper;
+use Froxlor\Language;
 use Froxlor\Settings;
 use Froxlor\System\Crypt;
+use Froxlor\UI\Panel\UI;
 use Froxlor\UI\Response;
 use Froxlor\User;
 use Froxlor\Validate\Validate;
@@ -103,6 +105,10 @@ class Admins extends ApiCommand implements ResourceEntity
 			Database::pexecute($result_stmt, $query_fields, true, true);
 			$result = [];
 			while ($row = $result_stmt->fetch(PDO::FETCH_ASSOC)) {
+				// unset sensitive data
+				unset($row['password']);
+				unset($row['data_2fa']);
+
 				$result[] = $row;
 			}
 			return $this->response([
@@ -123,11 +129,12 @@ class Admins extends ApiCommand implements ResourceEntity
 	public function listingCount()
 	{
 		if ($this->isAdmin() && $this->getUserDetail('change_serversettings') == 1) {
+			$query_fields = [];
 			$result_stmt = Database::prepare("
 				SELECT COUNT(*) as num_admins
 				FROM `" . TABLE_PANEL_ADMINS . "`
-			");
-			$result = Database::pexecute_first($result_stmt, null, true, true);
+			" . $this->getSearchWhere($query_fields));
+			$result = Database::pexecute_first($result_stmt, $query_fields, true, true);
 			if ($result) {
 				return $this->response($result['num_admins']);
 			}
@@ -148,8 +155,8 @@ class Admins extends ApiCommand implements ResourceEntity
 	 * @param string $admin_password
 	 *            optional, default auto-generated
 	 * @param string $def_language
-	 * *          optional, ISO 639-1 language code (e.g. 'en', 'de', see lng-folder for supported languages),
-	 * *          default is system-default language
+	 *            optional, ISO 639-1 language code (e.g. 'en', 'de', see lng-folder for supported languages),
+	 *            default is system-default language
 	 * @param bool $gui_access
 	 *            optional, allow login via webui, if false ONLY the login via webui is disallowed; default true
 	 * @param bool $api_allowed
@@ -253,6 +260,9 @@ class Admins extends ApiCommand implements ResourceEntity
 			$idna_convert = new IdnaWrapper();
 			$email = $idna_convert->encode(Validate::validate($email, 'email', '', '', [], true));
 			$def_language = Validate::validate($def_language, 'default language', '', '', [], true);
+			if (!empty($def_language) && !isset(Language::getLanguages()[$def_language])) {
+				$def_language = Settings::Get('panel.standardlanguage');
+			}
 			$custom_notes = Validate::validate(str_replace("\r\n", "\n", $custom_notes), 'custom_notes', Validate::REGEX_CONF_TEXT, '', [], true);
 
 			if (Settings::Get('system.mail_quota_enabled') != '1') {
@@ -264,6 +274,11 @@ class Admins extends ApiCommand implements ResourceEntity
 			// cause empty == generate password automatically
 			if ($password != '') {
 				$password = Crypt::validatePassword($password, true);
+			}
+
+			// verify ip-address ids are numeric values only
+			if (is_array($ipaddress)) {
+				$ipaddress = array_filter($ipaddress, 'is_numeric');
 			}
 
 			$diskspace *= 1024;
@@ -287,6 +302,15 @@ class Admins extends ApiCommand implements ResourceEntity
 				'login' => $loginname
 			], true, true);
 
+			// Check for existing email address
+			// do not check via api as we skip any permission checks for this task
+			$email_check_admin_stmt = Database::prepare("
+				SELECT `email` FROM `" . TABLE_PANEL_ADMINS . "` WHERE `email` = :email
+			");
+			$email_check_admin = Database::pexecute_first($email_check_admin_stmt, [
+				'email' => $email
+			], true, true);
+
 			if (($loginname_check && strtolower($loginname_check['loginname']) == strtolower($loginname)) || ($loginname_check_admin && strtolower($loginname_check_admin['loginname']) == strtolower($loginname))) {
 				Response::standardError('loginnameexists', $loginname, true);
 			} elseif (preg_match('/^' . preg_quote(Settings::Get('customer.accountprefix'), '/') . '([0-9]+)/', $loginname)) {
@@ -298,6 +322,8 @@ class Admins extends ApiCommand implements ResourceEntity
 				Response::standardError('loginnameiswrong', $loginname, true);
 			} elseif (!Validate::validateEmail($email)) {
 				Response::standardError('emailiswrong', $email, true);
+			} elseif ($email_check_admin && strtolower($email_check_admin['email']) == strtolower($email)) {
+				Response::standardError('emailexists', $email, true);
 			} else {
 				if ($customers_see_all != '1') {
 					$customers_see_all = '0';
@@ -339,7 +365,9 @@ class Admins extends ApiCommand implements ResourceEntity
 					'quota' => $email_quota,
 					'ftps' => $ftps,
 					'mysqls' => $mysqls,
-					'ip' => empty($ipaddress) ? "" : (is_array($ipaddress) && $ipaddress > 0 ? json_encode($ipaddress) : -1),
+					'ip' => empty($ipaddress) ? "" : (is_array($ipaddress) && count($ipaddress) > 0
+						? json_encode(array_map('intval', $ipaddress))
+						: -1),
 					'theme' => $_theme,
 					'custom_notes' => $custom_notes,
 					'custom_notes_show' => $custom_notes_show
@@ -416,6 +444,11 @@ class Admins extends ApiCommand implements ResourceEntity
 			];
 			$result = Database::pexecute_first($result_stmt, $params, true, true);
 			if ($result) {
+				if (!$this->isInternal()) {
+					// unset sensitive data
+					unset($result['password']);
+					unset($result['data_2fa']);
+				}
 				$this->logger()->logAction(FroxlorLogger::ADM_ACTION, LOG_INFO, "[API] get admin '" . $result['loginname'] . "'");
 				return $this->response($result);
 			}
@@ -439,10 +472,10 @@ class Admins extends ApiCommand implements ResourceEntity
 	 * @param string $admin_password
 	 *            optional, default auto-generated
 	 * @param string $def_language
-	 * *          optional, ISO 639-1 language code (e.g. 'en', 'de', see lng-folder for supported languages),
-	 * *          default is system-default language
+	 *            optional, ISO 639-1 language code (e.g. 'en', 'de', see lng-folder for supported languages),
+	 *            default is system-default language
 	 * @param bool $gui_access
-	 * *          optional, allow login via webui, if false ONLY the login via webui is disallowed; default true
+	 *            optional, allow login via webui, if false ONLY the login via webui is disallowed; default true
 	 * @param bool $api_allowed
 	 *            optional, default is true if system setting api.enabled is true, else false
 	 * @param string $custom_notes
@@ -520,7 +553,7 @@ class Admins extends ApiCommand implements ResourceEntity
 			$result = $this->apiCall('Admins.get', [
 				'id' => $id,
 				'loginname' => $loginname
-			]);
+			], true);
 			$id = $result['adminid'];
 
 			if ($this->getUserDetail('change_serversettings') == 1 || $result['adminid'] == $this->getUserDetail('adminid')) {
@@ -586,8 +619,16 @@ class Admins extends ApiCommand implements ResourceEntity
 				$idna_convert = new IdnaWrapper();
 				$email = $idna_convert->encode(Validate::validate($email, 'email', '', '', [], true));
 				$def_language = Validate::validate($def_language, 'default language', '', '', [], true);
+				if (!empty($def_language) && !isset(Language::getLanguages()[$def_language])) {
+					$def_language = Settings::Get('panel.standardlanguage');
+				}
 				$custom_notes = Validate::validate(str_replace("\r\n", "\n", $custom_notes ?? ""), 'custom_notes', Validate::REGEX_CONF_TEXT, '', [], true);
+				// only allow known, installed themes - the value is rendered unescaped in the admin
+				// listing's optional Theme column, so anything else must never reach the DB
 				$theme = Validate::validate($theme, 'theme', '', '', [], true);
+				if (!empty($theme) && !isset(UI::getThemes()[$theme])) {
+					$theme = '';
+				}
 				$password = Validate::validate($password, 'password', '', '', [], true);
 
 				if (Settings::Get('system.mail_quota_enabled') != '1') {
@@ -596,6 +637,10 @@ class Admins extends ApiCommand implements ResourceEntity
 
 				if (empty($theme)) {
 					$theme = Settings::Get('panel.default_theme');
+				}
+
+				if (is_array($ipaddress)) {
+					$ipaddress = array_filter($ipaddress, 'is_numeric');
 				}
 
 				if (empty(trim($name))) {
@@ -610,8 +655,20 @@ class Admins extends ApiCommand implements ResourceEntity
 						'admin.email'
 					], '', true);
 				}
+				// Check for existing email address
+				// do not check via api as we skip any permission checks for this task
+				$email_check_admin_stmt = Database::prepare("
+					SELECT `email` FROM `" . TABLE_PANEL_ADMINS . "` WHERE `email` = :email and `adminid` <> :adminid
+				");
+				$email_check_admin = Database::pexecute_first($email_check_admin_stmt, [
+					'email' => $email,
+					'adminid' => $id,
+				], true, true);
+
 				if (!Validate::validateEmail($email)) {
 					Response::standardError('emailiswrong', $email, true);
+				} elseif ($email_check_admin && strtolower($email_check_admin['email']) == strtolower($email)) {
+					Response::standardError('emailexists', $email, true);
 				} else {
 					if ($deactivated != '1') {
 						$deactivated = '0';
@@ -695,7 +752,9 @@ class Admins extends ApiCommand implements ResourceEntity
 						'quota' => $email_quota,
 						'ftps' => $ftps,
 						'mysqls' => $mysqls,
-						'ip' => empty($ipaddress) ? "" : (is_array($ipaddress) && $ipaddress > 0 ? json_encode($ipaddress) : -1),
+						'ip' => empty($ipaddress) ? "" : (is_array($ipaddress) && count($ipaddress) > 0
+							? json_encode(array_map('intval', $ipaddress))
+							: -1),
 						'deactivated' => $deactivated,
 						'custom_notes' => $custom_notes,
 						'custom_notes_show' => $custom_notes_show,
@@ -734,6 +793,20 @@ class Admins extends ApiCommand implements ResourceEntity
 					");
 					Database::pexecute($upd_stmt, $upd_data, true, true);
 					$this->logger()->logAction(FroxlorLogger::ADM_ACTION, LOG_NOTICE, "[API] edited admin '" . $result['loginname'] . "'");
+
+					if ($password != $result['password']) {
+						// password has been changed - purge 2fa "remember this device" tokens so a
+						// credential rotation actually locks out anyone holding a surviving cookie.
+						// api-keys are intentionally left untouched here; the UI hints at rotating them instead.
+						// guarded by db_version since the `admin` column might not exist yet if this
+						// code has been deployed but the db update hasn't run yet
+						if (Settings::Get('panel.db_version') >= 202608210) {
+							$del_stmt = Database::prepare("DELETE FROM `" . TABLE_PANEL_2FA_TOKENS . "` WHERE `userid` = :id AND `admin` = '1'");
+							Database::pexecute($del_stmt, [
+								'id' => $id
+							], true, true);
+						}
+					}
 
 					// get all admin-data for return-array
 					$result = $this->apiCall('Admins.get', [

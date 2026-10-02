@@ -1,8 +1,8 @@
 <?php
 
 /**
- * This file is part of the Froxlor project.
- * Copyright (c) 2010 the Froxlor Team (see authors).
+ * This file is part of the froxlor project.
+ * Copyright (c) 2010 the froxlor Team (see authors).
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,7 +19,7 @@
  * https://files.froxlor.org/misc/COPYING.txt
  *
  * @copyright  the authors
- * @author     Froxlor team <team@froxlor.org>
+ * @author     froxlor team <team@froxlor.org>
  * @license    https://files.froxlor.org/misc/COPYING.txt GPLv2
  */
 
@@ -34,9 +34,11 @@ use Froxlor\Database\DbManager;
 use Froxlor\FileDir;
 use Froxlor\FroxlorLogger;
 use Froxlor\Idna\IdnaWrapper;
+use Froxlor\Language;
 use Froxlor\Settings;
 use Froxlor\System\Cronjob;
 use Froxlor\System\Crypt;
+use Froxlor\UI\Panel\UI;
 use Froxlor\UI\Response;
 use Froxlor\User;
 use Froxlor\Validate\Validate;
@@ -128,6 +130,10 @@ class Customers extends ApiCommand implements ResourceEntity
 						$row['dbspace_used'] = 0;
 					}
 				}
+				// unset sensitive data
+				unset($row['password']);
+				unset($row['data_2fa']);
+				unset($row['leprivatekey']);
 				$result[] = $row;
 			}
 			return $this->response([
@@ -148,16 +154,18 @@ class Customers extends ApiCommand implements ResourceEntity
 	public function listingCount()
 	{
 		if ($this->isAdmin()) {
+			$query_fields = [];
 			$result_stmt = Database::prepare("
 				SELECT COUNT(*) as num_customers
-				FROM `" . TABLE_PANEL_CUSTOMERS . "`
-				WHERE " . ($this->getUserDetail('customers_see_all') ? "1" : " `adminid` = :adminid "));
+				FROM `" . TABLE_PANEL_CUSTOMERS . "` `c`, `" . TABLE_PANEL_ADMINS . "` `a`
+				WHERE `c`.`adminid` = `a`.`adminid` AND " . ($this->getUserDetail('customers_see_all') ? "1" : " `c`.`adminid` = :adminid ") . $this->getSearchWhere($query_fields, true));
 			$params = [];
 			if ($this->getUserDetail('customers_see_all') == '0') {
 				$params = [
 					'adminid' => $this->getUserDetail('adminid')
 				];
 			}
+			$params = array_merge($params, $query_fields);
 			$result = Database::pexecute_first($result_stmt, $params, true, true);
 			if ($result) {
 				return $this->response($result['num_customers']);
@@ -197,6 +205,8 @@ class Customers extends ApiCommand implements ResourceEntity
 	 *                             optional, allow login via webui, if false ONLY the login via webui is disallowed; default true
 	 * @param bool $api_allowed
 	 *                             optional, default is true if system setting api.enabled is true, else false
+	 * @param bool $shell_allowed
+	 *                             optional, default is true if system setting system.allow_customer_shell is true, else false
 	 * @param int $gender
 	 *                             optional, 0 = no-gender, 1 = male, 2 = female
 	 * @param string $custom_notes
@@ -303,6 +313,7 @@ class Customers extends ApiCommand implements ResourceEntity
 				$def_language = $this->getParam('def_language', true, Settings::Get('panel.standardlanguage'));
 				$gui_access = $this->getBoolParam('gui_access', true, 1);
 				$api_allowed = $this->getBoolParam('api_allowed', true, (Settings::Get('api.enabled') && Settings::Get('api.customer_default')));
+				$shell_allowed = $this->getBoolParam('shell_allowed', true, intval(Settings::Get('system.allow_customer_shell')));
 				$gender = (int)$this->getParam('gender', true, 0);
 				$custom_notes = $this->getParam('custom_notes', true, '');
 				$custom_notes_show = $this->getBoolParam('custom_notes_show', true, 0);
@@ -377,6 +388,9 @@ class Customers extends ApiCommand implements ResourceEntity
 				$email = $idna_convert->encode(Validate::validate($email, 'email', '', '', [], true));
 				$customernumber = Validate::validate($customernumber, 'customer number', '/^[A-Za-z0-9 \-]*$/Di', '', [], true);
 				$def_language = Validate::validate($def_language, 'default language', '', '', [], true);
+				if (!empty($def_language) && !isset(Language::getLanguages()[$def_language])) {
+					$def_language = Settings::Get('panel.standardlanguage');
+				}
 				$custom_notes = Validate::validate(str_replace("\r\n", "\n", $custom_notes), 'custom_notes', Validate::REGEX_CONF_TEXT, '', [], true);
 
 				if (Settings::Get('system.mail_quota_enabled') != '1') {
@@ -505,6 +519,15 @@ class Customers extends ApiCommand implements ResourceEntity
 						'login' => $loginname
 					], true, true);
 
+					// Check for existing email address
+					// do not check via api as we skip any permission checks for this task
+					$email_check_admin_stmt = Database::prepare("
+						SELECT `email` FROM `" . TABLE_PANEL_ADMINS . "` WHERE `email` = :email
+					");
+					$email_check_admin = Database::pexecute_first($email_check_admin_stmt, [
+						'email' => $email
+					], true, true);
+
 					$mysql_maxlen = Database::getSqlUsernameLength() - strlen(Settings::Get('customer.mysqlprefix'));
 					if (($loginname_check && strtolower($loginname_check['loginname']) == strtolower($loginname)) || ($loginname_check_admin && strtolower($loginname_check_admin['loginname']) == strtolower($loginname))) {
 						Response::standardError('loginnameexists', $loginname, true);
@@ -514,6 +537,8 @@ class Customers extends ApiCommand implements ResourceEntity
 						} else {
 							Response::standardError('loginnameiswrong', $loginname, true);
 						}
+					} elseif ($email_check_admin && strtolower($email_check_admin['email']) == strtolower($email)) {
+						Response::standardError('emailexistsanon', $email, true);
 					}
 
 					$guid = intval(Settings::Get('system.lastguid')) + 1;
@@ -547,6 +572,7 @@ class Customers extends ApiCommand implements ResourceEntity
 						'lang' => $def_language,
 						'gui_access' => $gui_access,
 						'api_allowed' => $api_allowed,
+						'shell_allowed' => $shell_allowed,
 						'docroot' => $documentroot,
 						'guid' => $guid,
 						'diskspace' => $diskspace,
@@ -590,6 +616,7 @@ class Customers extends ApiCommand implements ResourceEntity
 						`def_language` = :lang,
 						`gui_access` = :gui_access,
 						`api_allowed` = :api_allowed,
+						`shell_allowed` = :shell_allowed,
 						`documentroot` = :docroot,
 						`guid` = :guid,
 						`diskspace` = :diskspace,
@@ -738,11 +765,12 @@ class Customers extends ApiCommand implements ResourceEntity
 							'adminid' => $this->getUserDetail('adminid'),
 							'docroot' => $documentroot,
 							'phpenabled' => $phpenabled,
-							'openbasedir' => '1'
+							'openbasedir' => '1',
+							'is_stdsubdomain' => 1
 						];
 						$domainid = -1;
 						try {
-							$std_domain = $this->apiCall('Domains.add', $ins_data);
+							$std_domain = $this->apiCall('Domains.add', $ins_data, true);
 							$domainid = $std_domain['id'];
 						} catch (Exception $e) {
 							$this->logger()->logAction(FroxlorLogger::ADM_ACTION, LOG_ERR, "[API] Unable to add standard-subdomain: " . $e->getMessage());
@@ -827,7 +855,7 @@ class Customers extends ApiCommand implements ResourceEntity
 						try {
 							$this->mailer()->Subject = $mail_subject;
 							$this->mailer()->AltBody = $mail_body;
-							$this->mailer()->msgHTML(str_replace("\n", "<br />", $mail_body));
+							$this->mailer()->Body = str_replace("\n", "<br />", $mail_body);
 							$this->mailer()->addAddress($email, User::getCorrectUserSalutation([
 								'firstname' => $firstname,
 								'name' => $name,
@@ -946,6 +974,12 @@ class Customers extends ApiCommand implements ResourceEntity
 					$result['dbspace_used'] = 0;
 				}
 			}
+			if (!$this->isInternal()) {
+				// unset sensitive data
+				unset($result['password']);
+				unset($result['data_2fa']);
+			}
+			unset($result['leprivatekey']);
 			$this->logger()->logAction($this->isAdmin() ? FroxlorLogger::ADM_ACTION : FroxlorLogger::USR_ACTION, LOG_INFO, "[API] get customer '" . $result['loginname'] . "'");
 			return $this->response($result);
 		}
@@ -996,12 +1030,14 @@ class Customers extends ApiCommand implements ResourceEntity
 	 * @param int $customernumber
 	 *                             optional
 	 * @param string $def_language
-	 * *                           optional, ISO 639-1 language code (e.g. 'en', 'de', see lng-folder for supported languages),
-	 * *                           default is system-default language
+	 *                             optional, ISO 639-1 language code (e.g. 'en', 'de', see lng-folder for supported languages),
+	 *                             default is system-default language
 	 * @param bool $gui_access
 	 *                             optional, allow login via webui, if false ONLY the login via webui is disallowed; default true
 	 * @param bool $api_allowed
 	 *                             optional, default is true if system setting api.enabled is true, else false
+	 * @param bool $shell_allowed
+	 *                             optional, default is true if system setting system.allow_customer_shell is true, else false
 	 * @param int $gender
 	 *                             optional, 0 = no-gender, 1 = male, 2 = female
 	 * @param string $custom_notes
@@ -1094,7 +1130,7 @@ class Customers extends ApiCommand implements ResourceEntity
 		$result = $this->apiCall('Customers.get', [
 			'id' => $id,
 			'loginname' => $loginname
-		]);
+		], true);
 		$id = $result['customerid'];
 
 		if ($this->isAdmin()) {
@@ -1105,7 +1141,7 @@ class Customers extends ApiCommand implements ResourceEntity
 			$email = $this->getParam('email', true, $idna_convert->decode($result['email']));
 			$name = $this->getParam('name', true, $result['name']);
 			$firstname = $this->getParam('firstname', true, $result['firstname']);
-			$company_required = (!empty($name) && empty($firstname)) || (empty($name) && !empty($firstname)) || (empty($name) && empty($firstname));
+			$company_required = ((!empty($name) && empty($firstname)) || (empty($name) && !empty($firstname)) || (empty($name) && empty($firstname))) && empty($result['company']);
 			$company = $this->getParam('company', !$company_required, $result['company']);
 			$street = $this->getParam('street', true, $result['street']);
 			$zipcode = $this->getParam('zipcode', true, $result['zipcode']);
@@ -1116,6 +1152,7 @@ class Customers extends ApiCommand implements ResourceEntity
 			$def_language = $this->getParam('def_language', true, $result['def_language']);
 			$gui_access = $this->getBoolParam('gui_access', true, $result['gui_access']);
 			$api_allowed = $this->getBoolParam('api_allowed', true, $result['api_allowed']);
+			$shell_allowed = $this->getBoolParam('shell_allowed', true, $result['shell_allowed']);
 			$gender = (int)$this->getParam('gender', true, $result['gender']);
 			$custom_notes = $this->getParam('custom_notes', true, $result['custom_notes']);
 			$custom_notes_show = $this->getBoolParam('custom_notes_show', true, $result['custom_notes_show']);
@@ -1183,7 +1220,16 @@ class Customers extends ApiCommand implements ResourceEntity
 
 		}
 		$def_language = Validate::validate($def_language, 'default language', '', '', [], true);
+		if (!empty($def_language) && !isset(Language::getLanguages()[$def_language])) {
+			$def_language = Settings::Get('panel.standardlanguage');
+		}
+
+		// only allow known, installed themes - the value is rendered unescaped in the admin
+		// customer listing's optional Theme column, so anything else must never reach the DB
 		$theme = Validate::validate($theme, 'theme', '', '', [], true);
+		if (!empty($theme) && !isset(UI::getThemes()[$theme])) {
+			$theme = '';
+		}
 
 		if (Settings::Get('system.mail_quota_enabled') != '1') {
 			$email_quota = -1;
@@ -1242,6 +1288,18 @@ class Customers extends ApiCommand implements ResourceEntity
 				], '', true);
 			} elseif (!Validate::validateEmail($email)) {
 				Response::standardError('emailiswrong', $email, true);
+			} else {
+				// Check for existing email address
+				// do not check via api as we skip any permission checks for this task
+				$email_check_admin_stmt = Database::prepare("
+						SELECT `email` FROM `" . TABLE_PANEL_ADMINS . "` WHERE `email` = :email
+					");
+				$email_check_admin = Database::pexecute_first($email_check_admin_stmt, [
+					'email' => $email
+				], true, true);
+				if ($email_check_admin && strtolower($email_check_admin['email']) == strtolower($email)) {
+					Response::standardError('emailexistsanon', $email, true);
+				}
 			}
 		}
 
@@ -1343,10 +1401,10 @@ class Customers extends ApiCommand implements ResourceEntity
 				]);
 
 				// enable/disable global mysql-user (loginname)
-				$current_allowed_mysqlserver =  isset($result['allowed_mysqlserver']) && !empty($result['allowed_mysqlserver']) ? json_decode($result['allowed_mysqlserver'], true) : [];
+				$current_allowed_mysqlserver = isset($result['allowed_mysqlserver']) && !empty($result['allowed_mysqlserver']) ? json_decode($result['allowed_mysqlserver'], true) : [];
 				foreach ($current_allowed_mysqlserver as $dbserver) {
 					// require privileged access for target db-server
-					Database::needRoot(true, $dbserver, false);
+					Database::needRoot(true, $dbserver, true);
 					// get DbManager
 					$dbm = new DbManager($this->logger());
 					foreach (array_map('trim', explode(',', Settings::Get('system.mysql_access_host'))) as $mysql_access_host) {
@@ -1474,6 +1532,7 @@ class Customers extends ApiCommand implements ResourceEntity
 				'custom_notes_show' => $custom_notes_show,
 				'gui_access' => $gui_access,
 				'api_allowed' => $api_allowed,
+				'shell_allowed' => $shell_allowed,
 				'allowed_mysqlserver' => empty($allowed_mysqlserver) ? "" : json_encode($allowed_mysqlserver)
 			];
 			$upd_data += $admin_upd_data;
@@ -1518,12 +1577,27 @@ class Customers extends ApiCommand implements ResourceEntity
 				`custom_notes_show` = :custom_notes_show,
 				`gui_access` = :gui_access,
 				`api_allowed` = :api_allowed,
+				`shell_allowed` = :shell_allowed,
 				`allowed_mysqlserver` = :allowed_mysqlserver";
 			$upd_query .= $admin_upd_query;
 		}
 		$upd_query .= " WHERE `customerid` = :customerid";
 		$upd_stmt = Database::prepare($upd_query);
 		Database::pexecute($upd_stmt, $upd_data);
+
+		if ($password != $result['password']) {
+			// password has been changed - purge 2fa "remember this device" tokens so a
+			// credential rotation actually locks out anyone holding a surviving cookie.
+			// api-keys are intentionally left untouched here; the UI hints at rotating them instead.
+			// guarded by db_version since the `admin` column might not exist yet if this code
+			// has been deployed but the db update hasn't run yet
+			if (Settings::Get('panel.db_version') >= 202608210) {
+				$del_stmt = Database::prepare("DELETE FROM `" . TABLE_PANEL_2FA_TOKENS . "` WHERE `userid` = :id AND `admin` = '0'");
+				Database::pexecute($del_stmt, [
+					'id' => $id
+				], true, true);
+			}
+		}
 
 		if ($this->isAdmin()) {
 			// Using filesystem - quota, insert a task which cleans the filesystem - quota
@@ -1623,6 +1697,13 @@ class Customers extends ApiCommand implements ResourceEntity
 			Database::query($admin_update_query);
 		}
 
+		// shell allowance has changed
+		if ($result['shell_allowed'] == '1' && $shell_allowed == '0') {
+			// update all users with a valid shell to have /bin/false (disable shell)
+			$ftp_upd_stmt = Database::prepare("UPDATE `" . TABLE_FTP_USERS . "` SET `shell` = '/bin/false' WHERE `customerid` = :cid");
+			Database::pexecute($ftp_upd_stmt, ['cid' => (int)$result['customerid']]);
+		}
+
 		$this->logger()->logAction($this->isAdmin() ? FroxlorLogger::ADM_ACTION : FroxlorLogger::USR_ACTION, LOG_NOTICE, "[API] edited user '" . $result['loginname'] . "'");
 
 		/*
@@ -1675,7 +1756,7 @@ class Customers extends ApiCommand implements ResourceEntity
 			$id = $result['customerid'];
 
 			// remove global mysql-user (loginname)
-			$current_allowed_mysqlserver =  isset($result['allowed_mysqlserver']) && !empty($result['allowed_mysqlserver']) ? json_decode($result['allowed_mysqlserver'], true) : [];
+			$current_allowed_mysqlserver = isset($result['allowed_mysqlserver']) && !empty($result['allowed_mysqlserver']) ? json_decode($result['allowed_mysqlserver'], true) : [];
 			foreach ($current_allowed_mysqlserver as $dbserver) {
 				// require privileged access for target db-server
 				Database::needRoot(true, $dbserver, false);

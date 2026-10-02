@@ -6,7 +6,6 @@
 	</div>
 
 	<div class="row mb-2">
-		<textarea cols="12" rows="4" readonly class="form-control w-100">{{ basedir }}bin/froxlor-cli froxlor:config-services --apply={{ params_filename }}
-rm {{ params_filename }}</textarea>
+		<textarea cols="12" rows="4" readonly class="form-control w-100">{{ basedir }}bin/froxlor-cli froxlor:config-services -D --apply={{ params_filename }}</textarea>
 	</div>
 {% endblock %}

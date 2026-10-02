@@ -1,8 +1,8 @@
 <?php
 
 /**
- * This file is part of the Froxlor project.
- * Copyright (c) 2010 the Froxlor Team (see authors).
+ * This file is part of the froxlor project.
+ * Copyright (c) 2010 the froxlor Team (see authors).
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,7 +19,7 @@
  * https://files.froxlor.org/misc/COPYING.txt
  *
  * @copyright  the authors
- * @author     Froxlor team <team@froxlor.org>
+ * @author     froxlor team <team@froxlor.org>
  * @license    https://files.froxlor.org/misc/COPYING.txt GPLv2
  */
 
@@ -345,7 +345,7 @@ class GlobalSearch
 								if (preg_match_all('/\{([a-z]+)\}/', $edata['result_format']['href'], $href_replacer) !== false) {
 									foreach ($href_replacer[1] as $href_field) {
 										$href_field_value = self::getFieldFromResult($cresult, $href_field);
-										$edata['result_format']['href'] = str_replace('{'.$href_field.'}', $href_field_value, $edata['result_format']['href']);
+										$edata['result_format']['href'] = str_replace('{' . $href_field . '}', $href_field_value, $edata['result_format']['href']);
 									}
 								}
 								$result[$entity][] = [
@@ -374,7 +374,7 @@ class GlobalSearch
 		return $result;
 	}
 
-	private static function getFieldFromResult(array $resultset, string $field = null)
+	private static function getFieldFromResult(array $resultset, ?string $field = null)
 	{
 		return $resultset[$field] ?? '';
 	}

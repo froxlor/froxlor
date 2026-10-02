@@ -1,8 +1,8 @@
 <?php
 
 /**
- * This file is part of the Froxlor project.
- * Copyright (c) 2010 the Froxlor Team (see authors).
+ * This file is part of the froxlor project.
+ * Copyright (c) 2010 the froxlor Team (see authors).
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,7 +19,7 @@
  * https://files.froxlor.org/misc/COPYING.txt
  *
  * @copyright  the authors
- * @author     Froxlor team <team@froxlor.org>
+ * @author     froxlor team <team@froxlor.org>
  * @license    https://files.froxlor.org/misc/COPYING.txt GPLv2
  */
 
@@ -55,7 +55,7 @@ class Rspamd
 
 		// get all email addresses
 		$antispam_stmt = Database::prepare("
-			SELECT email, spam_tag_level, spam_kill_level, bypass_spam, policy_greylist, iscatchall
+			SELECT email, spam_tag_level, rewrite_subject, spam_kill_level, bypass_spam, policy_greylist, iscatchall
 			FROM `" . TABLE_MAIL_VIRTUAL . "`
 			ORDER BY email
 		");
@@ -165,7 +165,7 @@ class Rspamd
 		$this->logger->logAction(FroxlorLogger::CRON_ACTION, LOG_DEBUG, 'Generating antispam config for ' . $email['email']);
 
 		$email['spam_tag_level'] = floatval($email['spam_tag_level']);
-		$email['spam_kill_level'] = floatval($email['spam_kill_level']);
+		$email['spam_kill_level'] = $email['spam_kill_level'] == -1 ? "null" : floatval($email['spam_kill_level']);
 		$email_id = md5($email['email']);
 
 		$this->frx_settings_file .= '# Email: ' . $email['email'] . "\n";
@@ -185,7 +185,9 @@ class Rspamd
 				$this->frx_settings_file .= '	apply {' . "\n";
 				$this->frx_settings_file .= '		actions {' . "\n";
 				$this->frx_settings_file .= '			"add header" = ' . $email['spam_tag_level'] . ';' . "\n";
-				$this->frx_settings_file .= '			rewrite_subject = ' . ($email['spam_tag_level'] + 0.01) . ';' . "\n";
+				if ((int)$email['rewrite_subject'] == 1) {
+					$this->frx_settings_file .= '			rewrite_subject = ' . ($email['spam_tag_level'] + 0.01) . ';' . "\n";
+				}
 				$this->frx_settings_file .= '			reject = ' . $email['spam_kill_level'] . ';' . "\n";
 				if ($type == 'rcpt' && (int)$email['policy_greylist'] == 0) {
 					$this->frx_settings_file .= '			greylist = null;' . "\n";

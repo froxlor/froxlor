@@ -279,7 +279,7 @@ class AdminsTest extends TestCase
 		// add test reseller
 		$data = [
 			'new_loginname' => 'resellertest',
-			'email' => 'testreseller@froxlor.org',
+			'email' => 'testreseller2@froxlor.org',
 			'name' => 'Testreseller'
 		];
 

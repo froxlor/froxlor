@@ -4,7 +4,9 @@ use PHPUnit\Framework\TestCase;
 use Froxlor\Api\Commands\Admins;
 use Froxlor\Api\Commands\Customers;
 use Froxlor\Api\Commands\Certificates;
+use Froxlor\Api\Commands\Domains;
 use Froxlor\Api\Commands\SubDomains;
+use Froxlor\Database\Database;
 
 /**
  *
@@ -78,6 +80,54 @@ class CertificatesTest extends TestCase
 		))->add();
 		$result = json_decode($json_result, true)['data'];
 		$this->assertEquals($domainid, $result['domainid']);
+	}
+
+	/**
+	 * regression test for GHSA-89vj-gqqr-73p8: the certificate's issuer organization
+	 * name is attacker-controlled (a customer can upload/self-sign any certificate for
+	 * their own domain) and was stored verbatim, allowing a stored-XSS payload to reach
+	 * the admin panel wherever the issuer is displayed. It must be sanitized to a safe
+	 * character set before being stored.
+	 */
+	public function testCustomerCertificatesAddSanitizesIssuerOrganization()
+	{
+		global $admin_userdata;
+
+		$customer_userdata = json_decode(Customers::getLocal($admin_userdata, [
+			'loginname' => 'test1'
+		])->get(), true)['data'];
+
+		// dedicated subdomain so this test doesn't depend on fixtures from other test
+		// files/classes (e.g. mysub.test2.local is created and later deleted again
+		// within SubDomainsTest.php itself)
+		SubDomains::getLocal($admin_userdata, [
+			'subdomain' => 'issuertest',
+			'domain' => 'test2.local',
+			'customerid' => $customer_userdata['customerid']
+		])->add();
+		$json_result = SubDomains::getLocal($admin_userdata, array(
+			'domainname' => 'issuertest.test2.local'
+		))->get();
+		$domain = json_decode($json_result, true)['data'];
+		$domainid = $domain['id'];
+
+		$certdata = $this->generateKey('<script>alert(document.cookie)</script>;rm -rf /');
+		$json_result = Certificates::getLocal($admin_userdata, array(
+			'domainname' => 'issuertest.test2.local',
+			'ssl_cert_file' => $certdata['cert'],
+			'ssl_key_file' => $certdata['key']
+		))->add();
+		$result = json_decode($json_result, true)['data'];
+		$this->assertEquals($domainid, $result['domainid']);
+		$this->assertStringNotContainsString('<', $result['issuer']);
+		$this->assertStringNotContainsString('>', $result['issuer']);
+		$this->assertStringNotContainsString(';', $result['issuer']);
+
+		// cleanup: cert is deleted along with the domain
+		SubDomains::getLocal($admin_userdata, array(
+			'domainname' => 'issuertest.test2.local',
+			'customerid' => $customer_userdata['customerid']
+		))->delete();
 	}
 
 	public function testAdminCertificatesList()
@@ -183,13 +233,95 @@ class CertificatesTest extends TestCase
 		$this->assertTrue(isset($result['domainid']) && $result['domainid'] > 0);
 	}
 
-	private function generateKey()
+	/**
+	 * regression test: Certificates::get()/listing() used to return ssl_key_file
+	 * verbatim regardless of the domain's letsencrypt flag. For Let's Encrypt managed
+	 * domains the key is generated and held server-side only - froxlor's own UI hides
+	 * the ssl-editor entirely for such domains (Domain::canEditSSL() requires
+	 * letsencrypt == 0), so the API must not hand it out either. Certificates for
+	 * non-letsencrypt domains (where the customer/admin uploaded the key themselves
+	 * and already sees it in the ssl-editor) must still be returned unchanged.
+	 */
+	public function testCertificatesResponseHidesKeyForLetsencryptDomain()
+	{
+		global $admin_userdata;
+
+		$customer_userdata = json_decode(Customers::getLocal($admin_userdata, [
+			'loginname' => 'test1'
+		])->get(), true)['data'];
+
+		$data = [
+			'domain' => 'lecerttest.local',
+			'customerid' => $customer_userdata['customerid']
+		];
+		$domain = json_decode(Domains::getLocal($admin_userdata, $data)->add(), true)['data'];
+		$domain_id = $domain['id'];
+
+		$certdata = $this->generateKey();
+		Certificates::getLocal($admin_userdata, [
+			'domainid' => $domain_id,
+			'ssl_cert_file' => $certdata['cert'],
+			'ssl_key_file' => $certdata['key']
+		])->add();
+
+		// simulate an activated Let's Encrypt certificate without going through the
+		// full DNS-validated activation flow
+		$upd_stmt = Database::prepare("UPDATE `" . TABLE_PANEL_DOMAINS . "` SET `letsencrypt` = '1' WHERE `id` = :id");
+		Database::pexecute($upd_stmt, [
+			'id' => $domain_id
+		]);
+
+		$result = json_decode(Certificates::getLocal($admin_userdata, [
+			'id' => $domain_id
+		])->get(), true)['data'];
+		$this->assertArrayNotHasKey('ssl_key_file', $result);
+		$this->assertNotEmpty($result['ssl_cert_file']);
+
+		$list = json_decode(Certificates::getLocal($admin_userdata)->listing(), true)['data']['list'];
+		$found = false;
+		foreach ($list as $cert) {
+			if ($cert['domainid'] == $domain_id) {
+				$found = true;
+				$this->assertArrayNotHasKey('ssl_key_file', $cert);
+			}
+		}
+		$this->assertTrue($found);
+
+		// control: a self-contained non-letsencrypt domain's key must still be returned
+		$data2 = [
+			'domain' => 'nonlecerttest.local',
+			'customerid' => $customer_userdata['customerid']
+		];
+		$domain2 = json_decode(Domains::getLocal($admin_userdata, $data2)->add(), true)['data'];
+		$domain2_id = $domain2['id'];
+		$certdata2 = $this->generateKey();
+		Certificates::getLocal($admin_userdata, [
+			'domainid' => $domain2_id,
+			'ssl_cert_file' => $certdata2['cert'],
+			'ssl_key_file' => $certdata2['key']
+		])->add();
+
+		$non_le_result = json_decode(Certificates::getLocal($admin_userdata, [
+			'id' => $domain2_id
+		])->get(), true)['data'];
+		$this->assertArrayHasKey('ssl_key_file', $non_le_result);
+		$this->assertNotEmpty($non_le_result['ssl_key_file']);
+
+		Domains::getLocal($admin_userdata, [
+			'id' => $domain_id
+		])->delete();
+		Domains::getLocal($admin_userdata, [
+			'id' => $domain2_id
+		])->delete();
+	}
+
+	private function generateKey($organizationName = "Froxlor")
 	{
 		$dn = array(
 			"countryName" => "DE",
 			"stateOrProvinceName" => "Hessen",
 			"localityName" => "Frankfurt",
-			"organizationName" => "Froxlor",
+			"organizationName" => $organizationName,
 			"organizationalUnitName" => "Testing",
 			"commonName" => "test2.local",
 			"emailAddress" => "team@froxlor.org"

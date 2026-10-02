@@ -8,18 +8,18 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php-versions: ['7.4', '8.2']
-        mysql-version: [8.0, 5.7]
+        php-versions: ['7.4', '8.4']
+        mysql-version: [8.4, 5.7]
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup PHP, with composer and extensions
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php-versions }}
           tools: composer:v2
-          extensions: mbstring, xml, ctype, pdo_mysql, mysql, curl, json, zip, session, filter, posix, openssl, fileinfo, bcmath, gmp, gnupg
+          extensions: mbstring, xml, ctype, pdo_mysql, mysql, curl, json, zip, session, filter, posix, openssl, fileinfo, bcmath, gmp
 
       - name: Install tools
         run: sudo apt-get install -y ant
@@ -30,19 +30,19 @@ jobs:
           sudo ufw allow in 3306/tcp
 
       - name: Setup MySQL
-        uses: samin/mysql-action@v1.3
+        uses: shogo82148/actions-setup-mysql@v1.53.1
         with:
-          mysql version: ${{ matrix.mysql-version }}
-          mysql database: 'froxlor010'
-          mysql root password: 'fr0xl0r.TravisCI'
+          mysql-version: ${{ matrix.mysql-version }}
+          root-password: 'fr0xl0r.TravisCI'
+          user: 'froxlor010'
+          password: 'fr0xl0r.TravisCI'
 
       - name: Wait for database
         run: sleep 15
 
       - name: Setup database
         run: |
-          mysql -h 127.0.0.1 --protocol=TCP -u root -pfr0xl0r.TravisCI -e "CREATE USER 'froxlor010'@'%' IDENTIFIED BY 'fr0xl0r.TravisCI';"
-          mysql -h 127.0.0.1 --protocol=TCP -u root -pfr0xl0r.TravisCI -e "GRANT ALL ON froxlor010.* TO 'froxlor010'@'%';"
+          mysql -h 127.0.0.1 --protocol=TCP -u root -pfr0xl0r.TravisCI -e "CREATE DATABASE froxlor010;"
           php -r "echo include('install/froxlor.sql.php');" > /tmp/froxlor.sql
           mysql -h 127.0.0.1 --protocol=TCP -u root -pfr0xl0r.TravisCI froxlor010 < /tmp/froxlor.sql
 

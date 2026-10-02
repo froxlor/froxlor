@@ -1,8 +1,8 @@
 <?php
 
 /**
- * This file is part of the Froxlor project.
- * Copyright (c) 2010 the Froxlor Team (see authors).
+ * This file is part of the froxlor project.
+ * Copyright (c) 2010 the froxlor Team (see authors).
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,7 +19,7 @@
  * https://files.froxlor.org/misc/COPYING.txt
  *
  * @copyright  the authors
- * @author     Froxlor team <team@froxlor.org>
+ * @author     froxlor team <team@froxlor.org>
  * @license    https://files.froxlor.org/misc/COPYING.txt GPLv2
  */
 
@@ -99,6 +99,12 @@ return [
 					'url' => 'customer_ftp.php?page=accounts',
 					'label' => lng('menue.ftp.accounts'),
 					'add_shortlink' => !CurrentUser::isAdmin() && CurrentUser::canAddResource('ftps') ? 'customer_ftp.php?page=accounts&action=add' : null,
+				],
+				[
+					'url' => 'customer_ftp.php?page=sshkeys',
+					'label' => lng('menue.ftp.sshkeys'),
+					'add_shortlink' => !CurrentUser::isAdmin() && CurrentUser::canAddResource('ftps') ? 'customer_ftp.php?page=sshkeys&action=add' : null,
+					'show_element' => intval(Settings::Get('system.allow_customer_shell')) == 1 && intval(CurrentUser::getField('shell_allowed')) == 1
 				],
 				[
 					'url' => Settings::Get('panel.webftp_url'),

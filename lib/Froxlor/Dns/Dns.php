@@ -1,8 +1,8 @@
 <?php
 
 /**
- * This file is part of the Froxlor project.
- * Copyright (c) 2010 the Froxlor Team (see authors).
+ * This file is part of the froxlor project.
+ * Copyright (c) 2010 the froxlor Team (see authors).
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,7 +19,7 @@
  * https://files.froxlor.org/misc/COPYING.txt
  *
  * @copyright  the authors
- * @author     Froxlor team <team@froxlor.org>
+ * @author     froxlor team <team@froxlor.org>
  * @license    https://files.froxlor.org/misc/COPYING.txt GPLv2
  */
 
@@ -54,7 +54,7 @@ class Dns
 				$dom_data['uid'] = $userinfo['userid'];
 			}
 		} else {
-			$where_clause = '`customerid` = :uid AND `email_only` = "0" AND ';
+			$where_clause = '`customerid` = :uid AND ';
 			$dom_data['uid'] = $userinfo['userid'];
 		}
 
@@ -112,8 +112,10 @@ class Dns
 		// check for required records
 		$required_entries = [];
 
-		self::addRequiredEntry('@', 'A', $required_entries);
-		self::addRequiredEntry('@', 'AAAA', $required_entries);
+		if ($domain['email_only'] == '0') {
+			self::addRequiredEntry('@', 'A', $required_entries);
+			self::addRequiredEntry('@', 'AAAA', $required_entries);
+		}
 		if (!$isMainButSubTo) {
 			self::addRequiredEntry('@', 'NS', $required_entries);
 		}
@@ -129,18 +131,20 @@ class Dns
 		}
 
 		// additional required records by setting
-		if ($domain['iswildcarddomain'] == '1') {
-			self::addRequiredEntry('*', 'A', $required_entries);
-			self::addRequiredEntry('*', 'AAAA', $required_entries);
-		} elseif ($domain['wwwserveralias'] == '1') {
-			self::addRequiredEntry('www', 'A', $required_entries);
-			self::addRequiredEntry('www', 'AAAA', $required_entries);
+		if ($domain['email_only'] == '0') {
+			if ($domain['iswildcarddomain'] == '1') {
+				self::addRequiredEntry('*', 'A', $required_entries);
+				self::addRequiredEntry('*', 'AAAA', $required_entries);
+			} elseif ($domain['wwwserveralias'] == '1') {
+				self::addRequiredEntry('www', 'A', $required_entries);
+				self::addRequiredEntry('www', 'AAAA', $required_entries);
+			}
 		}
 
 		if (!$froxlorhostname) {
 			// additional required records for subdomains
 			$subdomains_stmt = Database::prepare("
-				SELECT `domain`, `iswildcarddomain`, `wwwserveralias`, `isemaildomain` FROM `" . TABLE_PANEL_DOMAINS . "`
+				SELECT `domain`, `iswildcarddomain`, `wwwserveralias`, `isemaildomain`, `email_only` FROM `" . TABLE_PANEL_DOMAINS . "`
 				WHERE `parentdomainid` = :domainid
 			");
 			Database::pexecute($subdomains_stmt, [
@@ -151,16 +155,18 @@ class Dns
 				$sub_record = str_replace('.' . $domain['domain'], '', $subdomain['domain']);
 				// Listing domains is enough as there currently is no support for choosing
 				// different ips for a subdomain => use same IPs as toplevel
-				self::addRequiredEntry($sub_record, 'A', $required_entries);
-				self::addRequiredEntry($sub_record, 'AAAA', $required_entries);
+				if ($subdomain['email_only'] == '0') {
+					self::addRequiredEntry($sub_record, 'A', $required_entries);
+					self::addRequiredEntry($sub_record, 'AAAA', $required_entries);
 
-				// Check whether to add a www.-prefix
-				if ($subdomain['iswildcarddomain'] == '1') {
-					self::addRequiredEntry('*.' . $sub_record, 'A', $required_entries);
-					self::addRequiredEntry('*.' . $sub_record, 'AAAA', $required_entries);
-				} elseif ($subdomain['wwwserveralias'] == '1') {
-					self::addRequiredEntry('www.' . $sub_record, 'A', $required_entries);
-					self::addRequiredEntry('www.' . $sub_record, 'AAAA', $required_entries);
+					// Check whether to add a www.-prefix
+					if ($subdomain['iswildcarddomain'] == '1') {
+						self::addRequiredEntry('*.' . $sub_record, 'A', $required_entries);
+						self::addRequiredEntry('*.' . $sub_record, 'AAAA', $required_entries);
+					} elseif ($subdomain['wwwserveralias'] == '1') {
+						self::addRequiredEntry('www.' . $sub_record, 'A', $required_entries);
+						self::addRequiredEntry('www.' . $sub_record, 'AAAA', $required_entries);
+					}
 				}
 
 				// check for email ability

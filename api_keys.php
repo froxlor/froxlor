@@ -1,8 +1,8 @@
 <?php
 
 /**
- * This file is part of the Froxlor project.
- * Copyright (c) 2010 the Froxlor Team (see authors).
+ * This file is part of the froxlor project.
+ * Copyright (c) 2010 the froxlor Team (see authors).
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,7 +19,7 @@
  * https://files.froxlor.org/misc/COPYING.txt
  *
  * @copyright  the authors
- * @author     Froxlor team <team@froxlor.org>
+ * @author     froxlor team <team@froxlor.org>
  * @license    https://files.froxlor.org/misc/COPYING.txt GPLv2
  */
 
@@ -95,30 +95,45 @@ if ($action == 'delete' && $id > 0) {
 	}
 } elseif ($action == 'add') {
 	if (Request::post('send') == 'send') {
-		$ins_stmt = Database::prepare("
-			INSERT INTO `" . TABLE_API_KEYS . "` SET
-			`apikey` = :key, `secret` = :secret, `adminid` = :aid, `customerid` = :cid, `valid_until` = '-1', `allowed_from` = ''
-		");
-		// customer generates for himself, admins will see a customer-select-box later
-		if (AREA == 'admin') {
-			$cid = 0;
-		} elseif (AREA == 'customer') {
-			$cid = $userinfo['customerid'];
+		$user_passwd = Request::post('user_password');
+		if (empty($user_passwd)) {
+			Response::dynamicError(lng('panel.noauthentication'));
 		}
-		$key = hash('sha256', openssl_random_pseudo_bytes(64 * 64));
-		$secret = hash('sha512', openssl_random_pseudo_bytes(64 * 64 * 4));
-		Database::pexecute($ins_stmt, [
-			'key' => $key,
-			'secret' => $secret,
-			'aid' => $userinfo['adminid'],
-			'cid' => $cid
-		]);
-		Response::standardSuccess('apikeys.apikey_added', '', [
-			'filename' => $filename,
-			'page' => $page
-		]);
+		if ($userinfo['adminsession']) {
+			$table = "`" . TABLE_PANEL_ADMINS . "`";
+			$uid = 'adminid';
+		} else {
+			$table = "`" . TABLE_PANEL_CUSTOMERS . "`";
+			$uid = 'customerid';
+		}
+		if (\Froxlor\System\Crypt::validatePasswordLogin($userinfo, $user_passwd, $table, $uid)) {
+			$ins_stmt = Database::prepare("
+				INSERT INTO `" . TABLE_API_KEYS . "` SET
+				`apikey` = :key, `secret` = :secret, `adminid` = :aid, `customerid` = :cid, `valid_until` = '-1', `allowed_from` = ''
+			");
+			// customer generates for himself, admins will see a customer-select-box later
+			if (AREA == 'admin') {
+				$cid = 0;
+			} elseif (AREA == 'customer') {
+				$cid = $userinfo['customerid'];
+			}
+			$key = hash('sha256', openssl_random_pseudo_bytes(64 * 64));
+			$secret = hash('sha512', openssl_random_pseudo_bytes(64 * 64 * 4));
+			Database::pexecute($ins_stmt, [
+				'key' => $key,
+				'secret' => $secret,
+				'aid' => $userinfo['adminid'],
+				'cid' => $cid
+			]);
+			Response::standardSuccess('apikeys.apikey_added', '', [
+				'filename' => $filename,
+				'page' => $page
+			]);
+		} else {
+			Response::dynamicError(lng('panel.authenticationfailed'));
+		}
 	}
-	HTML::askYesNo('apikey_reallyadd', $filename, [
+	HTML::askUserPasswd('apikey_reallyadd', $filename, [
 		'id' => $id,
 		'page' => $page,
 		'action' => $action

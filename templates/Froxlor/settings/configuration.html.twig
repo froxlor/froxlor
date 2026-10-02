@@ -74,7 +74,6 @@
 											{% if
 												(dtype == 'apache22' and get_setting('system.webserver') == 'apache2' and get_setting('system.apache24') == '0') or
 												(dtype == 'apache24' and get_setting('system.webserver') == 'apache2' and get_setting('system.apache24') == '1') or
-												(dtype == 'lighttpd' and get_setting('system.webserver') == 'lighttpd') or
 												(dtype == 'nginx' and get_setting('system.webserver') == 'nginx') or
 												(dtype == 'bind' and get_setting('system.bind_enable') == '1' and get_setting('system.dns_server') == 'Bind') or
 												(dtype == 'powerdns' and get_setting('system.bind_enable') == '1' and get_setting('system.dns_server') == 'PowerDNS') or

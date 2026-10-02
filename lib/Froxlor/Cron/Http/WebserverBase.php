@@ -1,8 +1,8 @@
 <?php
 
 /**
- * This file is part of the Froxlor project.
- * Copyright (c) 2010 the Froxlor Team (see authors).
+ * This file is part of the froxlor project.
+ * Copyright (c) 2010 the froxlor Team (see authors).
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,7 +19,7 @@
  * https://files.froxlor.org/misc/COPYING.txt
  *
  * @copyright  the authors
- * @author     Froxlor team <team@froxlor.org>
+ * @author     froxlor team <team@froxlor.org>
  * @license    https://files.froxlor.org/misc/COPYING.txt GPLv2
  */
 
@@ -45,11 +45,13 @@ class WebserverBase
 				`d`.`phpsettingid`, `c`.`adminid`, `c`.`guid`, `c`.`email`,
 				`c`.`documentroot` AS `customerroot`, `c`.`deactivated` as `customer_deactivated`,
 				`c`.`phpenabled` AS `phpenabled_customer`,
-				`d`.`phpenabled` AS `phpenabled_vhost`
+				`d`.`phpenabled` AS `phpenabled_vhost`,
+				`a`.`email` as `admin_email`
 				FROM `" . TABLE_PANEL_DOMAINS . "` `d`
 
 				LEFT JOIN `" . TABLE_PANEL_CUSTOMERS . "` `c` USING(`customerid`)
 				LEFT JOIN `" . TABLE_PANEL_DOMAINS . "` `pd` ON (`pd`.`id` = `d`.`parentdomainid`)
+				LEFT JOIN `" . TABLE_PANEL_ADMINS . "` `a` ON (`a`.`adminid` = `c`.`adminid`)
 
 				WHERE `d`.`aliasdomain` IS NULL AND `d`.`email_only` <> '1'
 				ORDER BY `d`.`parentdomainid` DESC, `d`.`iswildcarddomain`, `d`.`domain` ASC;

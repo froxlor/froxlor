@@ -6,23 +6,23 @@
 		"build": "vite build"
 	},
 	"devDependencies": {
-		"@fortawesome/fontawesome-free": "^6.4.2",
+		"@fortawesome/fontawesome-free": "^6.7.2",
 		"@popperjs/core": "^2.11.8",
-		"@vitejs/plugin-vue": "^4.0.0",
-		"axios": "^1.7.4",
-		"bootstrap": "^5.3.2",
-		"chart.js": "^4.4.0",
-		"jquery": "^3.6.1",
-		"jquery-validation": "^1.20.0",
-		"laravel-vite-plugin": "^0.8.0",
-		"lodash": "^4.17.19",
-		"postcss": "^8.1.14",
+		"@vitejs/plugin-vue": "^5.2.1",
+		"axios": "^1.16.0",
+		"bootstrap": "^5.3.3",
+		"chart.js": "^4.4.8",
+		"jquery": "^3.7.1",
+		"jquery-validation": "^1.21.0",
+		"laravel-vite-plugin": "^1.2.0",
+		"lodash": "^4.18.1",
+		"postcss": "^8.5.13",
 		"resolve-url-loader": "^5.0.0",
-		"sass": "^1.69.3",
-		"vite": "^4.5.3",
-		"vue": "^3.2.37"
+		"sass": "^1.85.1",
+		"vite": "^6.4.2",
+		"vue": "^3.5.13"
 	},
 	"engines": {
-		"node": ">=18"
+		"node": ">=22"
 	}
 }

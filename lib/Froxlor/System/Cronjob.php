@@ -1,8 +1,8 @@
 <?php
 
 /**
- * This file is part of the Froxlor project.
- * Copyright (c) 2010 the Froxlor Team (see authors).
+ * This file is part of the froxlor project.
+ * Copyright (c) 2010 the froxlor Team (see authors).
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,7 +19,7 @@
  * https://files.froxlor.org/misc/COPYING.txt
  *
  * @copyright  the authors
- * @author     Froxlor team <team@froxlor.org>
+ * @author     froxlor team <team@froxlor.org>
  * @license    https://files.froxlor.org/misc/COPYING.txt GPLv2
  */
 
@@ -28,6 +28,7 @@ namespace Froxlor\System;
 use Exception;
 use Froxlor\Cron\TaskId;
 use Froxlor\Database\Database;
+use Froxlor\FileDir;
 use Froxlor\FroxlorLogger;
 use Froxlor\Settings;
 use PDO;
@@ -118,6 +119,85 @@ class Cronjob
 		}
 	}
 
+	public static function checkCurrentDistro(bool $is_install = false): string
+	{
+		// set default os.
+		if ($is_install) {
+			$distro = "trixie";
+		} else {
+			$distro = Settings::Get('system.distribution');
+		}
+
+		// read os-release
+		if (@file_exists('/etc/os-release') && is_readable('/etc/os-release')) {
+			if (function_exists('parse_ini_file')) {
+				$os_dist = parse_ini_file('/etc/os-release', false);
+			} else {
+				$osrf = explode("\n", file_get_contents('/etc/os-release'));
+				foreach ($osrf as $line) {
+					$osrfline = explode("=", $line);
+					if ($osrfline[0] == 'VERSION_CODENAME') {
+						$os_dist['VERSION_CODENAME'] = $osrfline[1];
+					} elseif ($osrfline[0] == 'ID') {
+						$os_dist['ID'] = $osrfline[1];
+					}
+				}
+			}
+			$distro = strtolower($os_dist['VERSION_CODENAME'] ?? ($os_dist['ID'] ?? $distro));
+		}
+
+		if (!$is_install && $distro != Settings::Get('system.distribution') && Settings::Get('system.distro_mismatch') != '2') {
+			Settings::Set('system.distro_mismatch', '1');
+		}
+
+		return $distro;
+	}
+
+	/**
+	 * @throws Exception
+	 */
+	public static function checkLocalUserGroupMembership(): bool
+	{
+		if ((int)Settings::Get('phpfpm.enabled') == 1) {
+			$username = Settings::Get('phpfpm.vhost_httpuser');
+		} elseif ((int)Settings::Get('system.mod_fcgid') == 1) {
+			$username = Settings::Get('system.mod_fcgid_httpuser');
+		} else {
+			$username = Settings::Get('system.httpuser');
+		}
+		$user = posix_getpwnam($username);
+		$group = posix_getgrnam(Settings::Get('system.httpgroup'));
+
+		$mylog = FroxlorLogger::getInstanceOf();
+		if (!$user || !$group) {
+			$mylog->logAction(
+				FroxlorLogger::CRON_ACTION,
+				LOG_NOTICE,
+				'Either local froxlor user or webserver-group could not be found/read. Please check settings.'
+			);
+			return false;
+		}
+
+		// primary group?
+		if ($user['gid'] === $group['gid']) {
+			return true;
+		}
+
+		// supplementary groups?
+		if (in_array($username, $group['members'])) {
+			return true;
+		}
+
+		// not yet in group, add it
+		$mylog->logAction(
+			FroxlorLogger::CRON_ACTION,
+			LOG_NOTICE,
+			'Local froxlor user not in webserver-group. Adding user "' . $username . '" to group "' . Settings::Get('system.httpgroup') . '"'
+		);
+		FileDir::safe_exec('usermod -aG ' . escapeshellarg(Settings::Get('system.httpgroup')) . ' ' . escapeshellarg($username));
+		return true;
+	}
+
 	/**
 	 * Inserts a task into the PANEL_TASKS-Table
 	 *
@@ -134,7 +214,7 @@ class Cronjob
 			INSERT INTO `" . TABLE_PANEL_TASKS . "` SET `type` = :type, `data` = :data
 		");
 
-		if ($type == TaskId::REBUILD_VHOST || $type == TaskId::REBUILD_DNS || $type == TaskId::CREATE_FTP || $type == TaskId::REBUILD_RSPAMD || $type == TaskId::CREATE_QUOTA || $type == TaskId::REBUILD_CRON) {
+		if ($type == TaskId::REBUILD_VHOST || $type == TaskId::REBUILD_DNS || $type == TaskId::CREATE_FTP || $type == TaskId::REBUILD_RSPAMD || $type == TaskId::CREATE_QUOTA || $type == TaskId::REBUILD_CRON || $type == TaskId::UPDATE_LE_SERVICES || $type == TaskId::REBUILD_NSSUSERS) {
 			// 4 = bind -> if bind disabled -> no task
 			if ($type == TaskId::REBUILD_DNS && Settings::Get('system.bind_enable') == '0') {
 				return;
@@ -145,6 +225,10 @@ class Cronjob
 			}
 			// 10 = quota -> if quota disabled -> no task
 			if ($type == TaskId::CREATE_QUOTA && Settings::Get('system.diskquota_enabled') == '0') {
+				return;
+			}
+			// 13 = let's encrypt for services -> if services empty = no task
+			if ($type == TaskId::UPDATE_LE_SERVICES && (Settings::Get('system.le_froxlor_enabled') == '0' || Settings::Get('system.le_renew_services') == '')) {
 				return;
 			}
 

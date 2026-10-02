@@ -1,8 +1,8 @@
 <?php
 
 /**
- * This file is part of the Froxlor project.
- * Copyright (c) 2010 the Froxlor Team (see authors).
+ * This file is part of the froxlor project.
+ * Copyright (c) 2010 the froxlor Team (see authors).
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,7 +19,7 @@
  * https://files.froxlor.org/misc/COPYING.txt
  *
  * @copyright  the authors
- * @author     Froxlor team <team@froxlor.org>
+ * @author     froxlor team <team@froxlor.org>
  * @license    https://files.froxlor.org/misc/COPYING.txt GPLv2
  */
 
@@ -109,6 +109,7 @@ class Domain
 		if ((int)UI::getCurrentUser()['adminsession'] == 0
 			&& $attributes['fields']['parentdomainid'] == 0
 			&& $attributes['fields']['deactivated'] == 0
+			&& !$attributes['fields']['email_only']
 			&& preg_match('/^https?:\/\/(.*)/i', $attributes['fields']['documentroot']) == false
 		) {
 			$statsapp = Settings::Get('system.traffictool');
@@ -157,10 +158,8 @@ class Domain
 	{
 		return $attributes['fields']['isbinddomain'] == '1'
 			&& UI::getCurrentUser()['dnsenabled'] == '1'
-			&& $attributes['fields']['caneditdomain'] == '1'
 			&& Settings::Get('system.bind_enable') == '1'
 			&& Settings::Get('system.dnsenabled') == '1'
-			&& !$attributes['fields']['email_only']
 			&& !$attributes['fields']['deactivated'];
 	}
 
@@ -183,7 +182,6 @@ class Domain
 	{
 		if (Settings::Get('system.use_ssl') == '1'
 			&& DDomain::domainHasSslIpPort($attributes['fields']['id'])
-			&& (CurrentUser::isAdmin() || (!CurrentUser::isAdmin() && (int)$attributes['fields']['caneditdomain'] == 1))
 			&& (int)$attributes['fields']['letsencrypt'] == 0
 			&& !(int)$attributes['fields']['email_only']
 			&& !$attributes['fields']['deactivated']

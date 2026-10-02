@@ -1,8 +1,8 @@
 <?php
 
 /**
- * This file is part of the Froxlor project.
- * Copyright (c) 2010 the Froxlor Team (see authors).
+ * This file is part of the froxlor project.
+ * Copyright (c) 2010 the froxlor Team (see authors).
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,7 +19,7 @@
  * https://files.froxlor.org/misc/COPYING.txt
  *
  * @copyright  the authors
- * @author     Froxlor team <team@froxlor.org>
+ * @author     froxlor team <team@froxlor.org>
  * @license    https://files.froxlor.org/misc/COPYING.txt GPLv2
  */
 
@@ -45,7 +45,7 @@ class DomainSSL
 	 * @return null
 	 * @throws \Exception
 	 */
-	public function setDomainSSLFilesArray(array &$domain = null)
+	public function setDomainSSLFilesArray(?array &$domain = null)
 	{
 		// check if the domain itself has a certificate defined
 		$dom_certs_stmt = Database::prepare("
@@ -86,12 +86,6 @@ class DomainSSL
 			if (!$this->validateCertificate($dom_certs)) {
 				FroxlorLogger::getInstanceOf()->logAction(FroxlorLogger::CRON_ACTION, LOG_ERR, 'Given SSL private key for ' . $domain['domain'] . ' does not seem to match the certificate. Cannot create ssl-directives');
 				return;
-			}
-
-			if (Settings::Get('system.webserver') == 'lighttpd') {
-				// put my.crt and my.key together for lighty.
-				$dom_certs['ssl_cert_file'] = trim($dom_certs['ssl_cert_file']) . "\n" . trim($dom_certs['ssl_key_file']) . "\n";
-				$ssl_files['ssl_key_file'] = '';
 			}
 
 			// initialize optional files

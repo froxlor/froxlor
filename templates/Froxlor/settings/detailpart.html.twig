@@ -13,6 +13,12 @@
 
 {% block settings %}
 
+	{% if part == 'nameserver' %}
+	<div class="pb-2">
+		{% include 'Froxlor/misc/alertbox.html.twig' %}
+	</div>
+	{% endif %}
+
 	{% import "Froxlor/form/formfields.html.twig" as formfields %}
 
 	<div class="card mb-3">

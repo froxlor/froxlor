@@ -1,8 +1,8 @@
 <?php
 
 /**
- * This file is part of the Froxlor project.
- * Copyright (c) 2010 the Froxlor Team (see authors).
+ * This file is part of the froxlor project.
+ * Copyright (c) 2010 the froxlor Team (see authors).
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,7 +19,7 @@
  * https://files.froxlor.org/misc/COPYING.txt
  *
  * @copyright  the authors
- * @author     Froxlor team <team@froxlor.org>
+ * @author     froxlor team <team@froxlor.org>
  * @license    https://files.froxlor.org/misc/COPYING.txt GPLv2
  */
 
@@ -33,7 +33,6 @@ return [
 		'sections' => [
 			'section_a' => [
 				'title' => lng('emails.emails_edit'),
-				'image' => 'icons/email_edit.png',
 				'fields' => [
 					'email_full' => [
 						'label' => lng('emails.emailaddress'),
@@ -89,60 +88,49 @@ return [
 							]
 						]
 					],
-					'mail_catchall' => [
+					'iscatchall' => [
+						'visible' => Settings::Get('catchall.catchall_enabled') == '1',
 						'label' => lng('emails.catchall'),
-						'type' => 'label',
-						'value' => ((int)$result['iscatchall'] == 0 ? lng('panel.no') : lng('panel.yes')),
-						'next_to' => [
-							'add_link' => [
-								'type' => 'link',
-								'href' => $filename . '?page=' . $page . '&amp;domainid=' . $result['domainid'] . '&amp;action=togglecatchall&amp;id=' . $result['id'],
-								'label' => '<i class="fa-solid fa-arrow-right-arrow-left"></i> ' . lng('panel.toggle'),
-								'classes' => 'btn btn-sm btn-secondary'
-							]
-						]
+						'type' => 'checkbox',
+						'value' => '1',
+						'checked' => (int)$result['iscatchall'],
+					],
+					'bypass_spam' => [
+						'visible' => Settings::Get('antispam.activated') == '1' && (int)Settings::Get('antispam.default_bypass_spam') <= 2,
+						'label' => lng('antispam.bypass_spam'),
+						'type' => 'checkbox',
+						'value' => '1',
+						'checked' => (int)$result['bypass_spam'],
 					],
 					'spam_tag_level' => [
 						'visible' => Settings::Get('antispam.activated') == '1',
 						'label' => lng('antispam.spam_tag_level'),
-						'type' => 'text',
-						'string_regexp' => '/^\d{1,}(\.\d{1,2})?$/',
-						'value' => $result['spam_tag_level']
+						'type' => 'number',
+						'min' => 0,
+						'step' => 0.1,
+						'value' => $result['spam_tag_level'],
+					],
+					'rewrite_subject' => [
+						'visible' => Settings::Get('antispam.activated') == '1' && (int)Settings::Get('antispam.default_spam_rewrite_subject') <= 2,
+						'label' => lng('antispam.rewrite_subject'),
+						'type' => 'checkbox',
+						'value' => '1',
+						'checked' => (int)$result['rewrite_subject'],
 					],
 					'spam_kill_level' => [
 						'visible' => Settings::Get('antispam.activated') == '1',
 						'label' => lng('antispam.spam_kill_level'),
-						'type' => 'text',
-						'string_regexp' => '/^\d{1,}(\.\d{1,2})?$/',
+						'desc' => lng('panel.use_checkbox_to_disable'),
+						'type' => 'textul',
+						'step' => 0.1,
 						'value' => $result['spam_kill_level']
 					],
-					'bypass_spam' => [
-						'visible' => Settings::Get('antispam.activated') == '1',
-						'label' => lng('antispam.bypass_spam'),
-						'type' => 'label',
-						'value' => ((int)$result['bypass_spam'] == 0 ? lng('panel.no') : lng('panel.yes')),
-						'next_to' => [
-							'add_link' => [
-								'type' => 'link',
-								'href' => $filename . '?page=' . $page . '&amp;domainid=' . $result['domainid'] . '&amp;action=togglebypass&amp;id=' . $result['id'],
-								'label' => '<i class="fa-solid fa-arrow-right-arrow-left"></i> ' . lng('panel.toggle'),
-								'classes' => 'btn btn-sm btn-secondary'
-							]
-						]
-					],
 					'policy_greylist' => [
-						'visible' => Settings::Get('antispam.activated') == '1',
+						'visible' => Settings::Get('antispam.activated') == '1' && (int)Settings::Get('antispam.default_policy_greylist') <= 2,
 						'label' => lng('antispam.policy_greylist'),
-						'type' => 'label',
-						'value' => ((int)$result['policy_greylist'] == 0 ? lng('panel.no') : lng('panel.yes')),
-						'next_to' => [
-							'add_link' => [
-								'type' => 'link',
-								'href' => $filename . '?page=' . $page . '&amp;domainid=' . $result['domainid'] . '&amp;action=togglegreylist&amp;id=' . $result['id'],
-								'label' => '<i class="fa-solid fa-arrow-right-arrow-left"></i> ' . lng('panel.toggle'),
-								'classes' => 'btn btn-sm btn-secondary'
-							]
-						]
+						'type' => 'checkbox',
+						'value' => '1',
+						'checked' => (int)$result['policy_greylist'],
 					],
 					'mail_fwds' => [
 						'label' => lng('emails.forwarders') . ' (' . $forwarders_count . ')',
@@ -153,6 +141,20 @@ return [
 								'type' => 'link',
 								'href' => $filename . '?page=forwarders&amp;domainid=' . $result['domainid'] . '&amp;action=add&amp;id=' . $result['id'],
 								'label' => lng('emails.forwarder_add'),
+								'classes' => 'btn btn-sm btn-primary'
+							]
+						]
+					],
+					'mail_senders' => [
+						'visible' => ((int)$result['popaccountid'] != 0 && Settings::Get('mail.enable_allow_sender') == '1'),
+						'label' => lng('emails.senders') . ' (' . $senders_count . ')',
+						'type' => 'itemlist',
+						'values' => $senders,
+						'next_to' => [
+							'add_link' => [
+								'type' => 'link',
+								'href' => $filename . '?page=senders&amp;domainid=' . $result['domainid'] . '&amp;action=add&amp;id=' . $result['id'],
+								'label' => lng('emails.sender_add'),
 								'classes' => 'btn btn-sm btn-primary'
 							]
 						]

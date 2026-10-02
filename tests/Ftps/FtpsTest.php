@@ -186,7 +186,10 @@ class FtpsTest extends TestCase
 			'sendinfomail' => TRAVIS_CI == 1 ? 0 : 1
 		];
 
-		$this->expectExceptionMessage('Found symlink pointing outside of customer home directory: /frx');
+		// note: no leading slash here - the symlink-containment check in
+		// FileDir::makeCorrectDir() reports the offending path component relative to
+		// the (now consistently single-trailing-slash-normalized) customer homedir
+		$this->expectExceptionMessage('Found symlink pointing outside of customer home directory: frx');
 		Ftps::getLocal($customer_userdata, $data)->add();
 	}
 

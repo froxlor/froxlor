@@ -1,8 +1,8 @@
 <?php
 
 /**
- * This file is part of the Froxlor project.
- * Copyright (c) 2010 the Froxlor Team (see authors).
+ * This file is part of the froxlor project.
+ * Copyright (c) 2010 the froxlor Team (see authors).
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,7 +19,7 @@
  * https://files.froxlor.org/misc/COPYING.txt
  *
  * @copyright  the authors
- * @author     Froxlor team <team@froxlor.org>
+ * @author     froxlor team <team@froxlor.org>
  * @license    https://files.froxlor.org/misc/COPYING.txt GPLv2
  */
 
@@ -47,9 +47,11 @@ if (Settings::Get('2fa.enabled') != '1') {
 if (AREA == 'admin') {
 	$upd_stmt = Database::prepare("UPDATE `" . TABLE_PANEL_ADMINS . "` SET `type_2fa` = :t2fa, `data_2fa` = :d2fa WHERE adminid = :id");
 	$uid = $userinfo['adminid'];
+	$isadmin = 1;
 } elseif (AREA == 'customer') {
 	$upd_stmt = Database::prepare("UPDATE `" . TABLE_PANEL_CUSTOMERS . "` SET `type_2fa` = :t2fa, `data_2fa` = :d2fa WHERE customerid = :id");
 	$uid = $userinfo['customerid'];
+	$isadmin = 0;
 }
 $success_message = "";
 
@@ -57,11 +59,29 @@ $tfa = new FroxlorTwoFactorAuth('Froxlor ' . Settings::Get('system.hostname'));
 
 // do the delete and then just show a success-message
 if ($action == 'delete') {
+	// disabling 2fa is a state change and must go through the global CSRF guard in
+	// lib/init.php, which only validates the token for POST/PUT/PATCH/DELETE - a plain
+	// GET (e.g. from a cross-site link, allowed through by the SameSite=Lax session
+	// cookie) must not be able to silently strip a user's 2fa
+	if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+		Response::dynamicError('This action requires a POST request');
+	}
 	Database::pexecute($upd_stmt, [
 		't2fa' => 0,
 		'd2fa' => "",
 		'id' => $uid
 	]);
+	// purge "remember this device" tokens so a 2fa reset can't be bypassed by a surviving cookie;
+	// scope by account type too, since admin- and customer-ids can collide (e.g. both id 1) -
+	// guarded by db_version since the `admin` column might not exist yet if this code has been
+	// deployed but the db update hasn't run yet (which itself purges all tokens once it does)
+	if (Settings::Get('panel.db_version') >= 202608210) {
+		$del_stmt = Database::prepare("DELETE FROM `" . TABLE_PANEL_2FA_TOKENS . "` WHERE `userid` = :id AND `admin` = :isadmin");
+		Database::pexecute($del_stmt, [
+			'id' => $uid,
+			'isadmin' => $isadmin
+		]);
+	}
 	Response::standardSuccess('2fa.2fa_removed');
 } elseif ($action == 'preadd') {
 	$type = Request::post('type_2fa', '0');

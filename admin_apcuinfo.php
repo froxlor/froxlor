@@ -1,8 +1,8 @@
 <?php
 
 /**
- * This file is part of the Froxlor project.
- * Copyright (c) 2010 the Froxlor Team (see authors).
+ * This file is part of the froxlor project.
+ * Copyright (c) 2010 the froxlor Team (see authors).
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,7 +19,7 @@
  * https://files.froxlor.org/misc/COPYING.txt
  *
  * @copyright  the authors
- * @author     Froxlor team <team@froxlor.org>
+ * @author     froxlor team <team@froxlor.org>
  * @author     Janos Muzsi <muzsij@hypernics.hu>
  * @author     Ralf Becker <beckerr@php.net>
  * @author     Rasmus Lerdorf <rasmus@php.net>
@@ -118,7 +118,7 @@ if ($page == 'showinfo' && $userinfo['change_serversettings'] == '1') {
 		'uptime' => duration($cache['start_time'])
 	];
 
-	$overview['mem_used_percentage'] = number_format(($overview['mem_used'] / $overview['mem_avail']) * 100, 1);
+	$overview['mem_used_percentage'] = number_format(($overview['mem_used'] / $overview['mem_size']) * 100, 1);
 	$overview['num_hits_percentage'] = number_format(($overview['num_hits'] / $overview['num_hits_and_misses']) * 100,
 		1);
 	$overview['num_misses_percentage'] = number_format(($overview['num_misses'] / $overview['num_hits_and_misses']) * 100,

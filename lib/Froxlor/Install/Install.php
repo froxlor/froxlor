@@ -1,8 +1,8 @@
 <?php
 
 /**
- * This file is part of the Froxlor project.
- * Copyright (c) 2010 the Froxlor Team (see authors).
+ * This file is part of the froxlor project.
+ * Copyright (c) 2010 the froxlor Team (see authors).
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,7 +19,7 @@
  * https://files.froxlor.org/misc/COPYING.txt
  *
  * @copyright  the authors
- * @author     Froxlor team <team@froxlor.org>
+ * @author     froxlor team <team@froxlor.org>
  * @license    https://files.froxlor.org/misc/COPYING.txt GPLv2
  */
 
@@ -29,6 +29,7 @@ use Exception;
 use Froxlor\Config\ConfigParser;
 use Froxlor\Froxlor;
 use Froxlor\Install\Install\Core;
+use Froxlor\System\Cronjob;
 use Froxlor\System\IPTools;
 use Froxlor\UI\Panel\UI;
 use Froxlor\UI\Request;
@@ -393,8 +394,6 @@ class Install
 	{
 		if (strtoupper(@php_sapi_name()) == "APACHE2HANDLER" || stristr($_SERVER['SERVER_SOFTWARE'], "apache")) {
 			return 'apache24';
-		} elseif (substr(strtoupper(@php_sapi_name()), 0, 8) == "LIGHTTPD" || stristr($_SERVER['SERVER_SOFTWARE'], "lighttpd")) {
-			return 'lighttpd';
 		} elseif (substr(strtoupper(@php_sapi_name()), 0, 8) == "NGINX" || stristr($_SERVER['SERVER_SOFTWARE'], "nginx")) {
 			return 'nginx';
 		}
@@ -403,26 +402,6 @@ class Install
 
 	private function guessDistribution(): ?string
 	{
-		// set default os.
-		$default = 'bullseye';
-
-		// read os-release
-		if (@file_exists('/etc/os-release') && is_readable('/etc/os-release')) {
-			if (function_exists('parse_ini_file')) {
-				$os_dist = parse_ini_file('/etc/os-release', false);
-			} else {
-				$osrf = explode("\n", file_get_contents('/etc/os-release'));
-				foreach ($osrf as $line) {
-					$osrfline = explode("=", $line);
-					if ($osrfline[0] == 'VERSION_CODENAME') {
-						$os_dist['VERSION_CODENAME'] = $osrfline[1];
-					} else if ($osrfline[0] == 'ID') {
-						$os_dist['ID'] = $osrfline[1];
-					}
-				}
-			}
-			return strtolower($os_dist['VERSION_CODENAME'] ?? ($os_dist['ID'] ?? $default));
-		}
-		return $default;
+		return Cronjob::checkCurrentDistro(true);
 	}
 }

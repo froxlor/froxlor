@@ -1,8 +1,8 @@
 <?php
 
 /**
- * This file is part of the Froxlor project.
- * Copyright (c) 2010 the Froxlor Team (see authors).
+ * This file is part of the froxlor project.
+ * Copyright (c) 2010 the froxlor Team (see authors).
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,7 +19,7 @@
  * https://files.froxlor.org/misc/COPYING.txt
  *
  * @copyright  the authors
- * @author     Froxlor team <team@froxlor.org>
+ * @author     froxlor team <team@froxlor.org>
  * @license    https://files.froxlor.org/misc/COPYING.txt GPLv2
  */
 
@@ -28,6 +28,7 @@ namespace Froxlor\Cron\Http;
 use Froxlor\Cron\Http\Php\PhpInterface;
 use Froxlor\Database\Database;
 use Froxlor\FileDir;
+use Froxlor\Froxlor;
 use Froxlor\Settings;
 
 class NginxFcgi extends Nginx
@@ -36,7 +37,7 @@ class NginxFcgi extends Nginx
 	public function createOwnVhostStarter()
 	{
 		if (Settings::Get('phpfpm.enabled') == '1' && Settings::Get('phpfpm.enabled_ownvhost') == '1') {
-			$mypath = FileDir::makeCorrectDir(dirname(__FILE__, 3)); // /var/www/froxlor, needed for chown
+			$mypath = Froxlor::getInstallDir();
 
 			$user = Settings::Get('phpfpm.vhost_httpuser');
 			$group = Settings::Get('phpfpm.vhost_httpgroup');
@@ -110,7 +111,8 @@ class NginxFcgi extends Nginx
 			$php_options_text .= "\t\t" . 'include ' . Settings::Get('nginx.fastcgiparams') . ";\n";
 			$php_options_text .= "\t\t" . 'fastcgi_split_path_info ^(.+?\.php)(/.*)$;' . "\n";
 			$php_options_text .= "\t\t" . 'fastcgi_param SCRIPT_FILENAME $request_filename;' . "\n";
-			$php_options_text .= "\t\t" . 'fastcgi_param PATH_INFO $2;' . "\n";
+			$php_options_text .= "\t\t" . 'set $path_info $fastcgi_path_info;' . "\n";
+			$php_options_text .= "\t\t" . 'fastcgi_param PATH_INFO $path_info;' . "\n";
 			if ($domain['ssl'] == '1' && $ssl_vhost) {
 				$php_options_text .= "\t\t" . 'fastcgi_param HTTPS on;' . "\n";
 			}

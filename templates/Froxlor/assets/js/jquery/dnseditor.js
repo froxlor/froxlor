@@ -7,6 +7,9 @@ export default function () {
 				url: "lib/ajax.php?action=loadLanguageString",
 				type: "POST",
 				dataType: "json",
+				beforeSend: function (request) {
+					request.setRequestHeader('X-CSRF-TOKEN', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
+				},
 				data: {langid: 'dnseditor.notes.' + selVal},
 				success: function (data) {
 					$("#dns_content").next().html(data);

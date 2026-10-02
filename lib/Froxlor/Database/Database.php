@@ -1,8 +1,8 @@
 <?php
 
 /**
- * This file is part of the Froxlor project.
- * Copyright (c) 2010 the Froxlor Team (see authors).
+ * This file is part of the froxlor project.
+ * Copyright (c) 2010 the froxlor Team (see authors).
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,7 +19,7 @@
  * https://files.froxlor.org/misc/COPYING.txt
  *
  * @copyright  the authors
- * @author     Froxlor team <team@froxlor.org>
+ * @author     froxlor team <team@froxlor.org>
  * @license    https://files.froxlor.org/misc/COPYING.txt GPLv2
  */
 
@@ -133,7 +133,7 @@ class Database
 	 *            if set to false, the error will be logged, but we go on
 	 * @throws Exception
 	 */
-	private static function showerror(Exception $error, bool $showerror = true, bool $json_response = false, PDOStatement $stmt = null)
+	private static function showerror(Exception $error, bool $showerror = true, bool $json_response = false, ?PDOStatement $stmt = null)
 	{
 		global $userinfo, $theme, $linker;
 
@@ -190,10 +190,12 @@ class Database
 		if (!file_exists($sl_dir)) {
 			@mkdir($sl_dir, 0755);
 		}
-		openlog("froxlor", LOG_PID | LOG_PERROR, LOG_LOCAL0);
-		syslog(LOG_WARNING, str_replace("\n", " ", $error_message));
-		syslog(LOG_WARNING, str_replace("\n", " ", "--- DEBUG: " . $error_trace));
-		closelog();
+		if (!defined('TRAVIS_CI') || TRAVIS_CI == 0) {
+			openlog("froxlor", LOG_PID | LOG_PERROR, LOG_LOCAL0);
+			syslog(LOG_WARNING, str_replace("\n", " ", $error_message));
+			syslog(LOG_WARNING, str_replace("\n", " ", "--- DEBUG: " . $error_trace));
+			closelog();
+		}
 
 		/**
 		 * log error for reporting
@@ -375,6 +377,14 @@ class Database
 	{
 		self::$dbserver = $dbserver;
 		self::$link = null;
+	}
+
+	/**
+	 * get the currently used database-server (relevant for root-connection)
+	 */
+	public static function getServer()
+	{
+		return self::$dbserver;
 	}
 
 	/**

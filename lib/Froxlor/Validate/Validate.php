@@ -1,8 +1,8 @@
 <?php
 
 /**
- * This file is part of the Froxlor project.
- * Copyright (c) 2010 the Froxlor Team (see authors).
+ * This file is part of the froxlor project.
+ * Copyright (c) 2010 the froxlor Team (see authors).
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,7 +19,7 @@
  * https://files.froxlor.org/misc/COPYING.txt
  *
  * @copyright  the authors
- * @author     Froxlor team <team@froxlor.org>
+ * @author     froxlor team <team@froxlor.org>
  * @license    https://files.froxlor.org/misc/COPYING.txt GPLv2
  */
 
@@ -28,14 +28,16 @@ namespace Froxlor\Validate;
 use Exception;
 use Froxlor\Database\Database;
 use Froxlor\FroxlorLogger;
-use Froxlor\Idna\IdnaWrapper;
 use Froxlor\System\IPTools;
 use Froxlor\UI\Response;
 
 class Validate
 {
 
-	const REGEX_DIR = '/^|(\/[\w-]+)+$/';
+	// empty string or a sequence of safe path characters (word chars, dots, slashes,
+	// hyphens); a bare '^' alternative previously made this match any input at all,
+	// and '..' is explicitly excluded to block directory traversal
+	const REGEX_DIR = '/^((?!\.\.)[\w.\/-])*$/D';
 
 	const REGEX_PORT = '/^(([1-9])|([1-9][0-9])|([1-9][0-9][0-9])|([1-9][0-9][0-9][0-9])|([1-5][0-9][0-9][0-9][0-9])|(6[0-4][0-9][0-9][0-9])|(65[0-4][0-9][0-9])|(655[0-2][0-9])|(6553[0-5]))$/Di';
 
@@ -63,10 +65,11 @@ class Validate
 		string $str,
 		string $fieldname,
 		string $pattern = '',
-		$lng = '',
-		$emptydefault = [],
-		bool $throw_exception = false
-	) {
+		       $lng = '',
+		       $emptydefault = [],
+		bool   $throw_exception = false
+	)
+	{
 		if (!is_array($emptydefault)) {
 			$emptydefault_array = [
 				$emptydefault
@@ -122,14 +125,15 @@ class Validate
 	 */
 	public static function validate_ip2(
 		string $ip,
-		bool $return_bool = false,
+		bool   $return_bool = false,
 		string $lng = 'invalidip',
-		bool $allow_localhost = false,
-		bool $allow_priv = false,
-		bool $allow_cidr = false,
-		bool $cidr_as_netmask = false,
-		bool $throw_exception = false
-	) {
+		bool   $allow_localhost = false,
+		bool   $allow_priv = false,
+		bool   $allow_cidr = false,
+		bool   $cidr_as_netmask = false,
+		bool   $throw_exception = false
+	)
+	{
 		$cidr = "";
 		if ($allow_cidr) {
 			$org_ip = $ip;
@@ -139,8 +143,12 @@ class Validate
 				if (IPTools::is_ipv6($ip_cidr[0])) {
 					$cidr_range_max = 128;
 				}
-				if (strlen($ip_cidr[1]) <= 3 && in_array((int)$ip_cidr[1], array_values(range(1, $cidr_range_max)),
-						true) === false) {
+				// the strlen() <= 3 guard this used to have made the check a no-op for any
+				// CIDR suffix longer than 3 characters (e.g. "/12345") - such values passed
+				// through unvalidated and, downstream in IPTools::ip_in_range(), collapse to
+				// a netmask of 0 that matches every address, silently defeating an
+				// allowed_from IP restriction
+				if (in_array((int)$ip_cidr[1], array_values(range(1, $cidr_range_max)), true) === false) {
 					if ($return_bool) {
 						return false;
 					}
@@ -196,24 +204,66 @@ class Validate
 	 */
 	public static function validateUrl(string $url, bool $allow_private_ip = false): bool
 	{
+		// reject raw control characters before parse_url() can mask them (e.g. to '_')
+		if (preg_match('/[\x00-\x1F\x7F]/', $url)) {
+			return false;
+		}
+
 		if (strtolower(substr($url, 0, 7)) != "http://" && strtolower(substr($url, 0, 8)) != "https://") {
 			$url = 'http://' . $url;
 		}
 
-		// needs converting
-		try {
-			$idna_convert = new IdnaWrapper();
-			$url = $idna_convert->encode($url);
-		} catch (Exception $e) {
+		// Parse parts
+		$parts = parse_url($url);
+		if ($parts === false || !isset($parts['scheme'], $parts['host'])) {
 			return false;
 		}
 
-		if ($allow_private_ip) {
-			$pattern = '%^(?:(?:https?):\/\/)(?:\S+(?::\S*)?@)?(?:(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z\x{00a1}-\x{ffff}0-9]+-?)*[a-z\x{00a1}-\x{ffff}0-9]+)(?:\.(?:[a-z\x{00a1}-\x{ffff}0-9]+-?)*[a-z\x{00a1}-\x{ffff}0-9]+)*(?:\.(?:[a-z\x{00a1}-\x{ffff}]{2,})))(?::\d{2,5})?(?:\/[^\s]*)?$%iuS';
-		} else {
-			$pattern = '%^(?:(?:https?):\/\/)(?:\S+(?::\S*)?@)?(?:(?!10(?:\.\d{1,3}){3})(?!127(?:\.\d{1,3}){3})(?!169\.254(?:\.\d{1,3}){2})(?!192\.168(?:\.\d{1,3}){2})(?!172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z\x{00a1}-\x{ffff}0-9]+-?)*[a-z\x{00a1}-\x{ffff}0-9]+)(?:\.(?:[a-z\x{00a1}-\x{ffff}0-9]+-?)*[a-z\x{00a1}-\x{ffff}0-9]+)*(?:\.(?:[a-z\x{00a1}-\x{ffff}]{2,})))(?::\d{2,5})?(?:/[^\s]*)?$%iuS';
+		// Check allowed schemes
+		if (!in_array(strtolower($parts['scheme']), ['http', 'https'], true)) {
+			return false;
 		}
-		if (preg_match($pattern, $url)) {
+
+		// Check if host is valid domain or valid IP (v4 or v6)
+		$host = $parts['host'];
+		if (substr($host, 0, 1) == '[' && substr($host, -1) == ']') {
+			$host = substr($host, 1, -1);
+		}
+
+		foreach (['path', 'query', 'fragment', 'user', 'pass'] as $part) {
+			if (!empty($parts[$part])) {
+				$decoded = rawurldecode($parts[$part]);
+				if (preg_match('/[\r\n]|%0a|%0d/i', $parts[$part])) {
+					return false;
+				}
+				if (preg_match('/[\r\n]/', $decoded)) {
+					return false;
+				}
+				// no control chars
+				if (preg_match('/[\x00-\x1F\x7F]/', $decoded)) {
+					return false;
+				}
+				if (!preg_match('/^[a-zA-Z0-9._~!$&\'()*+,;=:@%\/?-]*$/', $parts[$part])) {
+					return false;
+				}
+				// anti traversal
+				if (strstr($decoded, '..') !== false || strstr($parts[$part], '..') !== false) {
+					return false;
+				}
+			}
+		}
+
+		$opts = FILTER_FLAG_IPV4 | FILTER_FLAG_NO_RES_RANGE | FILTER_FLAG_NO_PRIV_RANGE;
+		$opts6 = FILTER_FLAG_IPV6 | FILTER_FLAG_NO_RES_RANGE | FILTER_FLAG_NO_PRIV_RANGE;
+		if ($allow_private_ip) {
+			$opts = FILTER_FLAG_IPV4 | FILTER_FLAG_NO_RES_RANGE;
+			$opts6 = FILTER_FLAG_IPV6 | FILTER_FLAG_NO_RES_RANGE;
+		}
+		if (filter_var($host, FILTER_VALIDATE_IP, $opts)) {
+			return true;
+		} elseif (substr($parts['host'], 0, 1) == '[' && substr($parts['host'], -1) == ']' && filter_var($host, FILTER_VALIDATE_IP, $opts6)) {
+			return true;
+		} elseif (!preg_match('/^([0-9]{1,3}\.)+[0-9]{1,3}$/', $host) && self::validateDomain($host) !== false) {
 			return true;
 		}
 
@@ -327,7 +377,7 @@ class Validate
 
 			$interval_parts = explode(' ', $interval);
 
-			if (count($interval_parts) == 2 && preg_match('/[0-9]+/',
+			if (count($interval_parts) == 2 && preg_match('/^[0-9]+$/',
 					$interval_parts[0]) && in_array(strtoupper($interval_parts[1]), $valid_expr)) {
 				return true;
 			}
@@ -342,7 +392,8 @@ class Validate
 	 * @return bool
 	 * @throws Exception
 	 */
-	public static function validateBase64Image(string $base64string) {
+	public static function validateBase64Image(string $base64string)
+	{
 
 		if (!extension_loaded('gd')) {
 			Response::standardError('phpgdextensionnotavailable', null, true);
@@ -368,6 +419,229 @@ class Validate
 		}
 
 		// If everything is okay, return true
+		return true;
+	}
+
+	public static function validateDnsLoc(string $input)
+	{
+		$pattern = '/^
+        (\d{1,2})[ \t]+                # latitude degrees
+        (\d{1,2})[ \t]+                # latitude minutes
+        (\d{1,2}(?:\.\d+)?)[ \t]+      # latitude seconds
+        ([NS])[ \t]+                   # latitude direction
+        (\d{1,3})[ \t]+                # longitude degrees
+        (\d{1,2})[ \t]+                # longitude minutes
+        (\d{1,2}(?:\.\d+)?)[ \t]+      # longitude seconds
+        ([EW])[ \t]+                   # longitude direction
+        (-?\d+(?:\.\d+)?)m          # altitude
+        (?:[ \t]+(\d+(?:\.\d+)?)m      # size (optional)
+        (?:[ \t]+(\d+(?:\.\d+)?)m      # horiz precision (optional)
+        (?:[ \t]+(\d+(?:\.\d+)?)m)?    # vert precision (optional)
+        )?)?$/x';
+
+		if (!preg_match($pattern, $input, $matches)) {
+			return false;
+		}
+
+		[
+			,
+			$latDeg, $latMin, $latSec, $latDir,
+			$lonDeg, $lonMin, $lonSec, $lonDir,
+			$alt,
+			$size, $hPrec, $vPrec
+		] = $matches + array_fill(0, 13, null);
+
+		// Range checks
+		if ($latDeg > 90) return false;
+		if ($latMin > 59) return false;
+		if ($latSec >= 60) return false;
+
+		if ($lonDeg > 180) return false;
+		if ($lonMin > 59) return false;
+		if ($lonSec >= 60) return false;
+
+		return $input;
+	}
+
+	public static function validateDnsRp(string $input)
+	{
+		$parts = preg_split('/\s+/', trim($input));
+
+		if (count($parts) !== 2) {
+			return false;
+		}
+
+		[$mboxDname, $txtDname] = $parts;
+
+		// remove trailing dot if any
+		$mboxDname = rtrim($mboxDname, '.');
+		$txtDname = rtrim($txtDname, '.');
+
+		if (!self::validateDomain($mboxDname)) {
+			return false;
+		}
+
+		if (!self::validateDomain($txtDname)) {
+			return false;
+		}
+
+		return $input;
+	}
+
+	public static function validateDnsSshfp(string $input)
+	{
+		$parts = preg_split('/\s+/', trim($input));
+
+		if (count($parts) !== 3) {
+			return false;
+		}
+
+		[$algorithm, $type, $fingerprint] = $parts;
+
+		// ---- algorithm ----
+		$validAlgorithms = [1, 2, 3, 4, 6];
+
+		if (!ctype_digit($algorithm) || !in_array((int)$algorithm, $validAlgorithms, true)) {
+			return false;
+		}
+
+		// ---- fingerprint type ----
+		$validTypes = [1, 2];
+
+		if (!ctype_digit($type) || !in_array((int)$type, $validTypes, true)) {
+			return false;
+		}
+
+		// ---- check fingerprint ----
+		if (!ctype_xdigit($fingerprint)) {
+			return false;
+		}
+
+		$type = (int)$type;
+
+		switch ($type) {
+			case 1: // SHA-1
+				$expectedLength = 40;
+				break;
+
+			case 2: // SHA-256
+				$expectedLength = 64;
+				break;
+
+			default:
+				$expectedLength = 0;
+				break;
+		}
+
+		if (strlen($fingerprint) !== $expectedLength) {
+			return false;
+		}
+
+		return $input;
+	}
+
+	public static function validateDnsTlsa(string $input)
+	{
+		$parts = preg_split('/\s+/', trim($input));
+
+		if (count($parts) !== 4) {
+			return false;
+		}
+
+		[$usage, $selector, $matchingType, $data] = $parts;
+
+		// ---- usage ----
+		$validUsage = [0, 1, 2, 3];
+
+		if (!ctype_digit($usage) || !in_array((int)$usage, $validUsage, true)) {
+			return false;
+		}
+
+		// ---- selector ----
+		$validSelector = [0, 1];
+
+		if (!ctype_digit($selector) || !in_array((int)$selector, $validSelector, true)) {
+			return false;
+		}
+
+		// ---- matching type ----
+		$validMatching = [0, 1, 2];
+
+		if (!ctype_digit($matchingType) || !in_array((int)$matchingType, $validMatching, true)) {
+			return false;
+		}
+
+		// ---- certificate association data ----
+		if (!ctype_xdigit($data)) {
+			return false;
+		}
+
+		$matchingType = (int)$matchingType;
+
+		if ($matchingType === 1 && strlen($data) !== 64) {
+			return false; // SHA-256
+		}
+
+		if ($matchingType === 2 && strlen($data) !== 128) {
+			return false; // SHA-512
+		}
+
+		if ($matchingType === 0 && (strlen($data) < 2 || strlen($data) > 4096)) {
+			return false; // at least 1 byte hex
+		}
+
+		return $input;
+	}
+
+	public static function validateDnsNaptr(string $input): bool
+	{
+		// Split respecting quoted strings
+		$pattern = '/^
+        (\d{1,5})\s+                # order
+        (\d{1,5})\s+                # preference
+        "([^"]*)"\s+                # flags
+        "([^"]*)"\s+                # services
+        "([^"]*)"\s+                # regexp
+        (\S+)                      # replacement
+    $/x';
+
+		if (!preg_match($pattern, $input, $matches)) {
+			return false;
+		}
+
+		[, $order, $preference, $flags, $services, $regexp, $replacement] = $matches;
+
+		// 1. order & preference: 0–65535
+		if ($order < 0 || $order > 65535 || $preference < 0 || $preference > 65535) {
+			return false;
+		}
+
+		// 2. flags: allowed chars (RFC says single letters typically, but allow multiple)
+		if (!preg_match('/^[A-Za-z0-9]*$/', $flags)) {
+			return false;
+		}
+
+		// 3. services: usually like "E2U+sip"
+		if (!preg_match('/^[A-Za-z0-9+:\-]*$/', $services)) {
+			return false;
+		}
+
+		// 4. regexp: delimiter-based substitution (very loose validation)
+		// Example: !^.*$!sip:info@example.com!
+		if ($regexp !== '') {
+			$delim = $regexp[0];
+			if (substr_count($regexp, $delim) < 3) {
+				return false;
+			}
+		}
+
+		// 5. replacement: must be "." or valid domain
+		if ($replacement !== '.') {
+			if (!filter_var($replacement, FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME)) {
+				return false;
+			}
+		}
+
 		return true;
 	}
 }

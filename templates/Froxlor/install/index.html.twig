@@ -71,6 +71,9 @@
 						<p class="lead {{ preflight.criticals ? 'text-danger' : preflight.suggestions ? 'text-warning' : 'text-success'}}">
 							<i class="{{ preflight.criticals ? 'fa-solid fa-triangle-exclamation' : preflight.suggestions ? 'fa-solid fa-circle-info' : 'far fa-circle-check' }}"></i>
 							{{ preflight.text }}
+							{% if preflight.criticals is empty and preflight.suggestions %}
+							<br>{{ lng('install.suggestionsnote') }}
+							{% endif %}
 						</p>
 
 						{% if preflight.criticals %}

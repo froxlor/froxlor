@@ -1,8 +1,8 @@
 <?php
 
 /**
- * This file is part of the Froxlor project.
- * Copyright (c) 2010 the Froxlor Team (see authors).
+ * This file is part of the froxlor project.
+ * Copyright (c) 2010 the froxlor Team (see authors).
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,7 +19,7 @@
  * https://files.froxlor.org/misc/COPYING.txt
  *
  * @copyright  the authors
- * @author     Froxlor team <team@froxlor.org>
+ * @author     froxlor team <team@froxlor.org>
  * @license    https://files.froxlor.org/misc/COPYING.txt GPLv2
  */
 
@@ -224,7 +224,7 @@ if (is_array($_themeoptions) && (!array_key_exists('variants', $_themeoptions) |
 	$themevariant = "default";
 }
 
-if (array_key_exists('global', $_themeoptions)) {
+if (is_array($_themeoptions) && array_key_exists('global', $_themeoptions)) {
 	$_themeoptions['variants'][$themevariant] = PhpHelper::array_merge_recursive_distinct($_themeoptions['global'], $_themeoptions['variants'][$themevariant]);
 }
 
@@ -374,7 +374,7 @@ if (CurrentUser::hasSession()) {
 		'domain' => UI::getCookieHost(),
 		'secure' => UI::requestIsHttps(),
 		'httponly' => true,
-		'samesite' => 'Strict'
+		'samesite' => 'Lax'
 	];
 	setcookie(session_name(), $_COOKIE[session_name()], $cookie_params);
 } else {

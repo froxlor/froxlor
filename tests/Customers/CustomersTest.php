@@ -199,6 +199,43 @@ class CustomersTest extends TestCase
 		$this->assertEquals('', $result['custom_notes']);
 	}
 
+	/**
+	 * regression test: Customers::get()/listing() used to return the raw
+	 * panel_customers row (a wildcard SELECT), which includes
+	 * leprivatekey - the customer's Let's Encrypt/ACME account private key.
+	 * It is never rendered in any UI and only ever read directly from the
+	 * database by the acme.sh cron, so it must never round-trip through the
+	 * API, same as password/data_2fa.
+	 *
+	 * @depends testAdminCustomersAdd
+	 */
+	public function testCustomersResponseHidesLeprivatekey()
+	{
+		global $admin_userdata;
+
+		$upd_stmt = Database::prepare("UPDATE `" . TABLE_PANEL_CUSTOMERS . "` SET `leprivatekey` = :key WHERE `customerid` = 1");
+		Database::pexecute($upd_stmt, [
+			'key' => "-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----"
+		]);
+
+		$json_result = Customers::getLocal($admin_userdata, [
+			'id' => 1
+		])->get();
+		$result = json_decode($json_result, true)['data'];
+		$this->assertArrayNotHasKey('leprivatekey', $result);
+
+		$json_result = Customers::getLocal($admin_userdata)->listing();
+		$result = json_decode($json_result, true)['data'];
+		$found = false;
+		foreach ($result['list'] as $row) {
+			if ($row['customerid'] == 1) {
+				$found = true;
+				$this->assertArrayNotHasKey('leprivatekey', $row);
+			}
+		}
+		$this->assertTrue($found);
+	}
+
 	public function testAdminCustomersGetNotFound()
 	{
 		global $admin_userdata;

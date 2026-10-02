@@ -1,22 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <froxlor>
 	<distribution name="Ubuntu" codename="Focal"
-		version="20.04" defaulteditor="/bin/nano">
+		version="20.04" defaulteditor="/bin/nano" deprecated="true">
 		<!-- OS defaults to be loaded on installation -->
 		<defaults>
 			<default settinggroup="system" varname="nssextrausers" value="1"></default>
-			<default for="lighttpd" settinggroup="system" varname="apacheconf_vhost" value="/etc/lighttpd/conf-enabled/"></default>
-			<default for="lighttpd" settinggroup="system" varname="apacheconf_diroptions" value="/etc/lighttpd/froxlor-diroptions/"></default>
-			<default for="lighttpd" settinggroup="system" varname="apacheconf_htpasswddir" value="/etc/lighttpd/froxlor-htpasswd/"></default>
-			<default for="lighttpd" settinggroup="system" varname="apachereload_command" value="service lighttpd reload"></default>
-			<default for="lighttpd" settinggroup="system" varname="letsencryptacmeconf" value="/etc/lighttpd/acme.conf"></default>+
-			<default for="lighttpd" settinggroup="phpfpm" varname="fastcgi_ipcdir" value="/var/run/lighttpd/"></default>
 			<default for="nginx" settinggroup="system" varname="apacheconf_vhost" value="/etc/nginx/sites-enabled/"></default>
 			<default for="nginx" settinggroup="system" varname="apacheconf_diroptions" value="/etc/nginx/sites-enabled/"></default>
 			<default for="nginx" settinggroup="system" varname="apacheconf_htpasswddir" value="/etc/nginx/froxlor-htpasswd/"></default>
 			<default for="nginx" settinggroup="system" varname="apachereload_command" value="service nginx reload"></default>
 			<default for="nginx" settinggroup="system" varname="letsencryptacmeconf" value="/etc/nginx/acme.conf"></default>
-			<default for="nginx" settinggroup="phpfpm" varname="fastcgi_ipcdir" value="/var/run/nginx/"></default>
+			<default for="nginx" settinggroup="phpfpm" varname="fastcgi_ipcdir" value="/var/run/php/"></default>
 		</defaults>
 		<services>
 			<!-- HTTP -->
@@ -88,70 +82,6 @@ Alias "/.well-known/acme-challenge" "{{settings.system.letsencryptchallengepath}
 ]]>
 						</content>
 					</file>
-					<command><![CDATA[{{settings.system.apachereload_command}}]]></command>
-				</daemon>
-				<!-- HTTP Lighttpd -->
-				<daemon name="lighttpd" title="LigHTTPd (deprecated)">
-					<install><![CDATA[apt-get install lighttpd]]></install>
-					<file name="/etc/lighttpd/lighttpd.conf">
-						<content><![CDATA[
-server.modules = (
-	"mod_access",
-	"mod_alias",
-	"mod_compress",
-	"mod_redirect",
-	"mod_rewrite",
-	"mod_setenv",
-)
-
-server.document-root        = "/var/www"
-server.upload-dirs          = ( "/var/cache/lighttpd/uploads" )
-server.errorlog             = "/var/log/lighttpd/error.log"
-server.pid-file             = "/var/run/lighttpd.pid"
-server.username             = "www-data"
-server.groupname            = "www-data"
-server.port                 = 80
-
-
-index-file.names            = ( "index.php", "index.html", "index.lighttpd.html" )
-url.access-deny             = ( "~", ".inc" )
-static-file.exclude-extensions = ( ".php", ".pl", ".fcgi" )
-
-compress.cache-dir          = "/var/cache/lighttpd/compress/"
-compress.filetype           = ( "application/javascript", "text/css", "text/html", "text/plain" )
-
-alias.url                  += ("/.well-known/acme-challenge/" => "{{settings.system.letsencryptchallengepath}}/.well-known/acme-challenge/")
-
-# default listening port for IPv6 falls back to the IPv4 port
-include_shell "/usr/share/lighttpd/use-ipv6.pl " + server.port
-include_shell "/usr/share/lighttpd/create-mime.assign.pl"
-include_shell "/usr/share/lighttpd/include-conf-enabled.pl"
-]]>
-						</content>
-					</file>
-					<include>//service[@type='http']/general/commands</include>
-					<command>
-						<visibility mode="isdir">{{settings.system.apacheconf_vhost}}
-						</visibility>
-						<content><![CDATA[echo -e '\\ninclude_shell "cat {{settings.system.apacheconf_vhost}}*.conf"' >> /etc/lighttpd/lighttpd.conf]]></content>
-					</command>
-					<command>
-						<visibility mode="isfile">{{settings.system.apacheconf_vhost}}
-						</visibility>
-						<content><![CDATA[echo -e '\\ninclude "{{settings.system.apacheconf_vhost}}"' >> /etc/lighttpd/lighttpd.conf]]></content>
-					</command>
-					<command>
-						<visibility mode="isdir">{{settings.system.apacheconf_diroptions}}
-						</visibility>
-						<content><![CDATA[echo -e '\\ninclude_shell "cat {{settings.system.apacheconf_diroptions}}*.conf"' >> /etc/lighttpd/lighttpd.conf]]></content>
-					</command>
-					<command>
-						<visibility mode="isfile">{{settings.system.apacheconf_diroptions}}
-						</visibility>
-						<content><![CDATA[echo -e '\\ninclude "{{settings.system.apacheconf_diroptions}}"' >> /etc/lighttpd/lighttpd.conf]]></content>
-					</command>
-					<command><![CDATA[lighty-disable-mod cgi]]></command>
-					<command><![CDATA[lighty-disable-mod fastcgi]]></command>
 					<command><![CDATA[{{settings.system.apachereload_command}}]]></command>
 				</daemon>
 				<!-- HTTP Nginx -->
@@ -294,6 +224,9 @@ fastcgi_param  SERVER_NAME        $server_name;
 
 # PHP only, required if PHP was built with --enable-force-cgi-redirect
 fastcgi_param  REDIRECT_STATUS    200;
+
+# Fix for HTTP/3 ($http_host is not populated automatically)
+fastcgi_param  HTTP_HOST          $host;
 ]]>
 						</content>
 					</file>
@@ -1541,7 +1474,7 @@ user = <SQL_UNPRIVILEGED_USER>
 password = <SQL_UNPRIVILEGED_PASSWORD>
 dbname = <SQL_DB>
 hosts = <SQL_HOST>
-query = SELECT DISTINCT username FROM mail_users WHERE email in ((SELECT mail_virtual.email_full FROM mail_virtual WHERE mail_virtual.email = '%s' UNION SELECT mail_virtual.destination FROM mail_virtual WHERE mail_virtual.email = '%s'));
+query = SELECT GROUP_CONCAT(DISTINCT mu.username SEPARATOR ' ') AS sasl_users FROM mail_users mu WHERE mu.username = '%s' OR mu.email IN ((SELECT mail_virtual.email_full FROM mail_virtual WHERE mail_virtual.email = '%s') UNION (SELECT mail_virtual.destination FROM mail_virtual WHERE mail_virtual.email = '%s') UNION (SELECT mail_sender_aliases.email FROM mail_sender_aliases WHERE mail_sender_aliases.allowed_sender = '%s') UNION (SELECT mail_sender_aliases.email FROM mail_sender_aliases WHERE mail_sender_aliases.allowed_sender = CONCAT('@', SUBSTRING_INDEX('%s','@',-1))));
 ]]>
 							</content>
 						</file>
@@ -3360,6 +3293,7 @@ plugin {
 				<!-- general RSpamd commands -->
 				<general>
 					<commands index="1">
+						<command><![CDATA[DEBIAN_FRONTEND=noninteractive apt-get -yq --no-install-recommends install wget gnupg]]></command>
 						<command><![CDATA[mkdir -p /etc/apt/keyrings]]></command>
 						<command><![CDATA[wget -O- https://rspamd.com/apt-stable/gpg.key | gpg --dearmor | tee /etc/apt/keyrings/rspamd.gpg > /dev/null]]></command>
 						<command><![CDATA[echo "deb [signed-by=/etc/apt/keyrings/rspamd.gpg] http://rspamd.com/apt-stable/ focal main" > /etc/apt/sources.list.d/rspamd.list]]></command>
@@ -3391,6 +3325,7 @@ try_fallback = true;
 allow_username_mismatch = true;
 path = "/var/lib/rspamd/dkim/$domain.$selector.key";
 selector_map = "/etc/rspamd/dkim_selectors.map";
+use_esld = false;
 ]]>
 							</content>
 						</file>
@@ -4288,7 +4223,7 @@ aliases:     files
 				<!-- Cronjob -->
 				<daemon name="cron" title="Cronjob for froxlor"
 					mandatory="true">
-					<install><![CDATA[apt-get install cron gnupg]]></install>
+					<install><![CDATA[DEBIAN_FRONTEND=noninteractive apt-get -yq --no-install-recommends install cron gnupg]]></install>
 					<command><![CDATA[[ ! -e /usr/local/bin/froxlor-cli ] && ln -s <BASE_PATH>bin/froxlor-cli /usr/local/bin/froxlor-cli]]></command>
 					<command><![CDATA[/usr/bin/php <BASE_PATH>bin/froxlor-cli froxlor:cron --run-task 99]]></command>
 					<command><![CDATA[{{settings.system.crondreload}}]]></command>

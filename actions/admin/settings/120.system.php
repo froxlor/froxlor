@@ -1,8 +1,8 @@
 <?php
 
 /**
- * This file is part of the Froxlor project.
- * Copyright (c) 2010 the Froxlor Team (see authors).
+ * This file is part of the froxlor project.
+ * Copyright (c) 2010 the froxlor Team (see authors).
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,7 +19,7 @@
  * https://files.froxlor.org/misc/COPYING.txt
  *
  * @copyright  the authors
- * @author     Froxlor team <team@froxlor.org>
+ * @author     froxlor team <team@froxlor.org>
  * @license    https://files.froxlor.org/misc/COPYING.txt GPLv2
  */
 
@@ -209,6 +209,14 @@ return [
 					'default' => 90,
 					'save_method' => 'storeSettingField'
 				],
+				'system_report_web_bccadmin' => [
+					'label' => lng('serversettings.report.report_web_bccadmin'),
+					'settinggroup' => 'system',
+					'varname' => 'report_web_bccadmin',
+					'type' => 'checkbox',
+					'default' => false,
+					'save_method' => 'storeSettingField'
+				],
 				'system_mail_use_smtp' => [
 					'label' => lng('serversettings.mail_use_smtp'),
 					'settinggroup' => 'system',
@@ -257,7 +265,8 @@ return [
 					'varname' => 'mail_smtp_user',
 					'type' => 'text',
 					'default' => '',
-					'save_method' => 'storeSettingField'
+					'save_method' => 'storeSettingField',
+					'autocomplete' => 'off'
 				],
 				'system_mail_smtp_passwd' => [
 					'label' => lng('serversettings.mail_smtp_passwd'),
@@ -265,7 +274,8 @@ return [
 					'varname' => 'mail_smtp_passwd',
 					'type' => 'password',
 					'default' => '',
-					'save_method' => 'storeSettingField'
+					'save_method' => 'storeSettingField',
+					'autocomplete' => 'new-password'
 				],
 				'system_apply_specialsettings_default' => [
 					'label' => lng('serversettings.apply_specialsettings_default'),

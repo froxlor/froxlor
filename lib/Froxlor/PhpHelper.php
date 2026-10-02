@@ -1,8 +1,8 @@
 <?php
 
 /**
- * This file is part of the Froxlor project.
- * Copyright (c) 2010 the Froxlor Team (see authors).
+ * This file is part of the froxlor project.
+ * Copyright (c) 2010 the froxlor Team (see authors).
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,7 +19,7 @@
  * https://files.froxlor.org/misc/COPYING.txt
  *
  * @copyright  the authors
- * @author     Froxlor team <team@froxlor.org>
+ * @author     froxlor team <team@froxlor.org>
  * @license    https://files.froxlor.org/misc/COPYING.txt GPLv2
  */
 
@@ -199,15 +199,18 @@ class PhpHelper
 	 * @param string|null $nameserver set additional resolver nameserver to use (e.g. 1.1.1.1)
 	 * @return bool|array
 	 */
-	public static function gethostbynamel6(string $host, bool $try_a = true, string $nameserver = null)
+	public static function gethostbynamel6(string $host, bool $try_a = true, ?string $nameserver = null)
 	{
 		$ips = [];
+
+		// Limit CNAME traversal so misconfigured DNS loops cannot block callers.
+		$max_depth = 10;
 
 		try {
 			// set the default nameservers to use, use the system default if none are provided
 			$resolver = new Net_DNS2_Resolver($nameserver ? ['nameservers' => [$nameserver]] : []);
 
-			// get all ip addresses from the A record and normalize them
+			// 1. Query direct A records on the input hostname
 			if ($try_a) {
 				try {
 					$answer = $resolver->query($host, 'A')->answer;
@@ -217,11 +220,11 @@ class PhpHelper
 						}
 					}
 				} catch (Net_DNS2_Exception $e) {
-					// we can't do anything here, just continue
+					// no A record or query failed; continue to AAAA
 				}
 			}
 
-			// get all ip addresses from the AAAA record and normalize them
+			// 2. Query direct AAAA records on the input hostname
 			try {
 				$answer = $resolver->query($host, 'AAAA')->answer;
 				foreach ($answer as $rr) {
@@ -230,25 +233,114 @@ class PhpHelper
 					}
 				}
 			} catch (Net_DNS2_Exception $e) {
-				// we can't do anything here, just continue
+				// no AAAA record or query failed; continue to CNAME
+			}
+
+			// Follow CNAME chains explicitly; Net_DNS2 does not always include the
+			// target A/AAAA records when querying the original hostname.
+			$depth = 0;
+			$seen = [$host];
+			$current = $host;
+			while ($depth < $max_depth) {
+				$depth++;
+				try {
+					$answer = $resolver->query($current, 'CNAME')->answer;
+				} catch (Net_DNS2_Exception $e) {
+					break; // no CNAME found; stop following the chain
+				}
+				if (empty($answer)) {
+					break; // no CNAME record; stop following the chain
+				}
+				$cname_target = null;
+				foreach ($answer as $rr) {
+					if ($rr instanceof \Net_DNS2_RR_CNAME) {
+						$cname_target = $rr->cname;
+						break;
+					}
+				}
+				if ($cname_target === null) {
+					break; // no valid CNAME record found; stop
+				}
+				if (in_array($cname_target, $seen, true)) {
+					break; // loop detected; stop
+				}
+				$seen[] = $cname_target;
+
+				// 3a. Resolve A records from the CNAME target
+				if ($try_a) {
+					try {
+						$answer = $resolver->query($cname_target, 'A')->answer;
+						foreach ($answer as $rr) {
+							if ($rr instanceof \Net_DNS2_RR_A) {
+								$ips[] = inet_ntop(inet_pton($rr->address));
+							}
+						}
+					} catch (Net_DNS2_Exception $e) {
+						// continue following the chain even if A fails
+					}
+				}
+
+				// 3b. Resolve AAAA records from the CNAME target
+				try {
+					$answer = $resolver->query($cname_target, 'AAAA')->answer;
+					foreach ($answer as $rr) {
+						if ($rr instanceof \Net_DNS2_RR_AAAA) {
+							$ips[] = inet_ntop(inet_pton($rr->address));
+						}
+					}
+				} catch (Net_DNS2_Exception $e) {
+					// continue following the chain even if AAAA fails
+				}
+
+				$current = $cname_target;
 			}
 		} catch (Net_DNS2_Exception $e) {
 			// fallback to php's dns_get_record if Net_DNS2 has no resolver available, but this may cause
 			// problems if the system's dns is not configured correctly; for example, the acme pre-check
 			// will fail because some providers put a local ip in /etc/hosts
-
-			// get all ip addresses from the A record and normalize them
-			if ($try_a) {
-				$answer = @dns_get_record($host, DNS_A);
-				foreach ($answer as $rr) {
-					$ips[] = inet_ntop(inet_pton($rr['ip']));
+			$current = $host;
+			$depth = 0;
+			$seen = [$host];
+			while ($depth < $max_depth) {
+				$depth++;
+				// 1. Query direct A records on the current name
+				if ($try_a) {
+					$answer = @dns_get_record($current, DNS_A);
+					foreach ($answer as $rr) {
+						if (isset($rr['ip'])) {
+							$ips[] = inet_ntop(inet_pton($rr['ip']));
+						}
+					}
 				}
-			}
 
-			// get all ip addresses from the AAAA record and normalize them
-			$answer = @dns_get_record($host, DNS_AAAA);
-			foreach ($answer as $rr) {
-				$ips[] = inet_ntop(inet_pton($rr['ipv6']));
+				// 2. Query direct AAAA records on the current name
+				$answer = @dns_get_record($current, DNS_AAAA);
+				foreach ($answer as $rr) {
+					if (isset($rr['ipv6'])) {
+						$ips[] = inet_ntop(inet_pton($rr['ipv6']));
+					}
+				}
+
+				// 3. Follow CNAME chain
+				$answer = @dns_get_record($current, DNS_CNAME);
+				if (empty($answer)) {
+					break; // no CNAME found; stop following the chain
+				}
+				$cname_target = null;
+				foreach ($answer as $rr) {
+					if (isset($rr['cname'])) {
+						$cname_target = $rr['cname'];
+						break;
+					}
+				}
+				if ($cname_target === null) {
+					break; // no valid CNAME record found; stop
+				}
+				if (in_array($cname_target, $seen, true)) {
+					break; // loop detected; stop
+				}
+				$seen[] = $cname_target;
+				$current = $cname_target;
 			}
 		}
 
@@ -442,7 +534,7 @@ class PhpHelper
 	 * @param bool $asReturn
 	 * @return string
 	 */
-	public static function parseArrayToPhpFile(array $array, string $comment = null, bool $asReturn = false): string
+	public static function parseArrayToPhpFile(array $array, ?string $comment = null, bool $asReturn = false): string
 	{
 		$str = sprintf("<?php\n// %s\n\n", $comment ?? 'autogenerated froxlor file');
 
@@ -464,7 +556,7 @@ class PhpHelper
 	 * @param int $depth
 	 * @return string
 	 */
-	public static function parseArrayToString(array $array, string $key = null, int $depth = 1): string
+	public static function parseArrayToString(array $array, ?string $key = null, int $depth = 1): string
 	{
 		$str = '';
 		if (!is_null($key)) {
@@ -483,7 +575,9 @@ class PhpHelper
 						// special case for passwords (nowdoc)
 						$str .= self::tabPrefix($depth, "'{$key}' => <<<'EOT'\n{$value}\nEOT,\n");
 					} else {
-						$str .= self::tabPrefix($depth, "'{$key}' => '{$value}',\n");
+						// escape backslashes first, then single quotes:
+						$escaped = str_replace(['\\', "'"], ['\\\\', "\\'"], $value);
+						$str .= self::tabPrefix($depth, "'{$key}' => '{$escaped}',\n");
 					}
 				}
 			} else {

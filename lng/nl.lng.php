@@ -1,8 +1,8 @@
 <?php
 
 /**
- * This file is part of the Froxlor project.
- * Copyright (c) 2010 the Froxlor Team (see authors).
+ * This file is part of the froxlor project.
+ * Copyright (c) 2010 the froxlor Team (see authors).
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,7 +19,7 @@
  * https://files.froxlor.org/misc/COPYING.txt
  *
  * @copyright  the authors
- * @author     Froxlor team <team@froxlor.org>
+ * @author     froxlor team <team@froxlor.org>
  * @author     Sander Klein <roedie@roedie.nl>
  * @author     Frits Letteboer <f.letteboer@radiotwenterand.nl>
  * @license    https://files.froxlor.org/misc/COPYING.txt GPLv2
@@ -135,7 +135,7 @@ return [
 			'ssl_ca_file' => 'Pad naar SSL CA certificaat',
 			'default_vhostconf_domain' => 'Standaard VHost-instellingen voor iedere domeincontainer',
 			'docroot' => [
-				'title' => 'Aangepaste docroot (leeg = verwijzing naar Froxlor)',
+				'title' => 'Aangepaste docroot (leeg = verwijzing naar froxlor)',
 				'description' => 'U kunt voor deze IP/poortcombinatie een aangepaste document-root opgeven.<br /><strong>LET OP:</strong> Pas op wat u hier neerzet!',
 			],
 		],
@@ -193,15 +193,15 @@ return [
 		'security_settings' => 'Beveiliging',
 		'know_what_youre_doing' => 'Verander dit alleen wanneer u zeker weet wat u doet!',
 		'show_version_login' => [
-			'title' => 'Toon versie van Froxlor bij het inloggen',
-			'description' => 'Toont de versie van Froxlor in de voettekst van de inlogpagina',
+			'title' => 'Toon versie van froxlor bij het inloggen',
+			'description' => 'Toont de versie van froxlor in de voettekst van de inlogpagina',
 		],
 		'show_version_footer' => [
-			'title' => 'Toon versie van Froxlor in de voettekst',
-			'description' => 'Toont de versie van Froxlor in de voettekst op de rest van de pagina\'s',
+			'title' => 'Toon versie van froxlor in de voettekst',
+			'description' => 'Toont de versie van froxlor in de voettekst op de rest van de pagina\'s',
 		],
 		'froxlor_graphic' => [
-			'title' => 'Kopgrafiek voor Froxlor',
+			'title' => 'Kopgrafiek voor froxlor',
 			'description' => 'Afbeelding die getoond wordt in de kop',
 		],
 		'phpsettings' => [
@@ -246,7 +246,7 @@ return [
 		'accountdata' => 'Accountgegevens',
 		'contactdata' => 'Contactgegevens',
 		'servicedata' => 'Ondersteuningsgegevens',
-		'newerversionavailable' => 'Er is een nieuwe versie van Froxlor beschikbaar',
+		'newerversionavailable' => 'Er is een nieuwe versie van froxlor beschikbaar',
 		'cron' => [
 			'cronsettings' => 'Instellingen cron-taken',
 			'add' => 'Cron-taak toevoegen',
@@ -260,8 +260,8 @@ return [
 		'webserver_group' => 'Groepnaam webserver',
 		'perlenabled' => 'Perl ingeschakeld',
 		'fcgid_settings' => 'FCGID',
-		'mod_fcgid_user' => 'Lokale gebruiker voor FCGID (Froxlor vhost)',
-		'mod_fcgid_group' => 'Lokale groep voor FCGID (Froxlor vhost)',
+		'mod_fcgid_user' => 'Lokale gebruiker voor FCGID (froxlor vhost)',
+		'mod_fcgid_group' => 'Lokale groep voor FCGID (froxlor vhost)',
 		'perl_settings' => 'Perl/CGI',
 		'notgiven' => '[niet opgegeven]',
 		'store_defaultindex' => 'Standaard indexbestand opslaan in map klant',
@@ -281,7 +281,7 @@ return [
 		'interval' => 'interval',
 		'isactive' => 'actief',
 		'description' => 'beschrijving',
-		'changewarning' => 'Het aanpassen van de ze waarden kunnen van negatieve invloed zijn op het gedrag van Froxlor en haar geautomatiseerde taken.<br />Pas deze waarden alleen aan wanneer u *zeer zeker* bent van wat u doet.',
+		'changewarning' => 'Het aanpassen van de ze waarden kunnen van negatieve invloed zijn op het gedrag van froxlor en haar geautomatiseerde taken.<br />Pas deze waarden alleen aan wanneer u *zeer zeker* bent van wat u doet.',
 	],
 	'crondesc' => [
 		'cron_unknown_desc' => 'geen beschrijving opgegeven',
@@ -358,7 +358,7 @@ return [
 		'hasaliasdomains' => 'Heeft alias domein(en)',
 		'statstics' => 'Gebruiksstatistieken',
 		'isassigneddomain' => 'Is toegewezen domein',
-		'add_date' => 'Toegevoegd aan Froxlor',
+		'add_date' => 'Toegevoegd aan froxlor',
 		'registration_date' => 'Toegevoegd aan register',
 		'topleveldomain' => 'Top-Level-Domein',
 		'associated_with_domain' => 'Toegekend',
@@ -489,8 +489,6 @@ return [
 		'pathmaynotcontaincolon' => 'Het opgegeven pad mag geen dubbele punt (":") bevatten. Geef een correct pad op.',
 		'exception' => '%s',
 		'notrequiredpasswordcomplexity' => 'Er is niet voldaan aan de complexiteit voor het wachtwoord (regex: %s)',
-		'stringerrordocumentnotvalidforlighty' => 'Een tekenreeks als ErrorDocument werkt niet in lighttpd. Geef een pad naar een bestand',
-		'urlerrordocumentnotvalidforlighty' => 'Een tekenreeks als ErrorDocument werkt niet in lighttpd. Geef een pad naar een bestand',
 		'intvaluetoolow' => 'Het opgegeven nummer is te laag (veld %s)',
 		'intvaluetoohigh' => 'Het opgegeven nummer is te hoog (veld %s)',
 		'phpfpmstillenabled' => 'PHP-FPM is op dit moment actief. Schakel dit eerst uit voordat u FCGID inschakelt',
@@ -557,10 +555,10 @@ return [
 		],
 		'password_reset' => [
 			'subject' => 'Wachtwoord opnieuw instellen',
-			'mailbody' => 'Hallo {USERNAME},\\n\\nuw wachtwoord voor Froxlor is opnieuw ingesteld!\\nHet nieuwe wachtwoord is: {LINK}\\n\\nMet vriendelijke groet,\\nuw beheerder',
+			'mailbody' => 'Hallo {USERNAME},\\n\\nuw wachtwoord voor froxlor is opnieuw ingesteld!\\nHet nieuwe wachtwoord is: {LINK}\\n\\nMet vriendelijke groet,\\nuw beheerder',
 		],
 		'new_database_by_customer' => [
-			'subject' => '[Froxlor] Nieuwe database aangemaakt',
+			'subject' => '[froxlor] Nieuwe database aangemaakt',
 			'mailbody' => 'Geachte {CUST_NAME},
 
 u hebt zojuist een nieuwe database aangemaakt. Hier zijn nogmaals de ingevoerde gegevens:
@@ -851,7 +849,7 @@ Met vriendelijke groet, uw beheerder',
 				'description' => 'Toegestane aantal verzoeken per domein',
 			],
 			'defaultini' => 'Standaard PHP-configuratie voor nieuwe domeinen',
-			'defaultini_ownvhost' => 'Standaard configuratie voor Froxlor-vHost',
+			'defaultini_ownvhost' => 'Standaard configuratie voor froxlor-vHost',
 		],
 		'sendalternativemail' => [
 			'title' => 'Gebruik alternatief emailadres',
@@ -944,7 +942,7 @@ Met vriendelijke groet, uw beheerder',
 		],
 		'panel_allow_domain_change_customer' => [
 			'title' => 'Het verplaatsen van domeinen tussen klanten toestaan',
-			'description' => 'Indien actief, kunt u de klant van een domein veranderen.<br /><b>Let op:</b> Froxlor zal niet het pad aanpassen. Dit kan ervoor zorgen dat het domein onbruikbaar wordt!',
+			'description' => 'Indien actief, kunt u de klant van een domein veranderen.<br /><b>Let op:</b> froxlor zal niet het pad aanpassen. Dit kan ervoor zorgen dat het domein onbruikbaar wordt!',
 		],
 		'cron' => [
 			'debug' => [
@@ -978,16 +976,16 @@ Met vriendelijke groet, uw beheerder',
 		'defaultwebsrverrhandler_enabled' => 'Standaard foutdocumenten voor alle klanten activeren',
 		'defaultwebsrverrhandler_err401' => [
 			'title' => 'Bestand/URL voor foutcode 401',
-			'description' => '<div class="text-danger">Wordt niet ondersteund in: lighttpd</div>',
+			'description' => '',
 		],
 		'defaultwebsrverrhandler_err403' => [
 			'title' => 'Bestand/URL voor foutcode 403',
-			'description' => '<div class="text-danger">Wordt niet ondersteund in: lighttpd</div>',
+			'description' => '',
 		],
 		'defaultwebsrverrhandler_err404' => 'Bestand/URL voor foutcode 404',
 		'defaultwebsrverrhandler_err500' => [
 			'title' => 'Bestand/URL voor foutcode 500',
-			'description' => '<div class="text-danger">Wordt niet ondersteund in: lighttpd</div>',
+			'description' => '',
 		],
 		'ftpserver' => [
 			'desc' => 'Indien PureFTPD geselecteerd is, worden .ftpquota bestanden dagelijks aangemaakt en/of bijgewerkt',
@@ -1001,23 +999,19 @@ Met vriendelijke groet, uw beheerder',
 			'description' => 'Kies de standaard doorverwijzingscode indien de klant dit zelf niet gedaan heeft',
 		],
 		'mail_also_with_mxservers' => 'Maak mail-, imap-, pop3- en smtp-"A record" ook wanneer MX-Servers zijn ingesteld',
-		'froxlordirectlyviahostname' => 'Froxlor is direct toegankelijk via hostnaam',
+		'froxlordirectlyviahostname' => 'froxlor is direct toegankelijk via hostnaam',
 		'panel_password_regex' => [
 			'title' => 'Reguliere expressie voor wachtwoorden',
 			'description' => 'Hier kunt u een reguliere expressie opgeven voor de complexiteit van wachtwoorden.<br />Leeg betekent geen speciale complexiteit',
 		],
-		'perl_path' => [
-			'title' => 'Pad naar Perl',
-			'description' => 'Alleen relevant voor lighttpd. Standaard is /usr/bin/perl',
-		],
 		'mod_fcgid_ownvhost' => [
-			'title' => 'FCGID inschakelen voor de VHost voor Froxlor',
-			'description' => 'Indien ingeschakeld wordt Froxlor ook uitgevoerd onder een lokale gebruiker<br /><strong>Let op:</strong>Dit vereist handmatige configuratie, zie <a target="_blank" href="https://docs.froxlor.org/latest/admin-guide/configuration/fcgid/">FCGID - handbook</a>',
+			'title' => 'FCGID inschakelen voor de VHost voor froxlor',
+			'description' => 'Indien ingeschakeld wordt froxlor ook uitgevoerd onder een lokale gebruiker<br /><strong>Let op:</strong>Dit vereist handmatige configuratie, zie <a target="_blank" href="https://docs.froxlor.org/latest/admin-guide/configuration/fcgid/">FCGID - handbook</a>',
 		],
 		'perl' => [
 			'suexecworkaround' => [
 				'title' => 'Om SuExec heenwerken (Geldt alleen voor Apache)',
-				'description' => 'Schakel dit alleen in indien de documentmappen van klanten niet in het pad van Apache SuExec vallen.<br />Indien ingeschakeld zal Froxlor een symbolische link maken voor het pad waarvoor Perl actief is + /cgi-bin/.<br />Merk op dat Perl dan alleen werkt in de submap /cgi-bin/ en niet in de map zelf (zoals het werkt zonder deze oplossing!)',
+				'description' => 'Schakel dit alleen in indien de documentmappen van klanten niet in het pad van Apache SuExec vallen.<br />Indien ingeschakeld zal froxlor een symbolische link maken voor het pad waarvoor Perl actief is + /cgi-bin/.<br />Merk op dat Perl dan alleen werkt in de submap /cgi-bin/ en niet in de map zelf (zoals het werkt zonder deze oplossing!)',
 			],
 			'suexeccgipath' => [
 				'title' => 'Pad naar symbolische links naar Perl-mappen van klanten',
@@ -1081,7 +1075,7 @@ Met vriendelijke groet, uw beheerder',
 		'REBUILD_DNS' => 'Opnieuw opbouwen bind-configuratie',
 		'CREATE_FTP' => 'Map aanmaken voor nieuwe FTP-gebruiker',
 		'DELETE_CUSTOMER_FILES' => 'Verwijderen klantbestanden van %s',
-		'noneoutstanding' => 'Er zijn op dit moment geen uitstaande taken voor Froxlor',
+		'noneoutstanding' => 'Er zijn op dit moment geen uitstaande taken voor froxlor',
 	],
 	'traffic' => [
 		'month' => 'Maand',
@@ -1108,13 +1102,13 @@ Met vriendelijke groet, uw beheerder',
 	],
 	'translator' => 'Sander Klein/Frits Letteboer',
 	'update' => [
-		'updateinprogress_onlyadmincanlogin' => 'Een nieuwere versie van Froxlor is geinstalleerd maar is nog niet geconfigureerd.<br />Alleen de beheerder kan inloggen en de update voltooien.',
-		'update' => 'Froxlor Update',
+		'updateinprogress_onlyadmincanlogin' => 'Een nieuwere versie van froxlor is geinstalleerd maar is nog niet geconfigureerd.<br />Alleen de beheerder kan inloggen en de update voltooien.',
+		'update' => 'froxlor Update',
 		'proceed' => 'Verdergaan',
 		'update_information' => [
-			'part_a' => 'De bestanden van Froxlor zijn bijgewerkt naar versie <strong>%s</strong>. De geinstalleerde versie is <strong>%s</strong>.',
+			'part_a' => 'De bestanden van froxlor zijn bijgewerkt naar versie <strong>%s</strong>. De geinstalleerde versie is <strong>%s</strong>.',
 			'part_b' => '<br /><br />Klanten kunnen niet inloggen totdat de update voltooid is.<br /><strong>Verdergaan?</strong>',
 		],
-		'noupdatesavail' => '<strong>U gebruikt reeds de meest recente versie van Froxlor.</strong>',
+		'noupdatesavail' => '<strong>U gebruikt reeds de meest recente versie van froxlor.</strong>',
 	],
 ];

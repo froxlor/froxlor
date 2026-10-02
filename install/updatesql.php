@@ -1,8 +1,8 @@
 <?php
 
 /**
- * This file is part of the Froxlor project.
- * Copyright (c) 2010 the Froxlor Team (see authors).
+ * This file is part of the froxlor project.
+ * Copyright (c) 2010 the froxlor Team (see authors).
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,7 +19,7 @@
  * https://files.froxlor.org/misc/COPYING.txt
  *
  * @copyright  the authors
- * @author     Froxlor team <team@froxlor.org>
+ * @author     froxlor team <team@froxlor.org>
  * @license    https://files.froxlor.org/misc/COPYING.txt GPLv2
  */
 
@@ -52,10 +52,10 @@ try {
 
 if (Froxlor::isFroxlor()) {
 
-	include_once(FileDir::makeCorrectFile(dirname(__FILE__) . '/updates/froxlor/update_0.10.inc.php'));
 	include_once(FileDir::makeCorrectFile(dirname(__FILE__) . '/updates/froxlor/update_2.0.inc.php'));
 	include_once(FileDir::makeCorrectFile(dirname(__FILE__) . '/updates/froxlor/update_2.1.inc.php'));
 	include_once(FileDir::makeCorrectFile(dirname(__FILE__) . '/updates/froxlor/update_2.2.inc.php'));
+	include_once(FileDir::makeCorrectFile(dirname(__FILE__) . '/updates/froxlor/update_2.3.inc.php'));
 
 	// Check Froxlor - database integrity (only happens after all updates are done, so we know the db-layout is okay)
 	Update::showUpdateStep("Checking database integrity");

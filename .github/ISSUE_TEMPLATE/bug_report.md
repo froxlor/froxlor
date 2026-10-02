@@ -15,8 +15,9 @@ assignees: ''
 A clear and concise description of what the bug is.
 
 **System information**
-* Froxlor version: $version/$gitSHA1
-* Web server: apache2/nginx/lighttpd
+* Froxlor version: \$version/\$gitSHA1
+* PHP sapi & version: php-fpm 8.3 / fcgid 8.0 / etc.
+* Web server: apache2/nginx
 * DNS server: Bind/PowerDNS (standalone)/PowerDNS (Bind-backend)
 * POP/IMAP server: Courier/Dovecot
 * SMTP server: postfix/exim

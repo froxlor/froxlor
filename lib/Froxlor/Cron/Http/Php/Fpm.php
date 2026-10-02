@@ -1,8 +1,8 @@
 <?php
 
 /**
- * This file is part of the Froxlor project.
- * Copyright (c) 2010 the Froxlor Team (see authors).
+ * This file is part of the froxlor project.
+ * Copyright (c) 2010 the froxlor Team (see authors).
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,7 +19,7 @@
  * https://files.froxlor.org/misc/COPYING.txt
  *
  * @copyright  the authors
- * @author     Froxlor team <team@froxlor.org>
+ * @author     froxlor team <team@froxlor.org>
  * @license    https://files.froxlor.org/misc/COPYING.txt GPLv2
  */
 
@@ -30,6 +30,7 @@ use Froxlor\Domain\Domain;
 use Froxlor\FileDir;
 use Froxlor\PhpHelper;
 use Froxlor\Settings;
+use InvalidArgumentException;
 
 class Fpm
 {
@@ -197,10 +198,11 @@ pm.max_children = 1
 			}
 
 			$fpm_config .= 'pm.max_requests = ' . $fpm_requests . "\n";
+			$fpm_config .= 'request_terminate_timeout = ' . $phpconfig['fpm_reqterm'] . "\n";
 
 			// possible slowlog configs
 			if ($phpconfig['fpm_slowlog'] == '1') {
-				$fpm_config .= 'request_terminate_timeout = ' . $phpconfig['fpm_reqterm'] . "\n";
+				$this->durationCompare($phpconfig['fpm_reqterm'], $phpconfig['fpm_reqslow']);
 				$fpm_config .= 'request_slowlog_timeout = ' . $phpconfig['fpm_reqslow'] . "\n";
 				$slowlog = FileDir::makeCorrectFile(Settings::Get('system.logfiles_directory') . '/' . $this->domain['loginname'] . '-php-slow.log');
 				$fpm_config .= 'slowlog = ' . $slowlog . "\n";
@@ -239,8 +241,8 @@ pm.max_children = 1
 
 					if ($this->domain['openbasedir_path'] == '0' && strstr($this->domain['documentroot'], ":") === false) {
 						$openbasedir = Domain::appendOpenBasedirPath($this->domain['documentroot'], true);
-					} else if ($this->domain['openbasedir_path'] == '2' && strpos(dirname($this->domain['documentroot']).'/', $this->domain['customerroot']) !== false) {
-						$openbasedir = Domain::appendOpenBasedirPath(dirname($this->domain['documentroot']).'/', true);
+					} else if ($this->domain['openbasedir_path'] == '2' && strpos(dirname($this->domain['documentroot']) . '/', $this->domain['customerroot']) !== false) {
+						$openbasedir = Domain::appendOpenBasedirPath(dirname($this->domain['documentroot']) . '/', true);
 					} else {
 						$openbasedir = Domain::appendOpenBasedirPath($this->domain['customerroot'], true);
 					}
@@ -274,8 +276,8 @@ pm.max_children = 1
 
 			$fpm_config .= "\n\n";
 			foreach ($phpini_array as $inisection) {
-				$is = explode("=", trim($inisection));
-				if (count($is) !== 2 || empty($is[0])) {
+				$is = explode("=", trim($inisection), 2);
+				if (empty($is[0])) {
 					continue;
 				}
 				foreach ($this->ini as $sec => $possibles) {
@@ -292,7 +294,7 @@ pm.max_children = 1
 			// now check if 'sendmail_path' has not been set in the custom-php.ini
 			// if not we use our fallback-default as usual
 			if (strpos($fpm_config, 'php_admin_value[sendmail_path]') === false) {
-				$fpm_config .= 'php_admin_value[sendmail_path] = /usr/sbin/sendmail -t -i -f ' . $this->domain['email'] . "\n";
+				$fpm_config .= 'php_admin_value[sendmail_path] = /usr/sbin/sendmail -t -i -f postmaster@' . $this->domain['domain'] . "\n";
 			}
 
 			// check for session.save_path, whether it has been specified by the user, if not, set a default
@@ -438,5 +440,41 @@ pm.max_children = 1
 		}
 
 		return $configdir;
+	}
+
+	/**
+	 * 'request_slowlog_timeout' can't be greater than 'request_terminate_timeout'
+	 *
+	 * @param $request_terminate_timeout
+	 * @param $request_slowlog_timeout
+	 * @return void
+	 */
+	private function durationCompare(&$request_terminate_timeout, &$request_slowlog_timeout)
+	{
+		$to_seconds = function ($str) {
+			if (!preg_match('/^([0-9]+)([smhd])?$/', $str, $matches)) {
+				throw new InvalidArgumentException("Invalid format: $str");
+			}
+			$value = (int)$matches[1];
+			$unit = $matches[2] ?? 's';
+
+			switch ($unit) {
+				case 'm':
+					return $value * 60;
+				case 'h':
+					return $value * 3600;
+				case 'd':
+					return $value * 86400;
+				default:
+					return $value;
+			}
+		};
+
+		$aSec = $to_seconds($request_terminate_timeout);
+		$bSec = $to_seconds($request_slowlog_timeout);
+
+		if ($bSec > $aSec) {
+			$request_slowlog_timeout = $request_terminate_timeout;
+		}
 	}
 }

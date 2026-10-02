@@ -1,8 +1,8 @@
 <?php
 
 /**
- * This file is part of the Froxlor project.
- * Copyright (c) 2010 the Froxlor Team (see authors).
+ * This file is part of the froxlor project.
+ * Copyright (c) 2010 the froxlor Team (see authors).
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,7 +19,7 @@
  * https://files.froxlor.org/misc/COPYING.txt
  *
  * @copyright  the authors
- * @author     Froxlor team <team@froxlor.org>
+ * @author     froxlor team <team@froxlor.org>
  * @license    https://files.froxlor.org/misc/COPYING.txt GPLv2
  */
 
@@ -29,12 +29,15 @@ return [
 		'de' => 'Němčina',
 		'en' => 'Angličtina',
 		'fr' => 'Francouzština',
+		'hu' => 'Maďarština',
 		'it' => 'Italština',
 		'nl' => 'Holandština',
 		'pt' => 'Portugalština',
 		'se' => 'Švědština',
+		'sk' => 'Slovenština',
 		'es' => 'Španělština',
 		'ca' => 'Katalánština',
+		'zh_CN' => 'Čínština (Zjednodušená)',
 	],
 	'2fa' => [
 		'2fa' => 'Možnosti 2FA',
@@ -55,7 +58,7 @@ return [
 		'overview' => 'Přehled',
 		'ressourcedetails' => 'Využijte zdroje',
 		'systemdetails' => 'Podrobnosti o systému',
-		'froxlordetails' => 'Podrobnosti o Froxloru',
+		'froxlordetails' => 'Podrobnosti o froxloru',
 		'installedversion' => 'Nainstalovaná verze',
 		'latestversion' => 'Nejnovější verze',
 		'lookfornewversion' => [
@@ -215,7 +218,7 @@ return [
 				'description' => 'Většinou CA_Bundle, nebo podobně, to pravděpodobně chcete nastavit, pokud jste si koupili SSL certifikát.',
 			],
 			'docroot' => [
-				'title' => 'Vlastní docroot (prázdný = ukazuje na Froxlor)',
+				'title' => 'Vlastní docroot (prázdný = ukazuje na froxlor)',
 				'description' => 'Zde můžete definovat vlastní kořenový adresář dokumentu (cíl požadavku) pro tuto kombinaci IP/port.<br /><strong>POZOR:</strong> Dávejte pozor, co zde zadáváte!',
 			],
 			'ssl_paste_description' => 'Vložte svůj úplný obsah certifikátu do textového pole',
@@ -284,15 +287,15 @@ return [
 		'security_settings' => 'Možnosti zabezpečení',
 		'know_what_youre_doing' => 'Změňte pouze, pokud víte, co děláte!',
 		'show_version_login' => [
-			'title' => 'Zobrazit Froxlor verzi při přihlášení',
-			'description' => 'Zobrazit Froxlor verzi v zápatí na přihlašovací stránce',
+			'title' => 'Zobrazit froxlor verzi při přihlášení',
+			'description' => 'Zobrazit froxlor verzi v zápatí na přihlašovací stránce',
 		],
 		'show_version_footer' => [
-			'title' => 'Zobrazit Froxlor verzi v zápatí',
-			'description' => 'Zobrazit Froxlor verzi v zápatí na ostatních stránkách',
+			'title' => 'Zobrazit froxlor verzi v zápatí',
+			'description' => 'Zobrazit froxlor verzi v zápatí na ostatních stránkách',
 		],
 		'froxlor_graphic' => [
-			'title' => 'Grafické záhlaví pro Froxlor',
+			'title' => 'Grafické záhlaví pro froxlor',
 			'description' => 'Jaká grafika by měla být zobrazena v záhlaví',
 		],
 		'phpsettings' => [
@@ -349,7 +352,7 @@ return [
 		'accountdata' => 'Údaje o účtu',
 		'contactdata' => 'Kontaktní údaje',
 		'servicedata' => 'Údaje o službě',
-		'newerversionavailable' => 'K dispozici je novější verze Froxloru.',
+		'newerversionavailable' => 'K dispozici je novější verze froxloru.',
 		'newerversiondetails' => 'Aktualizovat na verzi <b>%s</b> nyní?<br/>(Vaše aktuální verze je: %s)',
 		'extractdownloadedzip' => 'Extrahovat stažený archiv "%s"?',
 		'cron' => [
@@ -365,8 +368,8 @@ return [
 		'webserver_group' => 'Název skupiny webserveru',
 		'perlenabled' => 'Perl povolen',
 		'fcgid_settings' => 'FCGID',
-		'mod_fcgid_user' => 'Místní uživatel pro FCGID (Froxlor vHost)',
-		'mod_fcgid_group' => 'Místní skupina k použití pro FCGID (Froxlor vHost)',
+		'mod_fcgid_user' => 'Místní uživatel pro FCGID (froxlor vHost)',
+		'mod_fcgid_group' => 'Místní skupina k použití pro FCGID (froxlor vHost)',
 		'perl_settings' => 'Perl/CGI',
 		'notgiven' => '[neposkytnuto]',
 		'store_defaultindex' => 'Uložit výchozí indexový soubor zákazníkům docroot',
@@ -401,7 +404,7 @@ return [
 		'selectserveralias_desc' => 'Vyberte, zda by froxlor měl vytvořit wildcard-entry (*.domain.tld), WWW-alias (www.domain.tld) nebo vůbec žádný alias',
 		'show_news_feed' => [
 			'title' => 'Zobrazit novinky na admin nástěnce',
-			'description' => 'Povolením zobrazíte oficiální novinky Froxlor (https://inside.froxlor.org/news/) na vaší nástěnce a nikdy nezmeškejte důležité informace nebo oznámení o vydání.',
+			'description' => 'Povolením zobrazíte oficiální novinky froxlor (https://inside.froxlor.org/news/) na vaší nástěnce a nikdy nezmeškejte důležité informace nebo oznámení o vydání.',
 		],
 		'cronsettings' => 'Nastavení Cronjobu',
 		'integritycheck' => 'Ověření databáze',
@@ -431,7 +434,7 @@ return [
 		'autoupdate' => 'Automatická aktualizace',
 		'server_php' => 'PHP',
 		'dnsenabled' => 'Povolit DNS editor',
-		'froxlorvhost' => 'Froxlor VirtualHost nastavení',
+		'froxlorvhost' => 'froxlor VirtualHost nastavení',
 		'hostname' => 'Název serveru',
 		'memory' => 'Využití paměti',
 		'webserversettings_ssl' => 'Nastavení SSL Webserveru',
@@ -454,7 +457,12 @@ return [
 		],
 		'domain_http2' => [
 			'title' => 'HTTP2 podpora',
-			'description' => 'Podrobné vysvětlení HTTP2 viz <a target="_blank" href="https://en.wikipedia.org/wiki/HTTP/2">Wikipedia</a>',
+			'description' => 'Navštivte <a target="_blank" href="https://en.wikipedia.org/wiki/HTTP/2">Wikipedia</a> pro podrobné vysvětlení HTTP3 protokolu',
+		],
+		'domain_http3' => [
+			'title' => 'HTTP3 podpora',
+			'description' => 'Navštivte <a target="_blank" href="https://en.wikipedia.org/wiki/HTTP/3">Wikipedia</a> pro podrobné vysvětlení HTTP3 protokolu',
+			'nginx_version_warning' => '<br /><strong class="text-danger">VAROVÁNÍ:</strong> Je vyžadována Nginx verze 1.25.0 nebo vyšší a pro HTTP/3 je vyžadován ssl-protokol TLSv1.3. Pokud je vaše verze starší, tak se webový server při zapnutém HTTP/3 správně nespustí!',
 		],
 		'testmail' => 'Test SMTP',
 		'phpsettingsforsubdomains' => 'Použít php konfiguraci na všechny subdomény:',
@@ -519,6 +527,7 @@ return [
 		'backups' => [
 			'backups' => 'Zálohy',
 		],
+		'emaildomainwarning' => '<div id="emaildomainnote" class="invalid-feedback">VAROVÁNÍ: Změnou tohoto nastavení trvale smažete všechny existující e-mailové adresy a účty.</div>',
 	],
 	'apcuinfo' => [
 		'clearcache' => 'Vymazat APCu mezipaměť',
@@ -578,7 +587,7 @@ return [
 		'interval' => 'interval',
 		'isactive' => 'povoleno',
 		'description' => 'popis',
-		'changewarning' => 'Změna těchto hodnot může mít negativní příčinu chování Froxlor a jeho automatických úloh.<br />Změňte hodnoty zde pouze pokud jste si jisti, že víte, co děláte.',
+		'changewarning' => 'Změna těchto hodnot může mít negativní příčinu chování froxlor a jeho automatických úloh.<br />Změňte hodnoty zde pouze pokud jste si jisti, že víte, co děláte.',
 	],
 	'crondesc' => [
 		'cron_unknown_desc' => 'nebyl zadán žádný popis',
@@ -670,6 +679,10 @@ return [
 			'title' => 'Úroveň Spam tagu',
 			'description' => 'Počet bodů, který je nutný k označení e-mailu jako spam<br/>Výchozí: 7.0'
 		],
+		'rewrite_subject' => [
+			'title' => 'Přepisovat předmět',
+			'description' => 'Zda přidat <strong>***SPAM***</strong> do předmětu e-mailu, pokud je to vhodné',
+		],
 		'spam_kill_level' => [
 			'title' => 'Úroveň likvidace spamu',
 			'description' => 'Počet bodů, který je nutný k úplnému vyřazení e-mailu<br/>Výchozí: 14.0'
@@ -685,6 +698,24 @@ return [
 		'required_spf_dns' => 'Požadovaný SPF DNS záznam',
 		'required_dmarc_dns' => 'Požadovaný DMARC DNS záznam',
 		'required_dkim_dns' => 'Požadovaný DKIM DNS záznam',
+		'default_select' => [
+			'on_changeable' => 'Aktivováno, nastavitelné',
+			'off_changeable' => 'Deaktivováno, nastavitelné',
+			'on_unchangeable' => 'Aktivováno, nelze nastavit',
+			'off_unchangeable' => 'Deaktivováno, nelze nastavit',
+		],
+		'default_bypass_spam' => [
+			'title' => 'Obcházet výchozí hodnotu emailového spam filtru',
+			'description' => 'Zda mají nové e-mailové účty ve výchozím nastavení aktivovanou funkci „Obejít spamfiltr“ a zda je toto nastavení zákazníkem nastavitelné. <br/>Výchozí nastavení: Deaktivováno, nastavitelné'
+		],
+		'default_spam_rewrite_subject' => [
+			'title' => 'Přepisovat výchozí hodnotu předmětu',
+			'description' => 'Zda mají nové e-mailové účty ve výchozím nastavení aktivovanou funkci „Přepisovat předmět“ a zda je toto nastavení zákazníkem nastavitelné. <br/>Výchozí nastavení: Aktivováno, nastavitelné'
+		],
+		'default_policy_greylist' => [
+			'title' => 'Použít výchozí hodnotu greylistingu',
+			'description' => 'Zda mají nové e-mailové účty ve výchozím nastavení aktivovanou funkci „Použít greylisting“ a zda je toto nastavení zákazníkem nastavitelné. <br/>Výchozí nastavení: Aktivováno, nastavitelné'
+		],
 	],
 	'dns' => [
 		'destinationip' => 'IP domény(y)',
@@ -699,6 +730,10 @@ return [
 		'txtrecords' => 'Definovat TXT záznamy',
 		'txtexample' => 'Příklad (SPF-entry):<br />v=spf1 ip4:xxx.xxx.xx.0/23 -all',
 		'howitworks' => 'Zde můžete spravovat DNS položky pro vaši doménu. Pamatujte, že froxlor automaticky vygeneruje NS/MX/A/AAAA záznamy pro vás. Vlastní položky jsou upřednostňovány, budou automaticky vygenerovány pouze chybějící položky.',
+		'nis2note' => [
+			'title' => 'NIS2 info',
+			'content' => 'DNS hosting/autoritativní DNS služby mohou být považovány za digitální služby s vyššími bezpečnostními a oznamovacími povinnostmi podle <strong>EU-NIS2</strong>. Zkontrolujte, zda se na vaše nastavení vztahuje NIS2 a jaká opatření jsou vyžadována.'
+		],
 	],
 	'dnseditor' => [
 		'edit' => 'upravit DNS',
@@ -745,7 +780,7 @@ return [
 		'hasaliasdomains' => 'Má alias doménu(y)',
 		'statstics' => 'Statistiky využití',
 		'isassigneddomain' => 'Je přiřazena doména',
-		'add_date' => 'Přidáno do Froxloru',
+		'add_date' => 'Přidáno do froxloru',
 		'registration_date' => 'Přidáno do registru',
 		'topleveldomain' => 'Top-Level-Doména',
 		'associated_with_domain' => 'Přidružené',
@@ -810,6 +845,10 @@ return [
 		'back_to_overview' => 'Zpět na přehled domény',
 		'accounts' => 'Účty',
 		'emails' => 'Adresy',
+		'senders' => 'Povolený odesílatel',
+		'sender_add' => 'Přidat povoleného odesílatele',
+		'foreign_sender' => 'Povolený (externí) odesílatel',
+		'allowed_sender_info' => 'Pomocí nastavení <strong>Povolený odesílatel</strong> povolíte existujícímu e-mailovému účtu odesílání e-mailů s jinou adresou odesílatele.<br><strong>Důležité:</strong> Adresa/wildcard-doména zadaná zde se automaticky nestane poštovní schránkou – slouží pouze jako další povolený identifikátor odesílatele.',
 	],
 	'error' => [
 		'error' => 'Chyba',
@@ -836,6 +875,8 @@ return [
 		'mydocumentroot' => '\'Documentroot\'',
 		'loginnameexists' => 'Přihlašovací jméno %s již existuje',
 		'emailiswrong' => 'Emailová adresa %s obsahuje neplatné znaky nebo je nekompletní',
+		'emailexists' => 'E-mailová adresa %s je již používána jiným správcem.',
+		'emailexistsanon' => 'E-mailová adresa %s je již používána.',
 		'alternativeemailiswrong' => 'Zadaná alternativní e-mailová adresa %s pro odeslání přihlašovacích údajů se zdá být neplatná',
 		'loginnameiswrong' => 'Přihlašovací jméno "%s" obsahuje nepovolené znaky.',
 		'loginnameiswrong2' => 'Přihlašovací jméno obsahuje příliš mnoho znaků. Pouze %s znaky jsou povoleny.',
@@ -925,10 +966,9 @@ return [
 		'notrequiredpasswordlength' => 'Zadané heslo je příliš krátké. Zadejte prosím alespoň %s znaky.',
 		'overviewsettingoptionisnotavalidfield' => 'Jejda, pole, které by mělo být zobrazeno jako volba v přehledu nastavení, není výjimečně povolený typ. Z toho můžete vinit vývojáře. Nemělo by se to stát!',
 		'pathmaynotcontaincolon' => 'Cesta, kterou jste zadali, by neměla obsahovat dvojtečku (":"). Zadejte správnou hodnotu cesty.',
+		'invaliddocumentrooturl' => 'URL adresa, kterou jste zadali pro kořenový adresář, není platná. Zadejte prosím správnou URL adresu nebo unixovou cestu.',
 		'exception' => '%s',
 		'notrequiredpasswordcomplexity' => 'Složitost zadaného hesla nebyla dostatečná.<br />Pokud máte nějaké dotazy ohledně složitosti',
-		'stringerrordocumentnotvalidforlighty' => 'Řetězec jako ErrorDocument v lighttpd nefunguje, zadejte prosím cestu k souboru',
-		'urlerrordocumentnotvalidforlighty' => 'URL adresa jako chybový dokument nefunguje v lighttp, zadejte prosím cestu k souboru',
 		'invaliderrordocumentvalue' => 'Hodnota udaná jako chybový dokument se nezdá být platným souborem, URL nebo řetězcem.',
 		'intvaluetoolow' => 'Zadané číslo je příliš nízké (pole %s)',
 		'intvaluetoohigh' => 'Zadané číslo je příliš vysoké (pole %s)',
@@ -952,13 +992,13 @@ return [
 		'sslcertificateinvalidchain' => 'Údaje daného řetězce certifikátů se nezdají být platným certifikátem',
 		'givendirnotallowed' => 'Zadaný adresář v poli %s není povolen.',
 		'sslredirectonlypossiblewithsslipport' => 'Použití Let\'s Encryptí je možné pouze v případě, že doména má přiřazenou alespoň jednu ssl-povolenou kombinaci IP/port.',
-		'fcgidstillenableddeadlock' => 'FCGID je aktuálně aktivní.<br />Prosím deaktivujte ho před přepnutím na jiný webový server než Apache2 nebo lighttpd',
+		'fcgidstillenableddeadlock' => 'FCGID je aktuálně aktivní.<br />Prosím deaktivujte ho před přepnutím na jiný webový server než Apache2',
 		'send_report_title' => 'Odeslat zprávu o chybě',
-		'send_report_desc' => 'Děkujeme, že jste nahlásili tuto chybu a pomohli nám vylepšit Froxlor.<br />Toto je e-mail, který bude odeslán Froxlor vývojáři:',
+		'send_report_desc' => 'Děkujeme, že jste nahlásili tuto chybu a pomohli nám vylepšit froxlor.<br />Toto je e-mail, který bude odeslán froxlor vývojáři:',
 		'send_report' => 'Odeslat hlášení',
 		'send_report_error' => 'Chyba při odesílání hlášení: <br />%s',
 		'notallowedtouseaccounts' => 'Váš účet neumožňuje používat IMAP/POP3. E-mailové účty nelze přidat.',
-		'cannotdeletehostnamephpconfig' => 'Tato konfigurace PHP je používána ve Froxlor-vhost a nelze ji odstranit.',
+		'cannotdeletehostnamephpconfig' => 'Tato konfigurace PHP je používána ve froxlor-vhost a nelze ji odstranit.',
 		'cannotdeletedefaultphpconfig' => 'Tato konfigurace PHP je nastavena jako výchozí a nelze ji odstranit.',
 		'passwordshouldnotbeusername' => 'Heslo by nemělo být stejné jako uživatelské jméno.',
 		'no_phpinfo' => 'Je nám líto, phpinfo() nelze přečíst',
@@ -969,7 +1009,7 @@ return [
 		'no_opcacheinfo' => 'Žádné informace o OPCache nejsou k dispozici. OPCache se nezdá být načtena.',
 		'inactive_opcacheinfo' => 'OPCache se zdá být nainstalována, ale není aktivováno.',
 		'nowildcardwithletsencrypt' => 'Let\'s Encrypt neumí zpracovávat wildcard domény pomocí ACME ve froxlor (vyžaduje dns-challenge), omlouváme se. Nastavte prosím ServerAlias na WWW nebo jej zcela zakažte',
-		'customized_version' => 'Vypadá to, že vaše instalace Froxlor byla upravena, na úpravy neposkytuijeme podporu, je nám líto.',
+		'customized_version' => 'Vypadá to, že vaše instalace froxlor byla upravena, na úpravy neposkytuijeme podporu, je nám líto.',
 		'autoupdate_0' => 'Neznámá chyba',
 		'autoupdate_1' => 'Nastavení PHP allow_url_fopen je zakázáno. Autoupdate musí být povolen v php.ini',
 		'autoupdate_2' => 'PHP zip rozšíření nebylo nalezeno, ujistěte se, že je nainstalováno a aktivováno',
@@ -1012,6 +1052,8 @@ return [
 		'no_wwwcnamae_ifwwwalias' => 'Nelze nastavit CNAME záznam pro "www" jako doménu pro generování www-alias. Změňte prosím nastavení buď na "No alias" nebo "Wildcard alias"',
 		'local_group_exists' => 'Tato skupina již v systému existuje.',
 		'local_group_invalid' => 'Zadaný název skupiny je neplatný',
+		'local_user_invalid' => 'Zadané uživatelské jméno je neplatné nebo neexistuje',
+		'local_user_isfroxloruser' => 'Zadané uživatelské jméno je spravováno froxlorem a nelze jej v tomto kontextu použít',
 		'invaliddnsforletsencrypt' => 'DNS domén neobsahuje žádnou z vybraných IP adres. Vytvoření Let\'s Encryp certifikátu není možné.',
 		'notallowedphpconfigused' => 'Pokus o použití php konfigurace, která není přiřazena zákazníkovi',
 		'pathmustberelative' => 'Uživatel nemá oprávnění specifikovat adresáře mimo domovský adresář zákazníka. Zadejte relativní cestu (bez úvodního /).',
@@ -1024,6 +1066,10 @@ return [
 		'invalidpgppublickey' => 'PGP veřejný klíč není platný',
 		'invalid_validtime' => 'Platný čas v sekundách může být pouze mezi 10 a 120',
 		'customerphpenabledbutnoconfig' => 'Zákazník má PHP aktivován, ale nebyla vybrána žádná konfigurace PHP.',
+		'emaildomainstillhasaddresses' => 'Nelze deaktivovat flag poštovní domény, protože pro tuto doménu stále existují e-mailové adresy.',
+		'tls13requiredforhttp3' => 'Flag domény http3 je povolen, ale protokoly SSL nezahrnují TLSv1.3.',
+		'senderdomainnotowned' => 'Zadaná doména „%s“ nemůže být použita.',
+		'emailhasnoaccount' => 'Zadaná e-mailová adresa „%s“ nemá žádný účet, nelze přidat adresu odesílatele.',
 	],
 	'extras' => [
 		'description' => 'Zde můžete přidat některé doplňky, například ochranu adresářů.<br />Po každé změně bude systém potřebovat určitý čas, aby aplikoval nová nastavení.',
@@ -1055,6 +1101,8 @@ return [
 		'account_add' => 'Vytvořit účet',
 		'account_edit' => 'Upravit ftp účet',
 		'editpassdescription' => 'Nastavte nové heslo nebo ponechte prázdné pro zanechání stávajícího.',
+		'sshkey_add' => 'Přidat ssh klíč',
+		'sshkey_edit' => 'Upravit ssh klíč',
 	],
 	'gender' => [
 		'title' => 'Název',
@@ -1125,7 +1173,7 @@ return [
 			'mailbody' => 'Dobrý den, {SALUTATION},\\n\\nje zde váš odkaz pro nastavení nového hesla. Tento odkaz je platný po dobu následujících 24 hodin.\\n\\n{LINK}\\n\\nDěkujeme,\\nváš správce',
 		],
 		'new_database_by_customer' => [
-			'subject' => '[Froxlor] Byla vytvořena nová databáze',
+			'subject' => '[froxlor] Byla vytvořena nová databáze',
 			'mailbody' => 'Dobrý den {CUST_NAME},
 
 jste právě přidali novou databázi. Zde jsou zadané informace:
@@ -1159,7 +1207,7 @@ Ach upřímně, váš správce',
 		],
 		'2fa' => [
 			'mailbody' => 'Dobrý den,\\n\\nváš 2FA přihlašovací kód je: {CODE}.\\n\\nToto je automaticky vytvořený\\ne-mail, prosím neodpovídejte na to!\\n\\nVáš správce',
-			'subject' => 'Froxlor - 2FA kód',
+			'subject' => 'froxlor - 2FA kód',
 		],
 	],
 	'menue' => [
@@ -1191,6 +1239,7 @@ Ach upřímně, váš správce',
 			'ftp' => 'FTP',
 			'accounts' => 'Účty',
 			'webftp' => 'WebFTP',
+			'sshkeys' => 'SSH klíče',
 		],
 		'extras' => [
 			'extras' => 'Extra',
@@ -1338,6 +1387,11 @@ Ach upřímně, váš správce',
 		'letsencrypt' => 'Používá Let\'s Encrypt',
 		'set' => 'Aplikovat',
 		'shell' => 'Konzole',
+		'sshkeydesc' => 'Popis klíče SSH',
+		'ftpuser' => 'FTP uživatel',
+		'sshpubkey' => 'Věřejný SSH klíč',
+		'sshpubkeyph' => "Začíná na „ssh-ed25519“, „ssh-rsa“, „ecdsa-sha2-nistp256“, „ecdsa-sha2-nistp384“, „ecdsa-sha2-nistp521“, „sk-ecdsa-sha2-nistp256@openssh.com“ nebo „sk-ssh-ed25519@openssh.com'",
+		'sshfingerprint' => 'Otisk',
 		'exportpath' => [
 			'title' => 'Cílová cesta pro exportovaná data',
 			'description' => 'Toto je cesta, kde bude exporotovaný archiv uložen. Pokud jsou webová data zahrnuta, všechny soubory z domovského adresáře jsou uloženy mimo složku zadanou zde.',
@@ -1350,6 +1404,7 @@ Ach upřímně, váš správce',
 		'none_value' => 'Žádná',
 		'viewlogs' => 'Zobrazit protokoly',
 		'not_configured' => 'Systém ještě není nakonfigurován. Klikněte zde pro přechod do konfigurace.',
+		'start_setup' => 'Spustit nastavení',
 		'ihave_configured' => 'Konfiguroval jsem služby',
 		'system_is_configured' => '<i class="fa-solid fa-circle-exclamation me-1"></i>Systém je již nastaven jako konfigurovaný',
 		'settings_before_configuration' => 'Ujistěte se, že jste upravili nastavení před konfigurací služeb zde',
@@ -1377,13 +1432,17 @@ Ach upřímně, váš správce',
 		'upload_import' => 'Nahrát a importovat',
 		'profile' => 'Můj profil',
 		'use_checkbox_for_unlimited' => 'Hodnota „0“ deaktivuje tento prostředek. Zaškrtávací políčko vpravo umožňuje „neomezené“ použití.',
+		'use_checkbox_to_disable' => 'Chcete-li tuto funkci deaktivovat, zaškrtněte políčko napravo od textového pole.',
+		'distro_mismatch' => 'Zdá se, že jste provedli upgrade na novou distribuci. Nezapomeňte prosím odpovídajícím způsobem překonfigurovat služby.',
+		'set_new_distro' => 'Nastavit distribuci',
+		'dismiss' => 'Zavřít',
 	],
 	'phpfpm' => [
-		'vhost_httpuser' => 'Místní uživatel pro PHP-FPM (Froxlor vHost)',
-		'vhost_httpgroup' => 'Místní skupina pro PHP-FPM (Froxlor vHost)',
+		'vhost_httpuser' => 'Místní uživatel pro PHP-FPM (froxlor vHost)',
+		'vhost_httpgroup' => 'Místní skupina pro PHP-FPM (froxlor vHost)',
 		'ownvhost' => [
-			'title' => 'Povolit PHP-FPM pro Froxlor vHost',
-			'description' => 'Pokud je povoleno, bude Froxlor spuštěn také pod místním uživatelem',
+			'title' => 'Povolit PHP-FPM pro froxlor vHost',
+			'description' => 'Pokud je povoleno, bude froxlor spuštěn také pod místním uživatelem',
 		],
 		'use_mod_proxy' => [
 			'title' => 'Použít mod_proxy / mod_proxy_fcgi',
@@ -1413,10 +1472,12 @@ Ach upřímně, váš správce',
 		'email_reallydelete' => 'Opravdu chcete odstranit e-mailovou adresu %s?',
 		'email_reallydelete_account' => 'Opravdu chcete smazat e-mailový účet %s?',
 		'email_reallydelete_forwarder' => 'Opravdu chcete odstranit přeposílatele %s?',
+		'email_reallydelete_sender' => 'Opravdu chcete odstranit povoleného odesílatele %s?',
 		'extras_reallydelete' => 'Opravdu chcete odstranit ochranu adresáře pro %s?',
 		'extras_reallydelete_pathoptions' => 'Opravdu chcete odstranit možnosti cesty pro %s?',
 		'extras_reallydelete_export' => 'Opravdu chcete přerušit plánovanou práci na exportu?',
 		'ftp_reallydelete' => 'Opravdu chcete odstranit FTP účet %s?',
+		'sshkey_reallydelete' => 'Opravdu chcete smazat ssh-klíč %s?',
 		'mysql_reallydelete' => 'Opravdu chcete odstranit databázi %s? Tuto akci nelze vrátit zpět!',
 		'admin_configs_reallyrebuild' => 'Opravdu chcete znovu sestavit všechny konfigurační soubory?',
 		'admin_customer_alsoremovefiles' => 'Odstranit také uživatelské soubory?',
@@ -1625,7 +1686,7 @@ Ach upřímně, váš správce',
 				'description' => 'Kolik požadavků by mělo být povoleno na doménu?',
 			],
 			'defaultini' => 'Výchozí konfigurace PHP pro nové domény',
-			'defaultini_ownvhost' => 'Výchozí konfigurace PHP pro Froxlor-vHost',
+			'defaultini_ownvhost' => 'Výchozí konfigurace PHP pro froxlor-vHost',
 			'idle_timeout' => [
 				'title' => 'Časový limit nečinnosti',
 				'description' => 'Časový limit nastavení Mod FastCGI.',
@@ -1693,7 +1754,7 @@ Ach upřímně, váš správce',
 			],
 			'ssl_cipher_list' => [
 				'title' => 'Konfigurovat povolené SSL šifry',
-				'description' => 'Toto je seznam šifer, které chcete (nebo nechcete) použít při komunikaci SSL. Pro seznam šifer a způsob, jak je zahrnout/vyloučit viz oddíly "CIPHER LIST FORMAT" a "CIPHER STRINGS" na <a href="https://www.openssl.org/docs/manmaster/man1/openssl-ciphers.html">man-stránce pro šifry</a>.<br /><br /><b>Výchozí hodnota je:</b><pre>ECDH+AESGCM:ECDH+AES256:!aNULL:!MD5:!DSS:!DH:!AES128</pre>',
+				'description' => 'Toto je seznam šifer, které chcete (nebo nechcete) použít při komunikaci SSL. Pro seznam šifer a způsob, jak je zahrnout/vyloučit viz oddíly "CIPHER LIST FORMAT" a "CIPHER STRINGS" na <a href="https://www.openssl.org/docs/manmaster/man1/openssl-ciphers.html">man-stránce pro šifry</a>.<br /><br /><b>Výchozí hodnota je:</b><pre>ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:DHE-RSA-CHACHA20-POLY1305</pre>',
 			],
 			'apache24_ocsp_cache_path' => [
 				'title' => 'Apache 2.4: cesta k OCSP stapling cache',
@@ -1748,6 +1809,14 @@ Ach upřímně, váš správce',
 			'removelink' => 'Klikněte zde pro vymazání všech kvót pro e-mailové účty.',
 			'enforcelink' => 'Klikněte zde pro vynucení výchozí kvóty na všechny uživatelské e-mailové účty.',
 		],
+		'mail_enable_allow_sender' => [
+			'title' => 'Povolit zákazníkům používání „povoleného odesílatele“',
+			'description' => 'Pokud je tato funkce povolena, mohou zákazníci určit „povoleného odesílatele“ pro e-mailové účty, ze kterých budou odesílat zprávy. <br>Výchozí nastavení: vypnuto',
+		],
+		'mail_allow_external_domains' => [
+			'title' => 'Povolit externí domény pro „povolené odesílatele“"',
+			'description' => 'Pokud je tato možnost povolena, může zákazník zadat jako „povoleného odesílatele“ pro e-mailové účty libovolnou doménu (kromě domén, které tento systém nevlastní).<br>Výchozí: vypnuto',
+		],
 		'session_allow_multiple_login' => [
 			'title' => 'Povolit vícenásobné přihlášení',
 			'description' => 'Pokud je uživatel aktivován, může se přihlásit vícekrát.',
@@ -1758,7 +1827,7 @@ Ach upřímně, váš správce',
 		],
 		'panel_allow_domain_change_customer' => [
 			'title' => 'Povolit přesouvání domén mezi zákazníky',
-			'description' => 'Pokud je aktivováno, můžete změnit zákazníka domény v nastavení domény.<br /><b>Upozornění:</b> Froxlor změní kořenový adresář dokumentu na výchozí domovský adresář nového zákazníka (+ doménová složka, pokud je aktivována)',
+			'description' => 'Pokud je aktivováno, můžete změnit zákazníka domény v nastavení domény.<br /><b>Upozornění:</b> froxlor změní kořenový adresář dokumentu na výchozí domovský adresář nového zákazníka (+ doménová složka, pokud je aktivována)',
 		],
 		'specialsettingsforsubdomains' => [
 			'description' => 'Pokud je zvoleno ano, budou tato vlastní nastavení vHost přidána ke všem subdoménám; pokud ne, budou zvláštní nastavení subdomény odstraněna.',
@@ -1786,16 +1855,16 @@ Ach upřímně, váš správce',
 		'defaultwebsrverrhandler_enabled' => 'Povolit výchozí chybové dokumenty pro všechny zákazníky',
 		'defaultwebsrverrhandler_err401' => [
 			'title' => 'Soubor/URL pro chybu 401',
-			'description' => '<div class="text-danger">Není podporováno v: lighttpd</div>',
+			'description' => '',
 		],
 		'defaultwebsrverrhandler_err403' => [
 			'title' => 'Soubor/URL pro chybu 403',
-			'description' => '<div class="text-danger">Není podporováno v: lighttpd</div>',
+			'description' => '',
 		],
 		'defaultwebsrverrhandler_err404' => 'Soubor/URL pro chybu 404',
 		'defaultwebsrverrhandler_err500' => [
 			'title' => 'Soubor/URL pro chybu 500',
-			'description' => '<div class="text-danger">Není podporováno v: lighttpd</div>',
+			'description' => '',
 		],
 		'ftpserver' => [
 			'desc' => 'Pokud je zvolen pureftpd, soubory .ftpquota pro uživatelské kvóty jsou vytvářeny a denně aktualizovány',
@@ -1809,23 +1878,19 @@ Ach upřímně, váš správce',
 			'description' => 'Nastavte výchozí kód přesměrování, který by se měl použít, pokud jej zákazník nenastaví sám',
 		],
 		'mail_also_with_mxservers' => 'Vytvořit mail-, imap-, pop3- a smtp-"A record" také s nastavením MX-serverů',
-		'froxlordirectlyviahostname' => 'Přístup k Froxlor přímo prostřednictvím názvu hostitele',
+		'froxlordirectlyviahostname' => 'Přístup k froxlor přímo prostřednictvím názvu hostitele',
 		'panel_password_regex' => [
 			'title' => 'Regulární výraz pro hesla',
 			'description' => 'Zde můžete nastavit regulární výraz pro složitost hesel.<br />Prázdné = žádné specifické požadavky',
 		],
-		'perl_path' => [
-			'title' => 'Cesta k perl',
-			'description' => 'Výchozí je /usr/bin/perl',
-		],
 		'mod_fcgid_ownvhost' => [
-			'title' => 'Povolit FCGID pro Froxlor vHost',
-			'description' => 'Pokud je povoleno, bude Froxlor spuštěn také pod místním uživatelem',
+			'title' => 'Povolit FCGID pro froxlor vHost',
+			'description' => 'Pokud je povoleno, bude froxlor spuštěn také pod místním uživatelem',
 		],
 		'perl' => [
 			'suexecworkaround' => [
 				'title' => 'Povolit SuExec workaround',
-				'description' => 'Povolit pouze v případě, že zákaznické docrooty nejsou v apache suexec cestě.<br />Pokud je povoleno, Froxlor vygeneruje symbolický odkaz od zákazníků perl-enabled adresáře + /cgi-bin/ k dané cestě.<br />Všimněte si, že perl bude fungovat pouze v podadresáři složek /cgi-bin/ a ne ve složce samotné (jako to dělá bez této opravy!)',
+				'description' => 'Povolit pouze v případě, že zákaznické docrooty nejsou v apache suexec cestě.<br />Pokud je povoleno, froxlor vygeneruje symbolický odkaz od zákazníků perl-enabled adresáře + /cgi-bin/ k dané cestě.<br />Všimněte si, že perl bude fungovat pouze v podadresáři složek /cgi-bin/ a ne ve složce samotné (jako to dělá bez této opravy!)',
 			],
 			'suexeccgipath' => [
 				'title' => 'Cesta pro symlinky adresářů zákazníka s povoleným perlem',
@@ -1914,6 +1979,10 @@ Ach upřímně, váš správce',
 				'title' => 'Úroveň varování v procentech pro provoz',
 				'description' => 'Platné hodnoty jsou 0 až 150. Nastavením této hodnoty na 0 zakáže tuto zprávu.',
 			],
+			'report_web_bccadmin' => [
+				'title' => 'BCC e-mail pro oznámení o webovém využití správci',
+				'description' => 'Pokud je tato funkce povolena, varování o využití místa na disku zasílané zákazníkovi se zasílá také příslušnému správci/prodejci (BCC).'
+			],
 		],
 		'dropdown' => 'Rozevírací nabídka',
 		'manual' => 'Manuální',
@@ -1977,11 +2046,11 @@ Ach upřímně, váš správce',
 			'description' => 'Kde by měly být vytvořeny ssl-certifikáty zadané zákazníkem?<br /><br /><div class="text-danger">POZNÁMKA: Obsah této složky je pravidelně smazán, aby se zabránilo ukládání dat do této složky ručně.</div>',
 		],
 		'allow_error_report_admin' => [
-			'title' => 'Povolit správcům/prodejcům nahlásit chyby databáze Froxlor',
+			'title' => 'Povolit správcům/prodejcům nahlásit chyby databáze froxlor',
 			'description' => 'Upozornění: Nikdy nám neposílejte žádné osobní (zákaznické)údaje!',
 		],
 		'allow_error_report_customer' => [
-			'title' => 'Umožnit zákazníkům nahlásit chyby databáze Froxlor',
+			'title' => 'Umožnit zákazníkům nahlásit chyby databáze froxlor',
 			'description' => 'Upozornění: Nikdy nám neposílejte žádné osobní (zákaznické)údaje!',
 		],
 		'mailtraffic_enabled' => [
@@ -2121,6 +2190,10 @@ Ach upřímně, váš správce',
 		'http2_support' => [
 			'title' => 'HTTP2 podpora',
 			'description' => 'povolit podporu HTTP2 pro ssl.<br><em class="text-danger">POVOLTE POUZE POKUD VÁŠ SERVER TUTO FUNKCI PODPORUJE (nginx verze 1.9.5+, apache2 verze 2.4.17+)</em>',
+		],
+		'http3_support' => [
+			'title' => 'HTTP3 podpora',
+			'description' => 'povolit podporu HTTP3 pro ssl.<br><em class="text-danger">POVOLTE POUZE V PŘÍPADĚ, ŽE VÁŠ WEBOVÝ SERVER TUTO FUNKCI PODPORUJE (nginx verze 1.25.0+)</em>',
 		],
 		'nssextrausers' => [
 			'title' => 'Použít libnss-extrauser místo libnss-mysql',
@@ -2294,7 +2367,7 @@ Ach upřímně, váš správce',
 		'REBUILD_DNS' => 'Obnovení bind konfigurace',
 		'CREATE_FTP' => 'Vytváření adresáře pro nového uživatele ftp-user',
 		'DELETE_CUSTOMER_FILES' => 'Mazání zákaznických souborů %s',
-		'noneoutstanding' => 'V současné době nejsou žádné nevyřízené úkoly pro Froxlor',
+		'noneoutstanding' => 'V současné době nejsou žádné nevyřízené úkoly pro froxlor',
 		'DELETE_EMAIL_DATA' => 'Odstranit e-mailová data zákazníka.',
 		'DELETE_FTP_DATA' => 'Odstranit data ftp účtu.',
 		'REBUILD_RSPAMD' => 'Obnovení konfigurace antispamu.',
@@ -2303,6 +2376,7 @@ Ach upřímně, váš správce',
 		'CREATE_CUSTOMER_DATADUMP' => 'Úloha pro export dat pro zákazníka %s',
 		'DELETE_DOMAIN_PDNS' => 'Odstranit doménu %s z databáze PowerDNS',
 		'DELETE_DOMAIN_SSL' => 'Odstranit ssl soubory domény %s',
+		'UPDATE_LE_SERVICES' => 'Aktualizace systémových služeb pro Let\'s Encrypt',
 	],
 	'terms' => 'Podmínky použití',
 	'traffic' => [
@@ -2365,18 +2439,18 @@ Ach upřímně, váš správce',
 	],
 	'translator' => '',
 	'update' => [
-		'updateinprogress_onlyadmincanlogin' => 'Byla nainstalována novější verze Froxloru, ale ještě nebyla nastavena.<br />Pouze správce se může přihlásit a dokončit aktualizaci.',
-		'update' => 'Aktualizace Froxloru',
+		'updateinprogress_onlyadmincanlogin' => 'Byla nainstalována novější verze froxloru, ale ještě nebyla nastavena.<br />Pouze správce se může přihlásit a dokončit aktualizaci.',
+		'update' => 'Aktualizace froxloru',
 		'proceed' => 'Pokračovat',
 		'update_information' => [
-			'part_a' => 'Froxlor soubory byly aktualizovány na verzi <strong>%s</strong>. Nainstalovaná verze je <strong>%s</strong>.',
+			'part_a' => 'froxlor soubory byly aktualizovány na verzi <strong>%s</strong>. Nainstalovaná verze je <strong>%s</strong>.',
 			'part_b' => '<br /><br />Zákazníci se nebudou moci přihlásit, dokud nebude aktualizace dokončena.<br /><strong>Pokračovat?</strong>',
 		],
-		'noupdatesavail' => 'Již máte nejnovější verzi %sFroxlor nainstalovanou.',
+		'noupdatesavail' => 'Již máte nejnovější verzi %sfroxlor nainstalovanou.',
 		'description' => 'Probíhá aktualizace databáze pro vaši instalaci froxlor',
 		'uc_newinfo' => 'K dispozici je novější verze %s: "%s" (Vaše aktuální verze je: %s)',
 		'notify_subject' => 'K dispozici je nová aktualizace',
-		'dbupdate_required' => 'Froxlor soubory byly aktualizovány, je vyžadována aktualizace databáze',
+		'dbupdate_required' => 'froxlor soubory byly aktualizovány, je vyžadována aktualizace databáze',
 	],
 	'usersettings' => [
 		'custom_notes' => [
@@ -2389,6 +2463,10 @@ Ach upřímně, váš správce',
 			'description' => 'Pokud je povoleno v nastavení, může tento uživatel vytvořit API klíče a přistupovat k froxlor API',
 			'notice' => 'Přístup k API není povolen pro váš účet.',
 		],
+		'shell_allowed' => [
+			'title' => 'Povolit přístup k shellu',
+			'description' => 'Pokud je tato možnost povolena v nastavení, může tento uživatel přiřadit přístup k shellu uživatelům ftp.',
+		],
 		'gui_access' => [
 			'title' => 'Povolit přihlášení do WebUI',
 			'description' => 'Pokud je zakázáno, uživatel se nemůže přihlásit do froxlor web-ui, ale všechny služby (web, ftp, mail, databáze, api-přístup atd.) budou fungovat normálně.',
@@ -2400,6 +2478,7 @@ Ach upřímně, váš správce',
 		'critical_error' => 'Kritická chyba',
 		'suggestions' => 'Není vyžadováno, ale doporučuje se',
 		'phpinfosuccess' => 'Váš systém běží s PHP %s',
+		'suggestionsnote' => 'Neexistují žádné kritické chyby, které by bránily instalaci, ale pro optimální fungování prosím postupujte podle níže uvedených doporučení.',
 		'phpinfowarn' => 'Váš systém běží na nižší verzi než PHP %s',
 		'phpinfoupdate' => 'Aktualizujte vaši aktuální verzi PHP z %s na %s nebo vyšší',
 		'start_installation' => 'Spustit instalaci',
@@ -2413,7 +2492,7 @@ Ach upřímně, váš správce',
 		'database' => [
 			'top' => 'Databáze',
 			'title' => 'Vytvořit databázi a uživatele',
-			'description' => 'Froxlor vyžaduje databázi a navíc <a href="https://docs.froxlor.org/latest/general/installation/tarball.html#_3-create-privileged-database-user" target="_blank">privilegovaného uživatele</a>, aby mohl vytvářet uživatele a databáze (volba GRANT). Daná databáze a neprivilegovaný databázový uživatel bude vytvořen v tomto procesu. Oprávněný uživatel musí existovat.',
+			'description' => 'froxlor vyžaduje databázi a navíc <a href="https://docs.froxlor.org/latest/general/installation/tarball.html#_3-create-privileged-database-user" target="_blank">privilegovaného uživatele</a>, aby mohl vytvářet uživatele a databáze (volba GRANT). Daná databáze a neprivilegovaný databázový uživatel bude vytvořen v tomto procesu. Oprávněný uživatel musí existovat.',
 			'user' => 'Neoprávněný databázový uživatel',
 			'dbname' => 'Název databáze',
 			'force_create' => 'Zálohovat a přepsat databázi, pokud existuje?',

@@ -1,8 +1,8 @@
 <?php
 
 /**
- * This file is part of the Froxlor project.
- * Copyright (c) 2010 the Froxlor Team (see authors).
+ * This file is part of the froxlor project.
+ * Copyright (c) 2010 the froxlor Team (see authors).
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,7 +19,7 @@
  * https://files.froxlor.org/misc/COPYING.txt
  *
  * @copyright  the authors
- * @author     Froxlor team <team@froxlor.org>
+ * @author     froxlor team <team@froxlor.org>
  * @license    https://files.froxlor.org/misc/COPYING.txt GPLv2
  */
 
@@ -254,8 +254,8 @@ class Check
 		];
 
 		if ((int)Settings::Get('system.mod_fcgid') == 1) {
-			// fcgid only works for apache and lighttpd
-			if (strtolower($newfieldvalue) != 'apache2' && strtolower($newfieldvalue) != 'lighttpd') {
+			// fcgid only works for apache
+			if (strtolower($newfieldvalue) != 'apache2') {
 				$returnvalue = [
 					self::FORMFIELDS_PLAUSIBILITY_CHECK_ERROR,
 					'fcgidstillenableddeadlock'
@@ -358,5 +358,42 @@ class Check
 		}
 
 		return [self::FORMFIELDS_PLAUSIBILITY_CHECK_OK];
+	}
+
+	/**
+	 * @param $fieldname
+	 * @param $fielddata
+	 * @param $newfieldvalue
+	 * @param $allnewfieldvalues
+	 * @return array|int[]
+	 * @throws \Exception
+	 */
+	public static function checkSystemUsername($fieldname, $fielddata, $newfieldvalue, $allnewfieldvalues)
+	{
+		if (empty($newfieldvalue) || $fielddata['value'] == $newfieldvalue) {
+			$returnvalue = [
+				self::FORMFIELDS_PLAUSIBILITY_CHECK_OK
+			];
+		} elseif (function_exists('posix_getpwnam') && posix_getpwnam($newfieldvalue) == false) {
+			$returnvalue = [
+				self::FORMFIELDS_PLAUSIBILITY_CHECK_ERROR,
+				'local_user_invalid'
+			];
+		} else {
+			// user exists, but cannot be one of the froxlor-customers
+			$sel_stmt = Database::prepare("SELECT COUNT(*) as numUsers FROM `" . TABLE_PANEL_CUSTOMERS . "` WHERE `loginname` = :username");
+			$result = Database::pexecute_first($sel_stmt, [':username' => $newfieldvalue]);
+			if ($result && $result['numUsers'] > 0) {
+				$returnvalue = [
+					self::FORMFIELDS_PLAUSIBILITY_CHECK_ERROR,
+					'local_user_isfroxloruser'
+				];
+			} else {
+				$returnvalue = [
+					self::FORMFIELDS_PLAUSIBILITY_CHECK_OK
+				];
+			}
+		}
+		return $returnvalue;
 	}
 }

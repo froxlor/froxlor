@@ -113,7 +113,7 @@
 			labels: labelsS,
 			datasets: [{
 				label: '{{ lng('traffic.trafficoverview') }}',
-				backgroundColor: ['rgb(255, 99, 132)', 'rgb(200, 199, 132)', 'rgb(255, 99, 0)'],
+				backgroundColor: ['rgb(24,114,162)', 'rgb(232, 219, 37)', 'rgb(208,72,0)'],
 				data: [{value: '{{ metrics.http|default(0) }}', formatted: '{{ metrics.http|formatBytes }}'}, {value: '{{ metrics.ftp|default(0) }}', formatted: '{{ metrics.ftp|formatBytes }}'}, {value: '{{ metrics.mail|default(0) }}', formatted: '{{ metrics.mail|formatBytes }}'}]
 			}]
 		};
@@ -161,7 +161,7 @@
 				labels: labelsC,
 				datasets: [{
 					label: '{{ lng('traffic.top5customers') }}',
-					backgroundColor: ['rgb(255, 99, 132)', 'rgb(200, 199, 132)', 'rgb(255, 99, 0)', 'rgb(100, 100, 132)', 'rgb(240, 150, 232)'],
+					backgroundColor: ['rgb(24,114,162)', 'rgb(232, 219, 37)', 'rgb(208,72,0)', 'rgb(118, 63, 138)', 'rgb(7, 104, 0)'],
 					data: dataValues
 				}]
 			};
@@ -220,7 +220,7 @@
 				datasets: [
 					{
 					label: '{{ lng('traffic.sumhttp') }}',
-					backgroundColor: 'rgb(255, 99, 132)',
+					backgroundColor: 'rgb(24,114,162)',
 					{% if range starts with 'days' or range == 'currentmonth' %}
 						data: [{% for d,dd in days %}{value: '{{ dd.http|default(0) }}', formatted: '{{ dd.http|formatBytes }}', axisv: '{{ d }}'},{% endfor %}],
 					{% elseif range starts with 'months' or range starts with 'year' or range == 'currentyear' %}
@@ -234,7 +234,7 @@
 				},
 				{
 					label: '{{ lng('traffic.sumftp') }}',
-					backgroundColor: 'rgb(200, 199, 132)',
+					backgroundColor: 'rgb(232, 219, 37)',
 					{% if range starts with 'days' or range == 'currentmonth' %}
 						data: [{% for d,dd in days %}{value: '{{ dd.ftp|default(0) }}', formatted: '{{ dd.ftp|formatBytes }}', axisv: '{{ d }}'},{% endfor %}],
 					{% elseif range starts with 'months' or range starts with 'year' or range == 'currentyear' %}
@@ -248,7 +248,7 @@
 				},
 				{
 					label: '{{ lng('traffic.summail') }}',
-					backgroundColor: 'rgb(255, 99, 0)',
+					backgroundColor: 'rgb(208,72,0)',
 					{% if range starts with 'days' or range == 'currentmonth' %}
 						data: [{% for d,dd in days %}{value: '{{ dd.mail|default(0) }}', formatted: '{{ dd.mail|formatBytes }}', axisv: '{{ d }}'},{% endfor %}],
 					{% elseif range starts with 'months' or range starts with 'year' or range == 'currentyear' %}

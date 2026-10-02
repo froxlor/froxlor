@@ -1,8 +1,8 @@
 <?php
 
 /**
- * This file is part of the Froxlor project.
- * Copyright (c) 2010 the Froxlor Team (see authors).
+ * This file is part of the froxlor project.
+ * Copyright (c) 2010 the froxlor Team (see authors).
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,7 +19,7 @@
  * https://files.froxlor.org/misc/COPYING.txt
  *
  * @copyright  the authors
- * @author     Froxlor team <team@froxlor.org>
+ * @author     froxlor team <team@froxlor.org>
  * @license    https://files.froxlor.org/misc/COPYING.txt GPLv2
  */
 
@@ -29,11 +29,15 @@ return [
 		'de' => 'Deutsch',
 		'en' => 'Englisch',
 		'fr' => 'Französisch',
+		'hu' => 'Ungarisch',
 		'it' => 'Italienisch',
 		'nl' => 'Niederländisch',
 		'pt' => 'Portugiesisch',
 		'se' => 'Schwedisch',
+		'sk' => 'Slowakisch',
 		'es' => 'Spanisch',
+		'ca' => 'Katalanisch',
+		'zh_CN' => 'Chinesisch (Vereinfacht)',
 	],
 	'2fa' => [
 		'2fa' => '2FA Optionen',
@@ -54,7 +58,7 @@ return [
 		'overview' => 'Übersicht',
 		'ressourcedetails' => 'Verbrauchte Ressourcen',
 		'systemdetails' => 'Systemdetails',
-		'froxlordetails' => 'Froxlor-Details',
+		'froxlordetails' => 'froxlor-Details',
 		'installedversion' => 'Installierte Version',
 		'latestversion' => 'Neueste Version',
 		'lookfornewversion' => [
@@ -144,7 +148,7 @@ return [
 			'EMAIL_PASSWORD' => 'Wird mit dem Passwort des neuen POP3/IMAP Kontos ersetzt.',
 			'index_html' => 'index Datei für neu erzeugte Kundenverzeichnisse',
 			'unconfigured_html' => 'index Datei für unkonfigurierte/unbekannte Domains',
-			'unconfigured_content_fallback' => 'Diese Domain muss über das Froxlor-Serververwaltungspanel konfiguriert werden, da sie derzeit keinem Kunden zugewiesen ist.',
+			'unconfigured_content_fallback' => 'Diese Domain muss über das froxlor-Serververwaltungspanel konfiguriert werden, da sie derzeit keinem Kunden zugewiesen ist.',
 			'file_extension' => [
 				'description' => 'Die Dateiendung für die index Datei muss zwischen 1 und 6 Zeichen lang sein und darf nur aus den Zeichen a-z, A-Z und 0-9 bestehen<br><br>Standard: html',
 				'title' => 'Dateiendung für Datei Vorlage',
@@ -211,7 +215,7 @@ return [
 				'description' => 'Meist CA_Bundle, o. Ä. Dies ist das Feld, das gesetzt werden sollte, wenn ein gekauftes SSL-Zertifikat vorliegt.',
 			],
 			'docroot' => [
-				'title' => 'Benutzerdefinierter Docroot (wenn leer, zeige auf Froxlor)',
+				'title' => 'Benutzerdefinierter Docroot (wenn leer, zeige auf froxlor)',
 				'description' => 'Hier kann ein benutzerdefinierter Document-Root (der Zielordner für einen Zugriff) für diese IP/Port Kombination gesetzt werden.<br /><strong>ACHTUNG:</strong> Bitte überlege vorher, welchen Pfad du hier angibst!',
 			],
 			'ssl_paste_description' => 'Bitte den Inhalt der Zertifikatsdatei in das Textfeld kopieren.',
@@ -278,16 +282,16 @@ return [
 		'nouptimeavailable' => 'nicht verfügbar',
 		'nosubject' => '(Kein Betreff)',
 		'show_version_login' => [
-			'title' => 'Zeige Froxlor Version beim Login',
-			'description' => 'Zeige Froxlor Version in der Fußzeile der Loginseite',
+			'title' => 'Zeige froxlor Version beim Login',
+			'description' => 'Zeige froxlor Version in der Fußzeile der Loginseite',
 		],
 		'show_version_footer' => [
-			'title' => 'Zeige Froxlor Version in Fußzeile',
-			'description' => 'Zeige Froxlor Version in der Fußzeile aller anderen Seiten',
+			'title' => 'Zeige froxlor Version in Fußzeile',
+			'description' => 'Zeige froxlor Version in der Fußzeile aller anderen Seiten',
 		],
 		'froxlor_graphic' => [
 			'title' => 'Grafik im Kopfbereich des Panels',
-			'description' => 'Welche Grafik soll im Kopfbereich des Panels anstatt des Froxlor Logos angezeigt werden?',
+			'description' => 'Welche Grafik soll im Kopfbereich des Panels anstatt des froxlor Logos angezeigt werden?',
 		],
 		'phpsettings' => [
 			'title' => 'PHP-Konfiguration',
@@ -346,7 +350,7 @@ return [
 		'accountdata' => 'Benutzerdaten',
 		'contactdata' => 'Kontaktdaten',
 		'servicedata' => 'Dienstleistungsdaten',
-		'newerversionavailable' => 'Eine neuere Version von Froxlor wurde veröffentlicht.',
+		'newerversionavailable' => 'Eine neuere Version von froxlor wurde veröffentlicht.',
 		'newerversiondetails' => 'Jetzt auf Version <b>%s</b> aktualisieren?<br/>(Aktuelle Version ist: %s)',
 		'extractdownloadedzip' => 'Heruntergeladenes Archiv "%s" entpacken?',
 		'cron' => [
@@ -362,8 +366,8 @@ return [
 		'webserver_group' => 'Gruppenname Webserver',
 		'perlenabled' => 'Perl verfügbar',
 		'fcgid_settings' => 'FCGID',
-		'mod_fcgid_user' => 'Lokaler Benutzer für FCGID (Froxlor Vhost)',
-		'mod_fcgid_group' => 'Lokale Gruppe für FCGID (Froxlor Vhost)',
+		'mod_fcgid_user' => 'Lokaler Benutzer für FCGID (froxlor Vhost)',
+		'mod_fcgid_group' => 'Lokale Gruppe für FCGID (froxlor Vhost)',
 		'perl_settings' => 'Perl/CGI',
 		'notgiven' => '[nicht angegeben]',
 		'store_defaultindex' => 'Standard-Index-Datei im Kundenordner erstellen',
@@ -396,7 +400,7 @@ return [
 		'selectserveralias_desc' => 'Wählen Sie hier, ob für diese Domain ein Wildcard-Eintrag (*.domain.tld), ein www-Alias (www.domain.tld) oder gar kein Alias angelegt werden soll.',
 		'show_news_feed' => [
 			'title' => 'Zeige Newsfeed im Admin-Dashboard',
-			'description' => 'Aktivieren Sie diese Option, um das offizielle Froxlor newsfeed (https://inside.froxlor.org/news/) auf deinem Dashboard anzuzeigen und verpasse keine wichtigen Informationen oder Release-Announcements.',
+			'description' => 'Aktivieren Sie diese Option, um das offizielle froxlor newsfeed (https://inside.froxlor.org/news/) auf deinem Dashboard anzuzeigen und verpasse keine wichtigen Informationen oder Release-Announcements.',
 		],
 		'cronsettings' => 'Cronjob-Einstellungen',
 		'integritycheck' => 'Datenbankprüfung',
@@ -406,7 +410,7 @@ return [
 		'customer_show_news_feed' => 'Zeige Newsfeed im Kunden-Dashboard',
 		'customer_news_feed_url' => [
 			'title' => 'Benutzerdefiniertes RSS-Feed',
-			'description' => 'Hier kann ein eigenes RSS-Feed angegeben werden, welches den Kunden auf dem Dashboard angezeigt wird.<br /><small>Leerlassen um das offizielle Froxlor Newsfeed (https://inside.froxlor.org/news/) zu verwenden.</small>',
+			'description' => 'Hier kann ein eigenes RSS-Feed angegeben werden, welches den Kunden auf dem Dashboard angezeigt wird.<br /><small>Leerlassen um das offizielle froxlor Newsfeed (https://inside.froxlor.org/news/) zu verwenden.</small>',
 		],
 		'movetoadmin' => 'Kunde verschieben',
 		'movecustomertoadmin' => [
@@ -423,7 +427,7 @@ return [
 		],
 		'autoupdate' => 'Auto-Update',
 		'dnsenabled' => 'Zugriff auf DNS Editor',
-		'froxlorvhost' => 'Froxlor VirtualHost Einstellungen',
+		'froxlorvhost' => 'froxlor VirtualHost Einstellungen',
 		'hostname' => 'Hostname',
 		'memory' => 'Speicherauslastung',
 		'webserversettings_ssl' => 'Webserver SSL-Einstellungen',
@@ -447,6 +451,11 @@ return [
 		'domain_http2' => [
 			'title' => 'HTTP2 Unterstützung',
 			'description' => 'Siehe <a target="_blank" href="https://de.wikipedia.org/wiki/Hypertext_Transfer_Protocol#HTTP.2F2">Wikipedia</a> für eine ausführliche Beschreibung von HTTP2',
+		],
+		'domain_http3' => [
+			'title' => 'HTTP3 Unterstützung',
+			'description' => 'Siehe <a target="_blank" href="https://de.wikipedia.org/wiki/Hypertext_Transfer_Protocol#HTTP.2F3">Wikipedia</a> für eine ausführliche Beschreibung von HTTP3',
+			'nginx_version_warning' => '<br /><strong class="text-danger">WARNUNG:</strong> Nginx unterstützt HTTP/3 erst ab Version 1.25.0 und dem SSL-Protokoll TLSv1.3. Wenn Ihre Version älter ist, wird der Webserver bei aktiviertem HTTP/3 NICHT korrekt starten.',
 		],
 		'testmail' => 'SMTP Test',
 		'phpsettingsforsubdomains' => 'PHP-Config für alle Subdomains übernehmen:',
@@ -504,6 +513,14 @@ return [
 		'apiguide' => 'API Guide',
 		'domain_duplicate' => 'Domain duplizieren',
 		'domain_duplicate_named' => '%s duplizieren',
+		'emaildomainwarning' => '<div id="emaildomainnote" class="invalid-feedback">ACHTUNG: Durch die Änderung dieser Einstellung löschen Sie alle bestehenden E-Mail-Adressen und -Konten unwiderruflich.</div>',
+		'webserver_serveradmin' => [
+			'setting' => 'ServerAdmin Angabe',
+			'customer' => 'Kunden E-Mail Adresse (standard)',
+			'admin' => 'Admin E-Mail Adresse',
+			'global' => 'Panel-Admin E-Mail Adresse',
+			'none' => 'Keine ServerAdmin Angabe'
+		]
 	],
 	'apikeys' => [
 		'no_api_keys' => 'Keine API Keys gefunden',
@@ -524,6 +541,7 @@ return [
 		'also_change_ftp' => 'Auch Passwort des Haupt-FTP-Zugangs ändern',
 		'also_change_stats' => ' Auch Passwort der Statistikseite ändern',
 		'also_change_global_mysql' => 'Auch Passwort des globalen MySQL-Zugangs ändern',
+		'apikeys_hint' => 'Ihr Passwort wurde erfolgreich geändert. Für diesen Account existieren noch %s aktive API-Schlüssel, die mit dem alten Passwort erstellt wurden. Falls Sie Ihr Passwort geändert haben, weil es kompromittiert sein könnte, sollten Sie diese auf der API-Schlüssel-Seite erneuern.',
 	],
 	'cron' => [
 		'cronname' => 'Cronjob-Name',
@@ -531,7 +549,7 @@ return [
 		'interval' => 'Intervall',
 		'isactive' => 'Aktiv',
 		'description' => 'Beschreibung',
-		'changewarning' => 'Änderungen an diesen Werten können einen negativen Effekt auf das Verhalten von Froxlor und seinen automatisierten Aufgaben haben.<br />Ändern Sie hier bitte nur etwas, wenn Sie sich über die Folgen im Klaren sind.',
+		'changewarning' => 'Änderungen an diesen Werten können einen negativen Effekt auf das Verhalten von froxlor und seinen automatisierten Aufgaben haben.<br />Ändern Sie hier bitte nur etwas, wenn Sie sich über die Folgen im Klaren sind.',
 	],
 	'crondesc' => [
 		'cron_unknown_desc' => 'Keine Beschreibung angegeben',
@@ -621,6 +639,10 @@ return [
 			'title' => 'Spam Level',
 			'description' => 'Erforderliche Punktzahl zum Markieren einer E-Mail als Spam<br/>Standard: 7.0'
 		],
+		'rewrite_subject' => [
+			'title' => 'Betreff ändern',
+			'description' => 'Dem E-Mail Betreff <strong>***SPAM***</strong> hinzufügen, sofern zutreffend',
+		],
 		'spam_kill_level' => [
 			'title' => 'Ablehnungs Level',
 			'description' => 'Erforderliche Punktzahl für das Ablehnen einer E-Mail<br/>Standard: 14.0'
@@ -636,6 +658,24 @@ return [
 		'required_spf_dns' => 'Erforderlicher SPF DNS Eintrag',
 		'required_dmarc_dns' => 'Erforderlicher DMARC DNS Eintrag',
 		'required_dkim_dns' => 'Erforderlicher DKIM DNS Eintrag',
+		'default_select' => [
+			'on_changeable' => 'Aktiviert, einstellbar',
+			'off_changeable' => 'Deaktiviert, einstellbar',
+			'on_unchangeable' => 'Aktiviert, nicht einstellbar',
+			'off_unchangeable' => 'Deaktiviert, nicht einstellbar',
+		],
+		'default_bypass_spam' => [
+			'title' => 'Standardwert: Spamfilter umgehen',
+			'description' => 'Wählen, ob bei neuen E-Mail-Konten "Spamfilter umgehen" standardmäßig aktiviert ist und ob diese Einstellung vom Kunden angepasst werden kann.<br/>Standard: Deaktiviert, einstellbar'
+		],
+		'default_spam_rewrite_subject' => [
+			'title' => 'Standardwert: Betreff ändern',
+			'description' => 'Wählen, ob bei neuen E-Mail-Konten "Betreff ändern" standardmäßig aktiviert ist und ob diese Einstellung vom Kunden angepasst werden kann.<br/>Standard: Aktiviert, einstellbar'
+		],
+		'default_policy_greylist' => [
+			'title' => 'Standardwert: Verwende greylisting',
+			'description' => 'Wählen, ob bei neuen E-Mail-Konten "Verwende greylisting" standardmäßig aktiviert ist und ob diese Einstellung vom Kunden angepasst werden kann.<br/>Standard: Aktiviert, einstellbar'
+		],
 	],
 	'dns' => [
 		'destinationip' => 'Domain-IP-Adresse(n)',
@@ -649,7 +689,11 @@ return [
 		'priority20' => 'Priorität 20',
 		'txtrecords' => 'TXT-Einträge definieren',
 		'txtexample' => 'Beispiel (SPF-Eintrag):<br />v=spf1 ip4:xxx.xxx.xx.0/23 -all',
-		'howitworks' => 'Hier können DNS Einträge für die Domain verwaltet werden. Beachten Sie, dass Froxlor automatisch NS/MX/A/AAAA Einträge generiert. Die benutzerdefinierten Einträge werden bevorzugt, nur fehlende Einträge werden automatisch generiert.',
+		'howitworks' => 'Hier können DNS Einträge für die Domain verwaltet werden. Beachten Sie, dass froxlor automatisch NS/MX/A/AAAA Einträge generiert. Die benutzerdefinierten Einträge werden bevorzugt, nur fehlende Einträge werden automatisch generiert.',
+		'nis2note' => [
+			'title' => 'NIS2 Info',
+			'content' => 'DNS-Hosting/Authoritative DNS Services können nach <strong>EU-NIS2</strong> als digitale Dienstleistung mit erhöhten Sicherheits- und Meldepflichten gelten. Bitte prüfe, ob dein Setup NIS2-betroffen ist und welche Maßnahmen erforderlich sind.'
+		],
 	],
 	'dnseditor' => [
 		'edit' => 'DNS editieren',
@@ -674,7 +718,7 @@ return [
 		'hasaliasdomains' => 'Hat Aliasdomain(s)',
 		'statstics' => 'Statistiken',
 		'isassigneddomain' => 'zugewiesene Domain',
-		'add_date' => 'Zu Froxlor hinzugefügt',
+		'add_date' => 'Zu froxlor hinzugefügt',
 		'registration_date' => 'Registriert am',
 		'topleveldomain' => 'Top-Level-Domain',
 		'associated_with_domain' => 'Verbunden mit',
@@ -739,6 +783,10 @@ return [
 		'back_to_overview' => 'Zurück zur Domain-Übersicht',
 		'accounts' => 'Konten',
 		'emails' => 'Adressen',
+		'senders' => 'Erlaubte Absendeadressen',
+		'sender_add' => 'Absendeadressen hinzufügen',
+		'foreign_sender' => 'Erlaubte (externe) Sender-Adresse',
+		'allowed_sender_info' => 'Mit einer <strong>Erlaubten Absendeadresse</strong> erlauben Sie einem bestehenden Mailkonto, zusätzlich mit einer anderen Absenderadresse E-Mails zu versenden.<br><strong>Wichtig:</strong> Die hier eingetragene Adresse/Wildcard-Domain wird nicht automatisch ein Postfach – sie dient nur als zusätzliche, erlaubte Absenderkennungen.',
 	],
 	'error' => [
 		'error' => 'Fehlermeldung',
@@ -765,6 +813,8 @@ return [
 		'mydocumentroot' => '\'Documentroot\'',
 		'loginnameexists' => 'Der Login-Name "%s" existiert bereits.',
 		'emailiswrong' => 'Die E-Mail-Adresse "%s" enthält ungültige Zeichen oder ist nicht vollständig.',
+		'emailexists' => 'Die E-Mail-Adresse "%s" wird bereits von einem anderen Admin verwendet',
+		'emailexistsanon' => 'Die E-Mail-Adresse "%s" wird bereits verwendet',
 		'alternativeemailiswrong' => 'Die angegebene alternative E-Mail Adresse "%s", an welche die Zugangsdaten geschickt werden soll, scheint ungültig zu sein.',
 		'loginnameiswrong' => 'Der Login-Name "%s" enthält ungültige Zeichen.',
 		'loginnameiswrong2' => 'Der Login-Name enthält zu viele Zeichen, es sind maximal %s Zeichen erlaubt.',
@@ -853,9 +903,9 @@ return [
 		'plausibilitychecknotunderstood' => 'Die Antwort des Plausibilitätschecks wurde nicht verstanden',
 		'errorwhensaving' => 'Bei dem Speichern des Feldes "%s" trat ein Fehler auf',
 		'pathmaynotcontaincolon' => 'Der eingegebene Pfad sollte keinen Doppelpunkt (":") enthalten. Bitte geben Sie einen korrekten Wert für den Pfad ein.',
+		'pathexistsasfile' => 'Der eingegebene Pfad existiert bereits als Datei. Bitte geben Sie einen anderen Pfad ein.',
+		'invaliddocumentrooturl' => 'Die URL, die Sie für den Pfad eingegeben haben, ist ungültig. Bitte geben Sie eine korrekte URL oder einen Unix-Pfad ein.',
 		'notrequiredpasswordcomplexity' => 'Die vorgegebene Passwort-Komplexität wurde nicht erfüllt.<br />Bitte kontaktieren Sie Ihren Administrator, wenn Sie Fragen zur Komplexitäts-Vorgabe haben.',
-		'stringerrordocumentnotvalidforlighty' => 'Ein Text als Fehlerdokument funktioniert leider in LigHTTPd nicht, bitte geben Sie einen Pfad zu einer Datei an',
-		'urlerrordocumentnotvalidforlighty' => 'Eine URL als Fehlerdokument funktioniert leider in LigHTTPd nicht, bitte geben Sie einen Pfad zu einer Datei an',
 		'invaliderrordocumentvalue' => 'Der angegebene Wert für das Fehlederdokument ist keine gültige Datei, URL oder Text-Zeile.',
 		'intvaluetoolow' => 'Die angegebene Zahl ist zu klein (Feld "%s")',
 		'intvaluetoohigh' => 'Die angegebene Zahl ist zu groß (Feld "%s")',
@@ -880,13 +930,13 @@ return [
 		'sslcertificateinvalidchain' => 'Das angegebene CertificateChainFile scheint nicht gültig zu sein.',
 		'givendirnotallowed' => 'Das angegebene Verzeichnis im Feld %s ist nicht erlaubt.',
 		'sslredirectonlypossiblewithsslipport' => 'Die Nutzung von Let\'s Encrypt ist nur möglich, wenn die Domain mindestens eine IP/Port - Kombination mit aktiviertem SSL zugewiesen hat.',
-		'fcgidstillenableddeadlock' => 'FCGID ist derzeit aktiviert.<br />Bitte deaktiviere es, um einen anderen Webserver als Apache2 oder lighttpd auswählen zu können.',
+		'fcgidstillenableddeadlock' => 'FCGID ist derzeit aktiviert.<br />Bitte deaktiviere es, um einen anderen Webserver als Apache2 auswählen zu können.',
 		'send_report_title' => 'Fehler melden',
-		'send_report_desc' => 'Danke, dass Sie uns diesen Fehler melden und damit helfen Froxlor zu verbessern.<br />Folgender Bericht wird per Mail an das Froxlor Entwickler Team gesendet.',
+		'send_report_desc' => 'Danke, dass Sie uns diesen Fehler melden und damit helfen froxlor zu verbessern.<br />Folgender Bericht wird per Mail an das froxlor Entwickler Team gesendet.',
 		'send_report' => 'Fehlerbericht senden',
 		'send_report_error' => 'Fehler beim Senden des Berichts: <br />%s',
 		'notallowedtouseaccounts' => 'Ihrem Konto ist die Nutzung von IMAP/POP3 nicht erlaubt, daher können keine E-Mail-Konten angelegt werden',
-		'cannotdeletehostnamephpconfig' => 'Diese PHP-Konfiguration ist dem Froxlor-Vhost zugewiesen und kann daher nicht gelöscht werden.',
+		'cannotdeletehostnamephpconfig' => 'Diese PHP-Konfiguration ist dem froxlor-Vhost zugewiesen und kann daher nicht gelöscht werden.',
 		'cannotdeletedefaultphpconfig' => 'Diese PHP-Konfiguration ist als Standard hinterlegt und kann daher nicht gelöscht werden.',
 		'passwordshouldnotbeusername' => 'Das Passwort sollte nicht mit dem Benutzernamen übereinstimmen.',
 		'no_phpinfo' => 'Entschuldigung, es ist nicht möglich die phpinfo() auszulesen.',
@@ -897,7 +947,7 @@ return [
 		'no_opcacheinfo' => 'Keine OPCache Informationen verfügbar. OPCache scheint nicht installiert zu sein.',
 		'inactive_opcacheinfo' => 'OPCache ist installiert, aber nicht aktiviert.',
 		'nowildcardwithletsencrypt' => 'Let\'s Encrypt kann mittels ACME Wildcard-Domains nur via DNS validieren, sorry. Bitte den ServerAlias auf WWW setzen oder deaktivieren',
-		'customized_version' => 'Es scheint als wäre die Froxlor Installation angepasst worden. Kein Support, sorry.',
+		'customized_version' => 'Es scheint als wäre die froxlor Installation angepasst worden. Kein Support, sorry.',
 		'autoupdate_0' => 'Unbekannter Fehler',
 		'autoupdate_1' => 'PHP Einstellung allow_url_fopen ist deaktiviert. Autoupdate benötigt diese Option, bitte in der php.ini aktivieren.',
 		'autoupdate_2' => 'PHP zip Erweiterung nicht gefunden, bitte prüfen, ob diese installiert und aktiviert ist.',
@@ -930,9 +980,16 @@ return [
 		'dns_srv_noalias' => 'Der SRV Eintrag darf kein CNAME Eintrag sein.',
 		'dns_duplicate_entry' => 'Eintrag existiert bereits',
 		'dns_notfoundorallowed' => 'Domain nicht gefunden oder keine Berechtigung',
+		'dns_loc_invalid' => 'Ungültiger LOC Eintrag',
+		'dns_rp_invalid' => 'Ungültiger RP Eintrag',
+		'dns_sshfp_invalid' => 'Ungültiger SSHFP Eintrag',
+		'dns_tlsa_invalid' => 'Ungültiger TLSA Eintrag',
+		'dns_naptr_invalid' => 'Ungültiger NAPTR Eintrag',
 		'domain_nopunycode' => 'Die Eingabe von Punycode (IDNA) ist nicht notwendig. Die Domain wird automatisch konvertiert.',
 		'domain_noipaddress' => 'Eine IP-Adresse kann nicht als Domain angelegt werden',
 		'dns_record_toolong' => 'Records/Labels können maximal 63 Zeichen lang sein',
+		'dns_invalid_recordlabel' => 'Record/Label enthält ungültige Zeichen',
+		'dns_unknown_type' => 'Nicht unterstützter DNS-Eintrag Typ',
 		'noipportgiven' => 'Keine IP/Port angegeben',
 		'nosslippportgiven' => 'Wenn SSL aktiviert ist, muss eine SSL IP/Port angegeben werden',
 		'jsonextensionnotfound' => 'Diese Funktion benötigt die PHP json-Erweiterung.',
@@ -940,6 +997,8 @@ return [
 		'no_wwwcnamae_ifwwwalias' => 'Es kann kein CNAME Eintrag für "www" angelegt werden, da die Domain einen www-Alias aktiviert hat. Ändere diese Einstellung auf "Kein Alias" oder "Wildcard Alias"',
 		'local_group_exists' => 'Die angegebene Gruppe existiert bereits auf dem System',
 		'local_group_invalid' => 'Der angegebene Gruppen-Name ist nicht gültig',
+		'local_user_invalid' => 'Der angegebene Benutzer-Name ist nicht gültig oder existiert nicht',
+		'local_user_isfroxloruser' => 'Der angegebene Benutzer-Name ist ein von froxlor verwalteter Benutzer und kann in diesem Kontext nicht verwendet werden.',
 		'invaliddnsforletsencrypt' => 'Die DNS-Einträge der Domain enthalten keine der gewählten IP Adressen. Let\'s Encrypt Zertifikats-Erstellung ist nicht möglich.',
 		'notallowedphpconfigused' => 'Nutzung einer PHP-Konfiguration welche nicht dem Kunden zugeordnet ist',
 		'pathmustberelative' => 'Der Benutzer hat nicht die benötigten Berechtigungen, um Pfade außerhalb des Kunden-Heimatverzeichnisses anzugeben. Bitte einen relativen Pfad angeben (kein führendes /).',
@@ -952,6 +1011,11 @@ return [
 		'invalidpgppublickey' => 'Der angegebene PGP Public Key ist ungültig',
 		'invalid_validtime' => 'Wert der valid_time in Sekunden muss zwischen 10 und 120 liegen.',
 		'customerphpenabledbutnoconfig' => 'Kunde hat PHP aktiviert aber keine PHP-Konfiguration wurde gewählt.',
+		'emaildomainstillhasaddresses' => 'Maildomain-Flag kann nicht deaktiviert werden, da für diese Domain noch E-Mail-Adressen vorhanden sind.',
+		'tls13requiredforhttp3' => 'Domain hat http3 Option aktiviert, aber SSL-Protokoll enthält nicht TLSv1.3',
+		'senderdomainnotowned' => 'Die angegebene Domain "%s" kann nicht genutzt werden.',
+		'senderdomainexternal' => 'Die angegebene externe Domain "%s" kann nicht genutzt werden.',
+		'emailhasnoaccount' => 'Die angegebene E-Mail-Adresse "%s" hat kein Konto. Eine Absenderadresse kann nicht hinzugefügt werden.',
 	],
 	'extras' => [
 		'description' => 'Hier können Sie zusätzliche Extras einrichten, wie zum Beispiel einen Verzeichnisschutz.<br />Die Änderungen sind erst nach einer kurzen Zeit wirksam.',
@@ -983,6 +1047,8 @@ return [
 		'account_add' => 'Benutzerkonto anlegen',
 		'account_edit' => 'FTP-Konto bearbeiten',
 		'editpassdescription' => 'Neues Passwort setzen oder leer für keine Änderung.',
+		'sshkey_add' => 'SSH-Key anlegen',
+		'sshkey_edit' => 'SSH-Key bearbeiten',
 	],
 	'gender' => [
 		'title' => 'Anrede',
@@ -1053,7 +1119,7 @@ return [
 			'mailbody' => 'Hallo {SALUTATION},\\n\\nhiermit erhalten Sie den Link, um ein neues Passwort zu setzen. Dieser Link ist für die nächsten 24 Stunden gültig.\\n\\n{LINK}\\n\\nVielen Dank,\\nIhr Administrator',
 		],
 		'new_database_by_customer' => [
-			'subject' => '[Froxlor] Neue Datenbank erstellt',
+			'subject' => '[froxlor] Neue Datenbank erstellt',
 			'mailbody' => 'Hallo {CUST_NAME},
 
 du hast gerade eine neue Datenbank angelegt. Hier die angegebenen Informationen:
@@ -1087,7 +1153,7 @@ Vielen Dank, Ihr Administrator',
 		],
 		'2fa' => [
 			'mailbody' => 'Hallo,\\n\\nihr 2FA-Login Code lautet: {CODE}\\n\\nDies ist eine automatisch generierte\\neMail, bitte antworten Sie nicht auf\\ndiese Mitteilung.\\n\\nIhr Administrator',
-			'subject' => 'Froxlor - 2FA Code',
+			'subject' => 'froxlor - 2FA Code',
 		],
 	],
 	'menue' => [
@@ -1119,6 +1185,7 @@ Vielen Dank, Ihr Administrator',
 			'ftp' => 'FTP',
 			'accounts' => 'Benutzerkonten',
 			'webftp' => 'WebFTP',
+			'sshkeys' => 'SSH Keys',
 		],
 		'extras' => [
 			'extras' => 'Extras',
@@ -1156,7 +1223,7 @@ Vielen Dank, Ihr Administrator',
 		'unprivileged_passwd' => 'Passwort für nicht privilegierten Benutzer',
 		'mysql_ssl_ca_file' => 'SSL-Serverzertifikat',
 		'mysql_ssl_verify_server_certificate' => 'Verifizieren des SSL-Serverzertifikats',
-		'globaluserinfo' => 'Um auf Datenbanken zuzugreifen, kann zusätzlich der Froxlor-Login (Benutzer: %s) verwendet werden, dieser hat automatisch Zugriff auf alle Datenbanken.<br />Es wird empfohlen diesen <b>nicht</b> für Applikationen zu nutzen, lediglich zur Administration (z.B. via phpMyAdmin).',
+		'globaluserinfo' => 'Um auf Datenbanken zuzugreifen, kann zusätzlich der froxlor-Login (Benutzer: %s) verwendet werden, dieser hat automatisch Zugriff auf alle Datenbanken.<br />Es wird empfohlen diesen <b>nicht</b> für Applikationen zu nutzen, lediglich zur Administration (z.B. via phpMyAdmin).',
 		'edit_global_user' => 'Admin Benutzer bearbeiten',
 	],
 	'panel' => [
@@ -1182,7 +1249,7 @@ Vielen Dank, Ihr Administrator',
 		'reset' => 'Änderungen verwerfen',
 		'pathDescription' => 'Sollte das Verzeichnis nicht existieren, wird es automatisch erstellt.',
 		'pathDescriptionEx' => '<br /><br /><span class="text-danger">Bitte beachten:</span> Der Pfad <code>/</code> ist nicht erlaubt aufgrund administrativer Einstellungen, er wird automatisch auf <code>/gewaehlte.subdomain.tld/</code> gesetzt, sofern nicht ein anderer Ordner angegeben wird.',
-		'pathDescriptionSubdomain' => 'Sollte das Verzeichnis nicht existieren, wird es automatisch erstellt.<br />Sollte eine Weiterleitung auf eine andere Domain gewünscht sein, muss der Eintrag mit http:// oder https:// beginnen.<br />Endet die URL mit einem / (Slash) geht Froxlor von einem Ordner aus, wenn nicht, wird es wie eine Datei behandelt.',
+		'pathDescriptionSubdomain' => 'Sollte das Verzeichnis nicht existieren, wird es automatisch erstellt.<br />Sollte eine Weiterleitung auf eine andere Domain gewünscht sein, muss der Eintrag mit http:// oder https:// beginnen.<br />Endet die URL mit einem / (Slash) geht froxlor von einem Ordner aus, wenn nicht, wird es wie eine Datei behandelt.',
 		'back' => 'Zurück',
 		'reseller' => 'Reseller',
 		'admin' => 'Administrator',
@@ -1212,6 +1279,7 @@ Vielen Dank, Ihr Administrator',
 		'theme' => 'Theme',
 		'variable' => 'Variable',
 		'description' => 'Beschreibung',
+		'cancel' => 'Abbrechen',
 		'ssleditor' => 'SSL-Einstellungen für diese Domain',
 		'ssleditor_infoshared' => 'Aktuell Zertifikat der Elterndomain genutzt',
 		'ssleditor_infoglobal' => 'Aktuell globales Zertifikat genutzt',
@@ -1223,6 +1291,10 @@ Vielen Dank, Ihr Administrator',
 		'ftpdesc' => 'FTP-Beschreibung',
 		'letsencrypt' => 'Benutzt Let\'s encrypt',
 		'set' => 'Setzen',
+		'sshkeydesc' => 'SSH-Key Beschreibung',
+		'ftpuser' => 'FTP Benutzer',
+		'sshpubkey' => 'Öffentlicher SSH Schlüssel',
+		'sshpubkeyph' => "Startet mit 'ssh-ed25519', 'ssh-rsa', 'ecdsa-sha2-nistp256', 'ecdsa-sha2-nistp384', 'ecdsa-sha2-nistp521', 'sk-ecdsa-sha2-nistp256@openssh.com', oder 'sk-ssh-ed25519@openssh.com'",
 		'exportpath' => [
 			'title' => 'Pfad zur Ablage des Exports',
 			'description' => 'In diesem Ordner werden die Export-Archive abgelegt. Wenn Web-Daten exportiert werden, werden alle Dateien aus dem Heimatverzeichnis gesichert, exklusive des hier angegebenen Ordners.',
@@ -1235,6 +1307,7 @@ Vielen Dank, Ihr Administrator',
 		'none_value' => 'Keine',
 		'viewlogs' => 'Logdateien einsehen',
 		'not_configured' => 'Das System wurde noch nicht konfiguriert. Klicke auf den Button um die Installation zu starten.',
+		'start_setup' => 'Setup starten',
 		'ihave_configured' => 'Ich habe die Dienste konfiguriert',
 		'system_is_configured' => '<i class="fa-solid fa-circle-exclamation me-1"></i>Das System ist bereits konfiguriert',
 		'settings_before_configuration' => 'Stelle sicher, dass die Einstellungen angepasst wurden bevor die Dienste konfiguriert werden.',
@@ -1262,13 +1335,21 @@ Vielen Dank, Ihr Administrator',
 		'upload_import' => 'Hochladen und importieren',
 		'profile' => 'Mein Profil',
 		'use_checkbox_for_unlimited' => 'Der Wert "0" deaktiviert die Resource. Die Checkbox rechts erlaubt "unlimitierte" Nutzung.',
+		'use_checkbox_to_disable' => 'Zum Deaktivieren, klicke die Checkbox auf der rechten Seite des Eingabefeldes',
+		'distro_mismatch' => 'Anscheinend wurde auf eine neue Distribution aktualisiert. Bitte die Dienste entsprechend neu konfigurieren.',
+		'set_new_distro' => 'Distribution setzen',
+		'dismiss' => 'Ignorieren',
+		'confirmaction' => 'Vorgang bestätigen',
+		'confirmactiondesc' => 'Der Vorgang muss durch Angabe des aktuellen Benutzerpassworts bestätigt werden',
+		'authenticationfailed' => 'Authentifizierung fehlgeschlagen',
+		'noauthentication' => 'Fehlende Authentifizierung',
 	],
 	'phpfpm' => [
-		'vhost_httpuser' => 'Lokaler Benutzer für PHP-FPM (Froxlor-Vhost)',
-		'vhost_httpgroup' => 'Lokale Gruppe für PHP-FPM (Froxlor-Vhost)',
+		'vhost_httpuser' => 'Lokaler Benutzer für PHP-FPM (froxlor-Vhost)',
+		'vhost_httpgroup' => 'Lokale Gruppe für PHP-FPM (froxlor-Vhost)',
 		'ownvhost' => [
-			'title' => 'Verwende PHP-FPM im Froxlor-Vhost',
-			'description' => 'Wenn verwendet, wird Froxlor selbst unter einem lokalen Benutzer ausgeführt',
+			'title' => 'Verwende PHP-FPM im froxlor-Vhost',
+			'description' => 'Wenn verwendet, wird froxlor selbst unter einem lokalen Benutzer ausgeführt',
 		],
 		'use_mod_proxy' => [
 			'title' => 'Verwende mod_proxy / mod_proxy_fcgi',
@@ -1298,10 +1379,12 @@ Vielen Dank, Ihr Administrator',
 		'email_reallydelete' => 'Wollen Sie die E-Mail-Adresse "%s" wirklich löschen?',
 		'email_reallydelete_account' => 'Wollen Sie das Konto von "%s" wirklich löschen?',
 		'email_reallydelete_forwarder' => 'Wollen Sie die Weiterleitung "%s" wirklich löschen?',
+		'email_reallydelete_sender' => 'Wollen Sie die Absendeadresse "%s" wirklich löschen?',
 		'extras_reallydelete' => 'Wollen Sie den Verzeichnisschutz für "%s" wirklich löschen?',
 		'extras_reallydelete_pathoptions' => 'Wollen Sie die Optionen für den Pfad "%s" wirklich löschen?',
 		'extras_reallydelete_export' => 'Wollen Sie den geplanten Daten-Export wirklich löschen?',
 		'ftp_reallydelete' => 'Wollen Sie das FTP-Benutzerkonto "%s" wirklich löschen?',
+		'sshkey_reallydelete' => 'Wollen Sie den SSH-Schlüssel "%s" wirklich löschen?',
 		'mysql_reallydelete' => 'Wollen Sie die Datenbank "%s" wirklich löschen?<br />ACHTUNG! Alle Daten gehen unwiderruflich verloren!',
 		'admin_configs_reallyrebuild' => 'Wollen Sie wirklich alle Konfigurationsdateien neu erstellen lassen?',
 		'admin_customer_alsoremovefiles' => 'Kundendaten löschen?',
@@ -1469,7 +1552,7 @@ Vielen Dank, Ihr Administrator',
 		],
 		'mailpwcleartext' => [
 			'title' => 'Passwörter der Mail-Konten auch im Klartext in der Datenbank speichern',
-			'description' => 'Wenn diese Einstellung auf Ja gesetzt wird, werden alle Passwörter auch unverschlüsselt (also im Klartext, für jeden mit Zugriff auf die Froxlor-Datenbank sofort lesbar) in der mail_users-Tabelle gespeichert. Aktivieren Sie diese Option nur dann, wenn Sie SASL nutzen!',
+			'description' => 'Wenn diese Einstellung auf Ja gesetzt wird, werden alle Passwörter auch unverschlüsselt (also im Klartext, für jeden mit Zugriff auf die froxlor-Datenbank sofort lesbar) in der mail_users-Tabelle gespeichert. Aktivieren Sie diese Option nur dann, wenn Sie SASL nutzen!',
 		],
 		'ftpdomain' => [
 			'title' => 'FTP-Benutzerkonten @domain',
@@ -1503,7 +1586,7 @@ Vielen Dank, Ihr Administrator',
 				'description' => 'Wieviele PHP-Requests pro Domain sollen erlaubt werden?',
 			],
 			'defaultini' => 'Voreingestellte PHP-Konfiguration für neue Domains',
-			'defaultini_ownvhost' => 'Voreingestellte PHP-Konfiguration für den Froxlor-Vhost',
+			'defaultini_ownvhost' => 'Voreingestellte PHP-Konfiguration für den froxlor-Vhost',
 			'idle_timeout' => [
 				'title' => 'Idle-Timeout',
 				'description' => 'Timeout-Einstellung für mod_FastCGI.',
@@ -1571,7 +1654,7 @@ Vielen Dank, Ihr Administrator',
 			],
 			'ssl_cipher_list' => [
 				'title' => 'Erlaubte SSL Ciphers festlegen',
-				'description' => 'Dies ist eine Liste von Ciphers, die genutzt werden sollen (oder auch nicht genutzt werden sollen), wenn eine SSL Verbindung besteht. Eine Liste aller Ciphers und wie diese hinzugefügt/ausgeschlossen werden ist in den Abschnitten "CIPHER LIST FORMAT" und "CIPHER STRINGS" in <a href="https://www.openssl.org/docs/manmaster/man1/openssl-ciphers.html">der man-page für Ciphers</a> zu finden.<br /><br /><b>Standard-Wert ist:</b><pre>ECDH+AESGCM:ECDH+AES256:!aNULL:!MD5:!DSS:!DH:!AES128</pre>',
+				'description' => 'Dies ist eine Liste von Ciphers, die genutzt werden sollen (oder auch nicht genutzt werden sollen), wenn eine SSL Verbindung besteht. Eine Liste aller Ciphers und wie diese hinzugefügt/ausgeschlossen werden ist in den Abschnitten "CIPHER LIST FORMAT" und "CIPHER STRINGS" in <a href="https://www.openssl.org/docs/manmaster/man1/openssl-ciphers.html">der man-page für Ciphers</a> zu finden.<br /><br /><b>Standard-Wert ist:</b><pre>ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:DHE-RSA-CHACHA20-POLY1305</pre>',
 			],
 			'apache24_ocsp_cache_path' => [
 				'title' => 'Apache 2.4: Pfad zum OCSP-Stapling-Cache',
@@ -1626,6 +1709,14 @@ Vielen Dank, Ihr Administrator',
 			'removelink' => 'Hier klicken, um alle E-Mail-Kontingente zu entfernen',
 			'enforcelink' => 'Hier klicken, um allen Benutzern das Standard-Kontingent zu zuweisen.',
 		],
+		'mail_enable_allow_sender' => [
+			'title' => 'Aktiviere "Erlaubte Absendeadressen" Nutzung für Kunden',
+			'description' => 'Wenn aktiviert können Kunden für E-Mail-Konten alternative Absendeadressen festlegen.<br>Standard: aus',
+		],
+		'mail_allow_external_domains' => [
+			'title' => 'Erlaube externe Domains für "Erlaubte Absendeadressen"',
+			'description' => 'Wenn aktiviert können Kunden beliebige Domains (außer diese auf diesem System, die nicht dem Kunden gehören) als "Erlaubte Absendeadressen" nutzen.<br>Standard: aus',
+		],
 		'session_allow_multiple_login' => [
 			'title' => 'Erlaube gleichzeitigen Login',
 			'description' => 'Wenn diese Option aktiviert ist, können sich Nutzer mehrmals gleichzeitig anmelden.',
@@ -1664,16 +1755,16 @@ Vielen Dank, Ihr Administrator',
 		'defaultwebsrverrhandler_enabled' => 'Verwende Standard-Fehlerdokumente für alle Kunden',
 		'defaultwebsrverrhandler_err401' => [
 			'title' => 'Datei/URL für Fehler 401',
-			'description' => '<div class="text-danger">Nicht unterstützt in: lighttpd</div>',
+			'description' => '',
 		],
 		'defaultwebsrverrhandler_err403' => [
 			'title' => 'Datei/URL für Fehler 403',
-			'description' => '<div class="text-danger">Nicht unterstützt in: lighttpd</div>',
+			'description' => '',
 		],
 		'defaultwebsrverrhandler_err404' => 'Datei/URL für Fehler 404',
 		'defaultwebsrverrhandler_err500' => [
 			'title' => 'Datei/URL für Fehler 500',
-			'description' => '<div class="text-danger">Nicht unterstützt in: lighttpd</div>',
+			'description' => '',
 		],
 		'ftpserver' => [
 			'desc' => 'Wenn pureftpd ausgewählt ist, werden die .ftpquota Dateien für das Quota erstellt und täglich aktualisiert.',
@@ -1687,23 +1778,19 @@ Vielen Dank, Ihr Administrator',
 			'description' => 'Dieser Redirect wird immer genutzt, sofern der Kunde keinen anderen auswählt.',
 		],
 		'mail_also_with_mxservers' => 'Erstelle mail-, imap-, pop3- and smtp-"A Record" auch wenn MX-Server angegeben sind',
-		'froxlordirectlyviahostname' => 'Froxlor direkt über den Hostnamen erreichbar machen',
+		'froxlordirectlyviahostname' => 'froxlor direkt über den Hostnamen erreichbar machen',
 		'panel_password_regex' => [
 			'title' => 'Regulärer Ausdruck für Passwörter',
 			'description' => 'Hier können Sie einen regulären Ausdruck für Passwort-Komplexität festlegen.<br />Leer = keine bestimmten Anforderungen',
 		],
-		'perl_path' => [
-			'title' => 'Pfad zu Perl',
-			'description' => 'Standard ist /usr/bin/perl',
-		],
 		'mod_fcgid_ownvhost' => [
-			'title' => 'Verwende FCGID im Froxlor-Vhost',
-			'description' => 'Wenn verwendet, wird Froxlor selbst unter einem lokalen Benutzer ausgeführt',
+			'title' => 'Verwende FCGID im froxlor-Vhost',
+			'description' => 'Wenn verwendet, wird froxlor selbst unter einem lokalen Benutzer ausgeführt',
 		],
 		'perl' => [
 			'suexecworkaround' => [
 				'title' => 'Aktiviere SuExec-Workaround',
-				'description' => 'Aktivieren Sie den Workaround nur, wenn die Kunden-Heimatverzeichnisse sich nicht unterhalb des suexec-Pfades liegen.<br />Wenn aktiviert erstellt Froxlor eine Verknüpfung des vom Kunden für Perl aktiviertem Pfad + /cgi-bin/ im angegebenen suexec-Pfad.<br />Bitte beachten Sie, dass Perl dann nur im Unterordner /cgi-bin/ des Kunden-Ordners funktioniert und nicht direkt in diesem Ordner (wie es ohne den Workaround wäre!)',
+				'description' => 'Aktivieren Sie den Workaround nur, wenn die Kunden-Heimatverzeichnisse sich nicht unterhalb des suexec-Pfades liegen.<br />Wenn aktiviert erstellt froxlor eine Verknüpfung des vom Kunden für Perl aktiviertem Pfad + /cgi-bin/ im angegebenen suexec-Pfad.<br />Bitte beachten Sie, dass Perl dann nur im Unterordner /cgi-bin/ des Kunden-Ordners funktioniert und nicht direkt in diesem Ordner (wie es ohne den Workaround wäre!)',
 			],
 			'suexeccgipath' => [
 				'title' => 'Pfad für Verknüpfungen zu Kunden-Perl-Verzeichnis',
@@ -1792,6 +1879,10 @@ Vielen Dank, Ihr Administrator',
 				'title' => 'Warn-Level in Prozent für Traffic',
 				'description' => 'Gültige Werte sind von 0 bis 150. Der Wert 0 deaktiviert diesen Report.',
 			],
+			'report_web_bccadmin' => [
+				'title' => 'BCC-E-Mail für Benachrichtigungen zur Webnutzung an den Administrator',
+				'description' => 'Wenn diese Option aktiviert ist, wird die an den Kunden gesendete Warnung bezüglich der Speicherplatznutzung auch an den entsprechenden Administrator/Reseller (BCC) gesendet.'
+			],
 		],
 		'dropdown' => 'Auswahlliste',
 		'manual' => 'Manuelle Eingabe',
@@ -1855,11 +1946,11 @@ Vielen Dank, Ihr Administrator',
 			'description' => 'Wo sollen kundenspezifizierte SSL-Zertifikate erstellt werden?<br /><br /><div class="text-danger">ACHTUNG: Der Inhalt dieses Ordners wird regelmäßig geleert, daher sollten dort keinerlei Daten manuell abgelegt werden.</div>',
 		],
 		'allow_error_report_admin' => [
-			'title' => 'Erlaube Administrator/Reseller das Melden von Datenbankfehlern an Froxlor',
+			'title' => 'Erlaube Administrator/Reseller das Melden von Datenbankfehlern an froxlor',
 			'description' => 'Bitte beachten: Senden Sie zu keiner Zeit irgendwelche datenschutzrelevanten/persönlichen (Kunden-)Daten an uns!',
 		],
 		'allow_error_report_customer' => [
-			'title' => 'Erlaube Kunden das Melden von Datenbankfehlern an Froxlor',
+			'title' => 'Erlaube Kunden das Melden von Datenbankfehlern an froxlor',
 			'description' => 'Bitte beachten: Senden Sie zu keiner Zeit irgendwelche datenschutzrelevanten/persönlichen (Kunden-)Daten an uns!',
 		],
 		'mailtraffic_enabled' => [
@@ -1884,7 +1975,7 @@ Vielen Dank, Ihr Administrator',
 		],
 		'system_cronconfig' => [
 			'title' => 'Cron-Konfigurationsdatei',
-			'description' => 'Pfad zur Konfigurationsdatei des Cron-Dienstes. Diese Datei wird von Froxlor automatisch aktualisiert.<br />Hinweis: Bitte verwenden Sie <strong>exakt</strong> die gleiche Datei wie für den Froxlor-Haupt-Cronjob (Standard: /etc/cron.d/froxlor)!<br><br>Wird <b>FreeBSD</b> verwendet, sollte hier <i>/etc/crontab</i> angegeben werden!',
+			'description' => 'Pfad zur Konfigurationsdatei des Cron-Dienstes. Diese Datei wird von froxlor automatisch aktualisiert.<br />Hinweis: Bitte verwenden Sie <strong>exakt</strong> die gleiche Datei wie für den froxlor-Haupt-Cronjob (Standard: /etc/cron.d/froxlor)!<br><br>Wird <b>FreeBSD</b> verwendet, sollte hier <i>/etc/crontab</i> angegeben werden!',
 		],
 		'system_crondreload' => [
 			'title' => 'Cron-Daemon reload Befehl',
@@ -1941,7 +2032,7 @@ Vielen Dank, Ihr Administrator',
 		],
 		'leenabled' => [
 			'title' => 'Let\'s Encrypt verwenden',
-			'description' => 'Wenn dies aktiviert ist, können Kunden durch Froxlor automatisch generierte und verlängerbare Let\'s Encrypt SSL-Zertifikate für Domains mit SSL IP/Port nutzen.<br /><br />Bitte die Webserver-Konfiguration beachten wenn aktiviert, da dieses Feature eine spezielle Konfiguration benötigt.',
+			'description' => 'Wenn dies aktiviert ist, können Kunden durch froxlor automatisch generierte und verlängerbare Let\'s Encrypt SSL-Zertifikate für Domains mit SSL IP/Port nutzen.<br /><br />Bitte die Webserver-Konfiguration beachten wenn aktiviert, da dieses Feature eine spezielle Konfiguration benötigt.',
 		],
 		'caa_entry' => [
 			'title' => 'CAA DNS Einträge generieren',
@@ -1973,7 +2064,7 @@ Vielen Dank, Ihr Administrator',
 		],
 		'available_shells' => [
 			'title' => 'Liste der verfügbaren Shells',
-			'description' => 'Komma-getrennte Liste von Shells, die der Kunde für seine FTP-Konten wählen kann.<br><br>Hinweis: Die Standard-Shell <strong>/bin/false</strong> wird immer eine Auswahlmöglichkeit sein (wenn aktiviert), auch wenn diese Einstellung leer ist. Sie ist in jedem Fall der Standardwert für alle FTP-Konten',
+			'description' => 'Komma-getrennte Liste von Shells, die der Kunde für seine FTP-Konten wählen kann.<br><br>Hinweis: Die Standard-Shell <strong>/bin/false</strong> wird immer eine Auswahlmöglichkeit sein (wenn aktiviert), auch wenn diese Einstellung leer ist. Sie ist in jedem Fall der Standardwert für alle FTP-Konten.',
 		],
 		'le_froxlor_enabled' => [
 			'title' => 'Let\'s Encrypt für den froxlor Vhost verwenden',
@@ -1999,6 +2090,10 @@ Vielen Dank, Ihr Administrator',
 		'http2_support' => [
 			'title' => 'HTTP2 Unterstützung',
 			'description' => 'Aktiviere HTTP2 Unterstützung für SSL.<br><em class="text-danger">NUR AKTIVIEREN, WENN DER WEBSERVER DIESE FUNKTION UNTERSTÜTZT (nginx version 1.9.5+, apache2 version 2.4.17+)</em>',
+		],
+		'http3_support' => [
+			'title' => 'HTTP3 Unterstützung',
+			'description' => 'Aktiviere HTTP3 Unterstützung für SSL.<br><em class="text-danger">NUR AKTIVIEREN, WENN DER WEBSERVER DIESE FUNKTION UNTERSTÜTZT (nginx version 1.25.0+)</em>',
 		],
 		'nssextrausers' => [
 			'title' => 'Verwende libnss-extrausers anstatt libnss-mysql',
@@ -2037,8 +2132,8 @@ Vielen Dank, Ihr Administrator',
 			'description' => 'Wenn eine Schlüsselgröße ausgewählt wird, werden ECC / ECDSA Zertifikate erstellt',
 		],
 		'froxloraliases' => [
-			'title' => 'Domain Aliase für Froxlor Vhost',
-			'description' => 'Komma getrennte Liste von Domains, welche als Server Alias zum Froxlor Vhost hinzugefügt werden',
+			'title' => 'Domain Aliase für froxlor Vhost',
+			'description' => 'Komma getrennte Liste von Domains, welche als Server Alias zum froxlor Vhost hinzugefügt werden',
 		],
 		'default_sslvhostconf' => [
 			'title' => 'Standard SSL vHost-Einstellungen',
@@ -2080,7 +2175,7 @@ Vielen Dank, Ihr Administrator',
 			'description' => 'Ist die Nutzung eines hochgeladenen Logos gewünscht, muss diese Einstellung auf "Ja" gesetzt werden. Alternativ kann weiterhin das Theme-basierte Überschreiben via "logo_custom.png" und "logo_custom_login.png" genutzt werden.',
 		],
 		'logo_overridecustom' => [
-			'title' => 'Überschreibe benutzerdefinierte Theme-Logos (logo_custom.png und logo_custom_login.png) mit "Logo Bold" (Header und Login, siehe unten)',
+			'title' => 'Überschreibe benutzerdefinierte Theme-Logos (logo_custom.png und logo_custom_login.png) mit "Logo Bild" (Header und Login, siehe unten)',
 			'description' => 'Ist diese Einstellung aktiv, werden benutzerdefinierte Logos im Theme-Ordner mit dem "Logo Bild" ersetzt',
 		],
 		'createstdsubdom_default' => [
@@ -2139,6 +2234,12 @@ Vielen Dank, Ihr Administrator',
 		],
 		'dmarc_entry' => 'DMARC-Eintrag für alle Domains',
 	],
+	'ssl_certificates' => [
+		'certificate_for' => 'Zertifikat für',
+		'valid_from' => 'Gültig ab',
+		'valid_until' => 'Gültig bis',
+		'issuer' => 'Aussteller',
+	],
 	'success' => [
 		'success' => 'Information',
 		'clickheretocontinue' => 'Hier klicken, um fortzufahren',
@@ -2160,7 +2261,7 @@ Vielen Dank, Ihr Administrator',
 		'REBUILD_DNS' => 'Neuerstellung der Bind-Konfiguration',
 		'CREATE_FTP' => 'Erstelle Verzeichnis für neuen FTP-Benutzer',
 		'DELETE_CUSTOMER_FILES' => 'Löschen von Kunden-Dateien %s',
-		'noneoutstanding' => 'Zur Zeit gibt es keine ausstehenden Aufgaben für Froxlor',
+		'noneoutstanding' => 'Zur Zeit gibt es keine ausstehenden Aufgaben für froxlor',
 		'DELETE_EMAIL_DATA' => 'E-Mail-Dateien des Kunden löschen',
 		'DELETE_FTP_DATA' => 'Kunden FTP-Konto Dateien löschen',
 		'REBUILD_RSPAMD' => 'Neuerstellung der Antispam-Konfiguration',
@@ -2169,6 +2270,8 @@ Vielen Dank, Ihr Administrator',
 		'CREATE_CUSTOMER_DATADUMP' => 'Daten-Export für Kunde %s',
 		'DELETE_DOMAIN_PDNS' => 'Lösche Domain %s von PowerDNS Datenbank',
 		'DELETE_DOMAIN_SSL' => 'Lösche SSL Dateien von Domain %s',
+		'UPDATE_LE_SERVICES' => 'Aktualisiere Systemdienste für Let\'s Encrypt',
+		'REBUILD_NSSUSERS' => 'Neuerstellung der libnss-extrausers Dateien',
 	],
 	'terms' => 'AGB',
 	'traffic' => [
@@ -2230,18 +2333,18 @@ Vielen Dank, Ihr Administrator',
 	],
 	'translator' => '',
 	'update' => [
-		'updateinprogress_onlyadmincanlogin' => 'Eine neuere Version von Froxlor wurde installiert, aber noch nicht eingerichtet.<br />Nur der Administrator kann sich anmelden und die Aktualisierung abschließen.',
-		'update' => 'Froxlor Aktualisierung',
+		'updateinprogress_onlyadmincanlogin' => 'Eine neuere Version von froxlor wurde installiert, aber noch nicht eingerichtet.<br />Nur der Administrator kann sich anmelden und die Aktualisierung abschließen.',
+		'update' => 'froxlor Aktualisierung',
 		'proceed' => 'Ausführen',
 		'update_information' => [
-			'part_a' => 'Die Froxlor-Dateien wurden aktualisiert. Neue Version ist <strong>%s</strong>. Die bisher installierte Version ist <strong>%s</strong>',
+			'part_a' => 'Die froxlor-Dateien wurden aktualisiert. Neue Version ist <strong>%s</strong>. Die bisher installierte Version ist <strong>%s</strong>',
 			'part_b' => '<br /><br />Ein Kunden-Login ist vor Abschluss des Aktualisierungsvorganges nicht möglich.<br /><strong>Aktualisierung ausführen?</strong>',
 		],
-		'noupdatesavail' => 'Die genutzte %sVersion von Froxlor ist aktuell.',
+		'noupdatesavail' => 'Die genutzte %sVersion von froxlor ist aktuell.',
 		'description' => 'Aktualisierung der froxlor Datenbank',
 		'uc_newinfo' => 'Eine neuere %sVersion ist verfügbar: "%s" (Aktuell installierte Version: %s)',
 		'notify_subject' => 'Neues Update verfügbar',
-		'dbupdate_required' => 'Froxlor-Dateien wurden aktualisiert, Datenbank-Aktualisierung notwendig',
+		'dbupdate_required' => 'froxlor-Dateien wurden aktualisiert, Datenbank-Aktualisierung notwendig',
 	],
 	'usersettings' => [
 		'custom_notes' => [
@@ -2254,9 +2357,13 @@ Vielen Dank, Ihr Administrator',
 			'description' => 'Wenn in den Einstellungen aktiviert, kann der Benutzer API Schlüssel erstellen und auf die froxlor API Zugreifen',
 			'notice' => 'API Zugriff ist für dieses Konto deaktiviert.',
 		],
+		'shell_allowed' => [
+			'title' => 'Erlaube Shell Zugriff',
+			'description' => 'Wenn in den Einstellungen aktiviert, kann der Benutzer seinen FTP-Konten Shell Zugriff erlauben',
+		],
 		'gui_access' => [
 			'title' => 'WebUI-Anmeldung zulassen',
-			'description' => 'Wenn diese Option deaktiviert ist, kann sich der Benutzer nicht bei der Froxlor-Weboberfläche anmelden, aber alle Dienste (Web, FTP, E-Mail, Datenbanken, API-Zugriff, usw.) funktionieren normal.',
+			'description' => 'Wenn diese Option deaktiviert ist, kann sich der Benutzer nicht bei der froxlor-Weboberfläche anmelden, aber alle Dienste (Web, FTP, E-Mail, Datenbanken, API-Zugriff, usw.) funktionieren normal.',
 		],
 	],
 	'install' => [
@@ -2264,6 +2371,7 @@ Vielen Dank, Ihr Administrator',
 		'critical_error' => 'Kritischer Fehler',
 		'suggestions' => 'Nicht notwendig, aber emfohlen',
 		'phpinfosuccess' => 'Auf dem System ist PHP %s installiert',
+		'suggestionsnote' => 'Es liegen keine kritische Fehler vor, die eine Installation verhindern, allerdings beachten Sie bitte die Empfehlungen weiter unten für ein optimales Erlebnis.',
 		'phpinfowarn' => 'Die genutzte PHP Version ist kleiner als die geforderte Version %s',
 		'phpinfoupdate' => 'Aktualisierung von PHP Version %s auf %s oder höher notwendig',
 		'start_installation' => 'Installation starten',
@@ -2277,7 +2385,7 @@ Vielen Dank, Ihr Administrator',
 		'database' => [
 			'top' => 'Datenbank',
 			'title' => 'Datenbank und Benutzer erstellen',
-			'description' => 'Froxlor benötigt eine Datenbank und zusätzlich <a href="https://docs.froxlor.org/latest/general/installation/tarball.html#_3-create-privileged-database-user" target="_blank">einen Benutzer mit privilegierten Rechten</a>, welcher Benutzer und Datenbanken erstellen darf (GRANT Option). Die angegebene Datenbank und der unprivilegierte Benutzer werden automatisch in diesem Prozess erstellt. Der privilegierte Benutzer muss existieren.',
+			'description' => 'froxlor benötigt eine Datenbank und zusätzlich <a href="https://docs.froxlor.org/latest/general/installation/tarball.html#_3-create-privileged-database-user" target="_blank">einen Benutzer mit privilegierten Rechten</a>, welcher Benutzer und Datenbanken erstellen darf (GRANT Option). Die angegebene Datenbank und der unprivilegierte Benutzer werden automatisch in diesem Prozess erstellt. Der privilegierte Benutzer muss existieren.',
 			'user' => 'Unprivilegierter Datenbank Benutzer',
 			'dbname' => 'Datenbank Name',
 			'force_create' => 'Sichern und überschreiben, sofern Datenbank existiert?',

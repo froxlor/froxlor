@@ -1,8 +1,8 @@
 <?php
 
 /**
- * This file is part of the Froxlor project.
- * Copyright (c) 2010 the Froxlor Team (see authors).
+ * This file is part of the froxlor project.
+ * Copyright (c) 2010 the froxlor Team (see authors).
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,7 +19,7 @@
  * https://files.froxlor.org/misc/COPYING.txt
  *
  * @copyright  the authors
- * @author     Froxlor team <team@froxlor.org>
+ * @author     froxlor team <team@froxlor.org>
  * @license    https://files.froxlor.org/misc/COPYING.txt GPLv2
  */
 
@@ -228,7 +228,7 @@ if ($page == 'overview' || $page == 'mysqls') {
 			$new_password = Crypt::validatePassword(Request::post('mysql_password'));
 			foreach ($allowed_mysqlservers as $dbserver) {
 				// require privileged access for target db-server
-				Database::needRoot(true, $dbserver, false);
+				Database::needRoot(true, $dbserver, true);
 				// get DbManager
 				$dbm = new DbManager($log);
 				// give permission to the user on every access-host we have

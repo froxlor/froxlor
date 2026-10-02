@@ -1,8 +1,8 @@
 <?php
 
 /**
- * This file is part of the Froxlor project.
- * Copyright (c) 2010 the Froxlor Team (see authors).
+ * This file is part of the froxlor project.
+ * Copyright (c) 2010 the froxlor Team (see authors).
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,7 +19,7 @@
  * https://files.froxlor.org/misc/COPYING.txt
  *
  * @copyright  the authors
- * @author     Froxlor team <team@froxlor.org>
+ * @author     froxlor team <team@froxlor.org>
  * @license    https://files.froxlor.org/misc/COPYING.txt GPLv2
  */
 
@@ -177,6 +177,10 @@ return [
 					'type' => 'text',
 					'default' => 'froxlorlocal',
 					'string_emptyallowed' => false,
+					'plausibility_check_method' => [
+						'\\Froxlor\\Validate\\Check',
+						'checkSystemUsername'
+					],
 					'save_method' => 'storeSettingWebserverFcgidFpmUser',
 					'websrv_avail' => [
 						'apache2'
@@ -246,6 +250,10 @@ return [
 					'type' => 'text',
 					'default' => 'froxlorlocal',
 					'string_emptyallowed' => false,
+					'plausibility_check_method' => [
+						'\\Froxlor\\Validate\\Check',
+						'checkSystemUsername'
+					],
 					'save_method' => 'storeSettingWebserverFcgidFpmUser',
 					'visible' => Settings::Get('phpfpm.enabled') && call_user_func([
 						'\Froxlor\Settings\FroxlorVhostSettings',

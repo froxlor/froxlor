@@ -10,6 +10,9 @@ export default function () {
 					url: "lib/ajax.php?action=editapikey",
 					type: "POST",
 					dataType: "json",
+					beforeSend: function (request) {
+						request.setRequestHeader('X-CSRF-TOKEN', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
+					},
 					data: {
 						id: akid,
 						allowed_from: _this.val(),
@@ -42,6 +45,9 @@ export default function () {
 					url: "lib/ajax.php?action=editapikey",
 					type: "POST",
 					dataType: "json",
+					beforeSend: function (request) {
+						request.setRequestHeader('X-CSRF-TOKEN', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
+					},
 					data: {
 						id: akid,
 						valid_until: _this.val(),

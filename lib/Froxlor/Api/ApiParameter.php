@@ -1,8 +1,8 @@
 <?php
 
 /**
- * This file is part of the Froxlor project.
- * Copyright (c) 2010 the Froxlor Team (see authors).
+ * This file is part of the froxlor project.
+ * Copyright (c) 2010 the froxlor Team (see authors).
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,7 +19,7 @@
  * https://files.froxlor.org/misc/COPYING.txt
  *
  * @copyright  the authors
- * @author     Froxlor team <team@froxlor.org>
+ * @author     froxlor team <team@froxlor.org>
  * @license    https://files.froxlor.org/misc/COPYING.txt GPLv2
  */
 
@@ -44,7 +44,7 @@ abstract class ApiParameter
 	 *
 	 * @throws Exception
 	 */
-	public function __construct(array $params = null)
+	public function __construct(?array $params = null)
 	{
 		if (!is_null($params)) {
 			$params = $this->trimArray($params);
@@ -91,7 +91,7 @@ abstract class ApiParameter
 	 * @return mixed
 	 * @throws Exception
 	 */
-	protected function getUlParam(string $param = null, string $ul_field = null, bool $optional = false, $default = 0)
+	protected function getUlParam(?string $param = null, ?string $ul_field = null, bool $optional = false, $default = 0)
 	{
 		$param_value = (int)$this->getParam($param, $optional, $default);
 		$ul_field_value = $this->getBoolParam($ul_field, true, 0);
@@ -116,7 +116,7 @@ abstract class ApiParameter
 	 * @return mixed
 	 * @throws Exception
 	 */
-	protected function getParam(string $param = null, bool $optional = false, $default = '')
+	protected function getParam(?string $param = null, bool $optional = false, $default = '')
 	{
 		// does it exist?
 		if (!isset($this->cmd_params[$param])) {
@@ -183,7 +183,7 @@ abstract class ApiParameter
 	 *
 	 * @return string
 	 */
-	protected function getBoolParam(string $param = null, bool $optional = false, $default = false)
+	protected function getBoolParam(?string $param = null, bool $optional = false, $default = false)
 	{
 		$_default = '0';
 		if ($default) {

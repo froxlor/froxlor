@@ -1,8 +1,8 @@
 <?php
 
 /**
- * This file is part of the Froxlor project.
- * Copyright (c) 2010 the Froxlor Team (see authors).
+ * This file is part of the froxlor project.
+ * Copyright (c) 2010 the froxlor Team (see authors).
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,7 +19,7 @@
  * https://files.froxlor.org/misc/COPYING.txt
  *
  * @copyright  the authors
- * @author     Froxlor team <team@froxlor.org>
+ * @author     froxlor team <team@froxlor.org>
  * @license    https://files.froxlor.org/misc/COPYING.txt GPLv2
  */
 
@@ -58,6 +58,51 @@ return [
 					'save_method' => 'storeSettingField',
 					'required_otp' => true
 				],
+				'antispam_default_bypass_spam' => [
+					'label' => lng('antispam.default_bypass_spam'),
+					'settinggroup' => 'antispam',
+					'varname' => 'default_bypass_spam',
+					'type' => 'select',
+					'default' => 2,
+					'select_var' => [
+						1 => lng('antispam.default_select.on_changeable'),
+						2 => lng('antispam.default_select.off_changeable'),
+						3 => lng('antispam.default_select.on_unchangeable'),
+						4 => lng('antispam.default_select.off_unchangeable'),
+					],
+					'save_method' => 'storeSettingField',
+					'advanced_mode' => true
+				],
+				'antispam_default_spam_rewrite_subject' => [
+					'label' => lng('antispam.default_spam_rewrite_subject'),
+					'settinggroup' => 'antispam',
+					'varname' => 'default_spam_rewrite_subject',
+					'type' => 'select',
+					'default' => 1,
+					'select_var' => [
+						1 => lng('antispam.default_select.on_changeable'),
+						2 => lng('antispam.default_select.off_changeable'),
+						3 => lng('antispam.default_select.on_unchangeable'),
+						4 => lng('antispam.default_select.off_unchangeable'),
+					],
+					'save_method' => 'storeSettingField',
+					'advanced_mode' => true
+				],
+				'antispam_default_policy_greylist' => [
+					'label' => lng('antispam.default_policy_greylist'),
+					'settinggroup' => 'antispam',
+					'varname' => 'default_policy_greylist',
+					'type' => 'select',
+					'default' => 1,
+					'select_var' => [
+						1 => lng('antispam.default_select.on_changeable'),
+						2 => lng('antispam.default_select.off_changeable'),
+						3 => lng('antispam.default_select.on_unchangeable'),
+						4 => lng('antispam.default_select.off_unchangeable'),
+					],
+					'save_method' => 'storeSettingField',
+					'advanced_mode' => true
+				],
 				'antispam_dkim_keylength' => [
 					'label' => lng('antispam.dkim_keylength'),
 					'settinggroup' => 'antispam',
@@ -84,7 +129,7 @@ return [
 					'settinggroup' => 'spf',
 					'varname' => 'spf_entry',
 					'type' => 'text',
-					'string_regexp' => '/^v=spf[a-z0-9:~?\s.-]+$/i',
+					'string_regexp' => '/^v=spf[a-z0-9:~?\s\.\-\/]+$/i',
 					'default' => 'v=spf1 a mx -all',
 					'save_method' => 'storeSettingField'
 				],

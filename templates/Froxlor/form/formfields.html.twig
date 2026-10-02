@@ -19,6 +19,8 @@
 						{% endif %}
 						{% if field.label.description is defined and field.label.description is not empty %}<br><small>{{ field.label.description|raw }}</small>
 						{% endif %}
+						{% if field.desc is defined and field.desc is not empty %}<br><small>{{ field.desc|raw }}</small>
+						{% endif %}
 						{% if field.requires_reconf is defined and field.requires_reconf is not empty %}
 							<div class="bg-info bg-opacity-25 rounded p-2 mt-2 d-flex align-items-center" role="alert">
 								<i class="fa-solid fa-circle-exclamation me-2"></i><p class="mb-0">{{ lng('serversettings.requires_reconfiguration', [field.requires_reconf|join(', ')])|raw }}</p>
@@ -170,7 +172,7 @@
 	{% if field.next_to is defined %}
 		<div class="input-group">
 		{% endif %}
-	<input type="{{ field.type }}" {% if (field.visible is defined and field.visible == false) or (field.disabled is defined and field.disabled == true) %} disabled {% endif %} {% if field.type == 'number' and field.min is defined %} min="{{ field.min }}" {% endif %} {% if field.type == 'number' and field.max is defined %} max="{{ field.max }}" {% endif %} {% if field.type != 'number' and field.maxlength is defined %} maxlength="{{ field.maxlength }}" {% endif %} id="{{ id }}" name="{{ id }}" value="{{ field.value|raw }}" class="form-control {% if field.valid is defined and field.valid == false %}is-invalid{% endif %}" {% if field.mandatory is defined and field.mandatory %} required {% endif %} {% if field.readonly is defined and field.readonly %} readonly {% endif %} {% if field.autocomplete is defined %} autocomplete="{{ field.autocomplete }}" {% endif %} {% if field.placeholder is defined %} placeholder="{{ field.placeholder }}" {% endif %} {% if field.type == 'file' and field.accept is defined %} accept="{{ field.accept }}" {% endif %} {% if field.pattern is defined %} pattern="{{ field.pattern }}" {% endif %}/>
+	<input type="{{ field.type }}" {% if (field.visible is defined and field.visible == false) or (field.disabled is defined and field.disabled == true) %} disabled {% endif %} {% if field.type == 'number' and field.min is defined %} min="{{ field.min }}" {% endif %} {% if field.type == 'number' and field.max is defined %} max="{{ field.max }}" {% endif %} {% if field.type == 'number' and field.step is not empty %} step="{{ field.step }}" {% endif %} {% if field.type != 'number' and field.maxlength is defined %} maxlength="{{ field.maxlength }}" {% endif %} id="{{ id }}" name="{{ id }}" value="{{ field.value|raw }}" class="form-control {% if field.valid is defined and field.valid == false %}is-invalid{% endif %}" {% if field.mandatory is defined and field.mandatory %} required {% endif %} {% if field.readonly is defined and field.readonly %} readonly {% endif %} {% if field.autocomplete is defined %} autocomplete="{{ field.autocomplete }}" {% endif %} {% if field.placeholder is defined %} placeholder="{{ field.placeholder }}" {% endif %} {% if field.type == 'file' and field.accept is defined %} accept="{{ field.accept }}" {% endif %} {% if field.pattern is defined %} pattern="{{ field.pattern }}" {% endif %}/>
 		{% if field.type == 'hidden' and field.display is defined %}
 			<input type="text" readonly class="form-control-plaintext" value="{{ field.display|raw }}">
 		{% endif %}
@@ -207,7 +209,7 @@
 		{% endfor %}
 	{% endif %}
 	<div class="input-group">
-		<input type="number" min="0" {% if max is not empty %} max="{{ max }}" {% endif %} id="{{ id }}" name="{{ id }}" value="{% if field.value >= 0 %}{{ field.value }}{% endif %}" class="form-control {% if field.valid is defined and field.valid == false %}is-invalid{% endif %}" {% if field.mandatory is defined and field.mandatory %} required {% endif %} {% if field.readonly is defined and field.readonly %} readonly {% endif %} {% if field.autocomplete is defined %} autocomplete="{{ field.autocomplete }}" {% endif %} {% if field.placeholder is defined %} placeholder="{{ field.placeholder }}" {% endif %}/>
+		<input type="number" min="0" {% if max is not empty %} max="{{ max }}" {% endif %}{% if field.step is not empty %} step="{{ field.step }}" {% endif %} id="{{ id }}" name="{{ id }}" value="{% if field.value >= 0 %}{{ field.value }}{% endif %}" class="form-control {% if field.valid is defined and field.valid == false %}is-invalid{% endif %}" {% if field.mandatory is defined and field.mandatory %} required {% endif %} {% if field.readonly is defined and field.readonly %} readonly {% endif %} {% if field.autocomplete is defined %} autocomplete="{{ field.autocomplete }}" {% endif %} {% if field.placeholder is defined %} placeholder="{{ field.placeholder }}" {% endif %}/>
 		<div class="input-group-text">
 			<input class="form-check-input mt-0" type="checkbox" name="{{ id }}_ul" value="1" {% if field.value == -1 %} checked="checked" {% endif %}>
 		</div>

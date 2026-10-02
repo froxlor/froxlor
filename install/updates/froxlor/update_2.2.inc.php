@@ -1,8 +1,8 @@
 <?php
 
 /**
- * This file is part of the Froxlor project.
- * Copyright (c) 2010 the Froxlor Team (see authors).
+ * This file is part of the froxlor project.
+ * Copyright (c) 2010 the froxlor Team (see authors).
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,12 +19,14 @@
  * https://files.froxlor.org/misc/COPYING.txt
  *
  * @copyright  the authors
- * @author     Froxlor team <team@froxlor.org>
+ * @author     froxlor team <team@froxlor.org>
  * @license    https://files.froxlor.org/misc/COPYING.txt GPLv2
  */
 
 use Froxlor\Database\Database;
+use Froxlor\Database\DbManager;
 use Froxlor\Froxlor;
+use Froxlor\FroxlorLogger;
 use Froxlor\Install\Update;
 use Froxlor\Settings;
 
@@ -169,3 +171,97 @@ if (Froxlor::isFroxlorVersion('2.2.0')) {
 	Update::showUpdateStep("Updating from 2.2.0 to 2.2.1", false);
 	Froxlor::updateToVersion('2.2.1');
 }
+
+if (Froxlor::isDatabaseVersion('202408140')) {
+
+	Update::showUpdateStep("Adding new rewrite-subject field to email table");
+	Database::query("ALTER TABLE `" . TABLE_MAIL_VIRTUAL . "` ADD `rewrite_subject` tinyint(1) NOT NULL default '1' AFTER `spam_tag_level`;");
+	Update::lastStepStatus(0);
+
+	Froxlor::updateToDbVersion('202409280');
+}
+
+if (Froxlor::isFroxlorVersion('2.2.1')) {
+	Update::showUpdateStep("Updating from 2.2.1 to 2.2.2", false);
+	Froxlor::updateToVersion('2.2.2');
+}
+
+if (Froxlor::isFroxlorVersion('2.2.2')) {
+	Update::showUpdateStep("Updating from 2.2.2 to 2.2.3", false);
+	Froxlor::updateToVersion('2.2.3');
+}
+
+if (Froxlor::isFroxlorVersion('2.2.3')) {
+	Update::showUpdateStep("Updating from 2.2.3 to 2.2.4", false);
+	Froxlor::updateToVersion('2.2.4');
+}
+
+if (Froxlor::isFroxlorVersion('2.2.4')) {
+	Update::showUpdateStep("Updating from 2.2.4 to 2.2.5", false);
+	Froxlor::updateToVersion('2.2.5');
+}
+
+if (Froxlor::isDatabaseVersion('202409280')) {
+
+	Update::showUpdateStep("Adding new antispam settings");
+	Settings::AddNew("antispam.default_bypass_spam", "2");
+	Settings::AddNew("antispam.default_spam_rewrite_subject", "1");
+	Settings::AddNew("antispam.default_policy_greylist", "1");
+	Update::lastStepStatus(0);
+
+	Froxlor::updateToDbVersion('202411200');
+}
+
+if (Froxlor::isDatabaseVersion('202411200')) {
+
+	Update::showUpdateStep("Adjusting customer mysql global user");
+	// get all customers that are not deactivated and that have at least one database (hence a global database-user)
+	$customers = Database::query("
+		SELECT DISTINCT c.loginname, c.allowed_mysqlserver
+		FROM `" . TABLE_PANEL_CUSTOMERS . "` c
+		LEFT JOIN `" . TABLE_PANEL_DATABASES . "` d ON c.customerid = d.customerid
+		WHERE c.deactivated = '0' AND d.id IS NOT NULL
+	");
+	while ($customer = $customers->fetch(\PDO::FETCH_ASSOC)) {
+		$current_allowed_mysqlserver = !empty($customer['allowed_mysqlserver']) ? json_decode($customer['allowed_mysqlserver'], true) : [];
+		foreach ($current_allowed_mysqlserver as $dbserver) {
+			// require privileged access for target db-server
+			Database::needRoot(true, $dbserver, false);
+			// get DbManager
+			$dbm = new DbManager(FroxlorLogger::getInstanceOf());
+			foreach (array_map('trim', explode(',', Settings::Get('system.mysql_access_host'))) as $mysql_access_host) {
+				try {
+					if ($dbm->getManager()->userExistsOnHost($customer['loginname'], $mysql_access_host)) {
+						// deactivate temporarily
+						$dbm->getManager()->disableUser($customer['loginname'], $mysql_access_host);
+						// re-enable
+						$dbm->getManager()->enableUser($customer['loginname'], $mysql_access_host, true);
+					}
+				} catch (Exception $e) {
+					// continue
+				}
+			}
+			$dbm->getManager()->flushPrivileges();
+			Database::needRoot();
+		}
+	}
+	Update::lastStepStatus(0);
+
+	Froxlor::updateToDbVersion('202412030');
+}
+
+if (Froxlor::isFroxlorVersion('2.2.5')) {
+	Update::showUpdateStep("Updating from 2.2.5 to 2.2.6", false);
+	Froxlor::updateToVersion('2.2.6');
+}
+
+if (Froxlor::isFroxlorVersion('2.2.6')) {
+	Update::showUpdateStep("Updating from 2.2.6 to 2.2.7", false);
+	Froxlor::updateToVersion('2.2.7');
+}
+
+if (Froxlor::isFroxlorVersion('2.2.7')) {
+	Update::showUpdateStep("Updating from 2.2.7 to 2.2.8", false);
+	Froxlor::updateToVersion('2.2.8');
+}
+

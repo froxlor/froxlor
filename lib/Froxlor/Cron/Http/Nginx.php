@@ -1,8 +1,8 @@
 <?php
 
 /**
- * This file is part of the Froxlor project.
- * Copyright (c) 2010 the Froxlor Team (see authors).
+ * This file is part of the froxlor project.
+ * Copyright (c) 2010 the froxlor Team (see authors).
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,13 +19,15 @@
  * https://files.froxlor.org/misc/COPYING.txt
  *
  * @copyright  the authors
- * @author     Froxlor team <team@froxlor.org>
+ * @author     froxlor team <team@froxlor.org>
  * @license    https://files.froxlor.org/misc/COPYING.txt GPLv2
  */
 
 namespace Froxlor\Cron\Http;
 
+use Exception;
 use Froxlor\Cron\Http\Php\PhpInterface;
+use Froxlor\Cron\TaskId;
 use Froxlor\Customer\Customer;
 use Froxlor\Database\Database;
 use Froxlor\Domain\Domain;
@@ -35,6 +37,7 @@ use Froxlor\FroxlorLogger;
 use Froxlor\Http\Directory;
 use Froxlor\Http\Statistics;
 use Froxlor\Settings;
+use Froxlor\System\Cronjob;
 use Froxlor\Validate\Validate;
 use Froxlor\System\Crypt;
 use PDO;
@@ -169,6 +172,7 @@ class Nginx extends HttpConfigBase
 				}
 
 				$http2 = $ssl_vhost == true && Settings::Get('system.http2_support') == '1';
+				$http3 = $ssl_vhost == true && Settings::Get('system.http3_support') == '1';
 
 				/**
 				 * this HAS to be set for the default host in nginx or else no vhost will work
@@ -176,6 +180,13 @@ class Nginx extends HttpConfigBase
 				$this->nginx_data[$vhost_filename] .= "\t" . 'listen    ' . $ip . ':' . $port . ' default_server' . ($ssl_vhost == true ? ' ssl' : '') . ($http2 && !$this->http2_on_directive ? ' http2' : '') . ';' . "\n";
 				if ($http2 && $this->http2_on_directive) {
 					$this->nginx_data[$vhost_filename] .= "\t" . 'http2 on;' . "\n";
+				}
+				if ($http3) {
+					$this->nginx_data[$vhost_filename] .= "\t" . 'listen    ' . $ip . ':' . $port . ' default_server quic reuseport;' . "\n";
+					$this->nginx_data[$vhost_filename] .= "\t" . 'http3 on;' . "\n";
+					$this->nginx_data[$vhost_filename] .= "\t" . 'quic_gso on;' . "\n";
+					$this->nginx_data[$vhost_filename] .= "\t" . 'quic_retry on;' . "\n";
+					$this->nginx_data[$vhost_filename] .= "\t" . 'add_header Alt-Svc \'h3=":' . $port . '"; ma=86400\' always;' . "\n";
 				}
 				$this->nginx_data[$vhost_filename] .= "\t" . '# Froxlor default vhost' . "\n";
 
@@ -208,10 +219,11 @@ class Nginx extends HttpConfigBase
 				if ($row_ipsandports['ssl'] == '0' && Settings::Get('system.le_froxlor_redirect') == '1') {
 					$is_redirect = true;
 					// check whether froxlor uses Let's Encrypt and not cert is being generated yet
-					// or a renew is ongoing - disable redirect
-					if (Settings::Get('system.le_froxlor_enabled') && ($this->froxlorVhostHasLetsEncryptCert() == false || $this->froxlorVhostLetsEncryptNeedsRenew())) {
+					// or a renewal is ongoing - disable redirect
+					if (Settings::Get('system.leenabled') == '1' && Settings::Get('system.le_froxlor_enabled') && ($this->froxlorVhostHasLetsEncryptCert() == false || $this->froxlorVhostLetsEncryptNeedsRenew())) {
 						$this->nginx_data[$vhost_filename] .= '# temp. disabled ssl-redirect due to Let\'s Encrypt certificate generation.' . PHP_EOL;
 						$is_redirect = false;
+						Cronjob::inserttask(TaskId::REBUILD_VHOST);
 					} else {
 						$_sslport = $this->checkAlternativeSslPort();
 						$mypath = 'https://' . Settings::Get('system.hostname') . $_sslport;
@@ -275,8 +287,10 @@ class Nginx extends HttpConfigBase
 					$this->nginx_data[$vhost_filename] .= "\t\tfastcgi_split_path_info ^(.+?\.php)(/.*)$;\n";
 					$this->nginx_data[$vhost_filename] .= "\t\tinclude " . Settings::Get('nginx.fastcgiparams') . ";\n";
 					$this->nginx_data[$vhost_filename] .= "\t\tfastcgi_param SCRIPT_FILENAME \$request_filename;\n";
-					$this->nginx_data[$vhost_filename] .= "\t\tfastcgi_param PATH_INFO \$fastcgi_path_info;\n";
 					$this->nginx_data[$vhost_filename] .= "\t\ttry_files \$fastcgi_script_name =404;\n";
+					$this->nginx_data[$vhost_filename] .= "\t\tset \$path_info \$fastcgi_path_info;\n";
+					$this->nginx_data[$vhost_filename] .= "\t\tfastcgi_param PATH_INFO \$path_info;\n";
+
 
 					if ($row_ipsandports['ssl'] == '1') {
 						$this->nginx_data[$vhost_filename] .= "\t\tfastcgi_param HTTPS on;\n";
@@ -432,10 +446,10 @@ class Nginx extends HttpConfigBase
 					if ($domain_or_ip['hsts_preload'] == 1) {
 						$sslsettings .= '; preload';
 					}
-					$sslsettings .= '";' . "\n";
+					$sslsettings .= '" always;' . "\n";
 				}
 
-				if ((isset($domain_or_ip['ocsp_stapling']) && $domain_or_ip['ocsp_stapling'] == "1") || (isset($domain_or_ip['letsencrypt']) && $domain_or_ip['letsencrypt'] == "1")) {
+				if ((isset($domain_or_ip['ocsp_stapling']) && $domain_or_ip['ocsp_stapling'] == "1")) {
 					$sslsettings .= "\t" . 'ssl_stapling on;' . "\n";
 					$sslsettings .= "\t" . 'ssl_stapling_verify on;' . "\n";
 					$sslsettings .= "\t" . 'ssl_trusted_certificate ' . FileDir::makeCorrectFile($domain_or_ip['ssl_cert_file']) . ';' . "\n";
@@ -515,6 +529,7 @@ class Nginx extends HttpConfigBase
 			'domainid' => $domain['id']
 		]);
 
+		$http3 = $ssl_vhost == true && (isset($domain['http3']) && $domain['http3'] == '1' && Settings::Get('system.http3_support') == '1');
 		while ($ipandport = $result_stmt->fetch(PDO::FETCH_ASSOC)) {
 			$domain['ip'] = $ipandport['ip'];
 			$domain['port'] = $ipandport['port'];
@@ -550,6 +565,16 @@ class Nginx extends HttpConfigBase
 				$vhost_content .= "\t" . 'http2 on;' . "\n";
 				$has_http2_on = true;
 			}
+			if ($http3) {
+				$vhost_content .= "\t" . 'listen    ' . $ipport . ' quic;' . "\n";
+			}
+		}
+
+		if ($http3) {
+			$vhost_content .= "\t" . 'add_header Alt-Svc \'h3=":' . $domain['port'] . '"; ma=86400\' always;' . "\n";
+			$vhost_content .= "\t" . 'http3 on;' . "\n";
+			$vhost_content .= "\t" . 'quic_gso on;' . "\n";
+			$vhost_content .= "\t" . 'quic_retry on;' . "\n";
 		}
 
 		// get all server-names
@@ -582,6 +607,12 @@ class Nginx extends HttpConfigBase
 		// avoid using any whitespaces
 		$domain['documentroot'] = trim($domain['documentroot']);
 
+		// defence in depth: never write a documentroot containing control characters into the vhost config
+		if (preg_match('/[\x00-\x1F\x7F]/', $domain['documentroot'])) {
+			FroxlorLogger::getInstanceOf()->logAction(FroxlorLogger::CRON_ACTION, LOG_ERR, $domain['domain'] . ' :: documentroot contains invalid control characters');
+			return '# invalid document-root/redirect-url for this domain, therefore no explicit vhost is being generated' . "\n";
+		}
+
 		// create ssl settings first since they are required for normal and redirect vhosts
 		if ($ssl_vhost === true && $domain['ssl'] == '1' && Settings::Get('system.use_ssl') == '1') {
 			$vhost_content .= "\n" . $this->composeSslSettings($domain) . "\n";
@@ -594,20 +625,31 @@ class Nginx extends HttpConfigBase
 
 		// if the documentroot is an URL we just redirect
 		if (preg_match('/^https?\:\/\//', $domain['documentroot'])) {
-			$possible_deactivated_webroot = $this->getWebroot($domain);
+			// documentroot is a redirect-target URL here, not a filesystem path - only call
+			// getWebroot() (which re-validates documentroot as a path) when its result is
+			// actually going to be used, i.e. for the deactivated-docroot fallback below
+			$possible_deactivated_webroot = '';
+			$this->deactivated = false;
+			if (($domain['deactivated'] == '1' || $domain['customer_deactivated'] == '1') && Settings::Get('system.deactivateddocroot') != '') {
+				$possible_deactivated_webroot = $this->getWebroot($domain);
+			}
 			if ($this->deactivated == false) {
-				$uri = $domain['documentroot'];
-				if (substr($uri, -1) == '/') {
-					$uri = substr($uri, 0, -1);
+				if (($ssl_vhost == false && $domain['ssl'] == '1' && $domain['ssl_redirect'] == '1') || Validate::validateUrl($domain['documentroot'])) {
+					$uri = $domain['documentroot'];
+					if (substr($uri, -1) == '/') {
+						$uri = substr($uri, 0, -1);
+					}
+
+					// Get domain's redirect code
+					$code = Domain::getDomainRedirectCode($domain['id']);
+
+					$vhost_content .= $this->getLogFiles($domain);
+					$vhost_content .= "\t" . 'location / {' . "\n";
+					$vhost_content .= "\t\t" . 'return ' . $code . ' ' . $uri . '$request_uri;' . "\n";
+					$vhost_content .= "\t" . '}' . "\n";
+				} else {
+					$vhost_content .= "\t" . 'return 500 "misconfigured redirect url";' . "\n";
 				}
-
-				// Get domain's redirect code
-				$code = Domain::getDomainRedirectCode($domain['id']);
-
-				$vhost_content .= $this->getLogFiles($domain);
-				$vhost_content .= "\t" . 'location / {' . "\n";
-				$vhost_content .= "\t\t" . 'return ' . $code . ' ' . $uri . '$request_uri;' . "\n";
-				$vhost_content .= "\t" . '}' . "\n";
 			} elseif (Settings::Get('system.deactivateddocroot') != '') {
 				$vhost_content .= $possible_deactivated_webroot;
 			}
@@ -705,6 +747,7 @@ class Nginx extends HttpConfigBase
 			$error_log = FileDir::makeCorrectFile(Settings::Get('system.logfiles_directory') . $domain['loginname'] . $speciallogfile . '-error.log');
 			// Create the logfile if it does not exist (fixes #46)
 			touch($error_log);
+			chmod($error_log, 0640);
 			chown($error_log, Settings::Get('system.httpuser'));
 			chgrp($error_log, Settings::Get('system.httpgroup'));
 		} else {
@@ -715,6 +758,7 @@ class Nginx extends HttpConfigBase
 			$access_log = FileDir::makeCorrectFile(Settings::Get('system.logfiles_directory') . $domain['loginname'] . $speciallogfile . '-access.log');
 			// Create the logfile if it does not exist (fixes #46)
 			touch($access_log);
+			chmod($access_log, 0640);
 			chown($access_log, Settings::Get('system.httpuser'));
 			chgrp($access_log, Settings::Get('system.httpgroup'));
 		} else {
@@ -783,7 +827,25 @@ class Nginx extends HttpConfigBase
 			$webroot_text .= "\t" . 'root     ' . FileDir::makeCorrectDir(Settings::Get('system.deactivateddocroot')) . ';' . "\n";
 			$this->deactivated = true;
 		} else {
-			$webroot_text .= "\t" . 'root     ' . FileDir::makeCorrectDir($domain['documentroot']) . ';' . "\n";
+			// re-validate at write-time: the stored documentroot was checked when it was
+			// set, but a customer-controlled path component could have been swapped for
+			// a symlink any time since then. this only applies to documentroots that are
+			// actually meant to live within the customer's home directory - an admin with
+			// change_serversettings is allowed to point documentroot at an absolute path
+			// outside of it (see Domains::add()/update()), which is a trusted, admin-only
+			// escape hatch with no customer-writable containment to protect
+			$customerroot_prefix = rtrim(preg_replace('#/+#', '/', $domain['customerroot']), '/') . '/';
+			if (substr(preg_replace('#/+#', '/', $domain['documentroot']), 0, strlen($customerroot_prefix)) == $customerroot_prefix) {
+				try {
+					$safe_documentroot = FileDir::makeCorrectDir($domain['documentroot'], $domain['customerroot']);
+				} catch (Exception $e) {
+					FroxlorLogger::getInstanceOf()->logAction(FroxlorLogger::CRON_ACTION, LOG_ERR, 'nginx::getWebroot: documentroot for "' . $domain['domain'] . '" is unsafe, falling back to customer home directory: ' . $e->getMessage());
+					$safe_documentroot = FileDir::makeCorrectDir($domain['customerroot']);
+				}
+			} else {
+				$safe_documentroot = FileDir::makeCorrectDir($domain['documentroot']);
+			}
+			$webroot_text .= "\t" . 'root     ' . $safe_documentroot . ';' . "\n";
 			$this->deactivated = false;
 		}
 
@@ -1163,7 +1225,8 @@ class Nginx extends HttpConfigBase
 			$phpopts .= "\t\tfastcgi_split_path_info ^(.+?\.php)(/.*)$;\n";
 			$phpopts .= "\t\tinclude " . Settings::Get('nginx.fastcgiparams') . ";\n";
 			$phpopts .= "\t\tfastcgi_param SCRIPT_FILENAME \$request_filename;\n";
-			$phpopts .= "\t\tfastcgi_param PATH_INFO \$fastcgi_path_info;\n";
+			$phpopts .= "\t\tset \$path_info \$fastcgi_path_info;\n";
+			$phpopts .= "\t\tfastcgi_param PATH_INFO \$path_info;\n";
 			$phpopts .= "\t\tfastcgi_pass " . Settings::Get('system.nginx_php_backend') . ";\n";
 			$phpopts .= "\t\tfastcgi_index index.php;\n";
 			if ($domain['ssl'] == '1' && $ssl_vhost) {

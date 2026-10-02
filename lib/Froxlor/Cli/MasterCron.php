@@ -1,8 +1,8 @@
 <?php
 
 /**
- * This file is part of the Froxlor project.
- * Copyright (c) 2010 the Froxlor Team (see authors).
+ * This file is part of the froxlor project.
+ * Copyright (c) 2010 the froxlor Team (see authors).
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,7 +19,7 @@
  * https://files.froxlor.org/misc/COPYING.txt
  *
  * @copyright  the authors
- * @author     Froxlor team <team@froxlor.org>
+ * @author     froxlor team <team@froxlor.org>
  * @license    https://files.froxlor.org/misc/COPYING.txt GPLv2
  */
 
@@ -27,7 +27,6 @@ namespace Froxlor\Cli;
 
 use Exception;
 use Froxlor\Cron\CronConfig;
-use Froxlor\Cron\System\Extrausers;
 use Froxlor\Cron\TaskId;
 use Froxlor\Database\Database;
 use Froxlor\FileDir;
@@ -80,6 +79,8 @@ final class MasterCron extends CliCommand
 				Cronjob::inserttask(TaskId::REBUILD_RSPAMD);
 				Cronjob::inserttask(TaskId::CREATE_QUOTA);
 				Cronjob::inserttask(TaskId::REBUILD_CRON);
+				Cronjob::inserttask(TaskId::UPDATE_LE_SERVICES);
+				Cronjob::inserttask(TaskId::REBUILD_NSSUSERS);
 				$jobs[] = 'tasks';
 			}
 			define('CRON_IS_FORCED', 1);
@@ -96,7 +97,7 @@ final class MasterCron extends CliCommand
 		if ($input->getOption('run-task')) {
 			$tasks_to_run = $input->getOption('run-task');
 			foreach ($tasks_to_run as $ttr) {
-				if (in_array($ttr, [TaskId::REBUILD_VHOST, TaskId::REBUILD_DNS, TaskId::REBUILD_RSPAMD, TaskId::CREATE_QUOTA, TaskId::REBUILD_CRON])) {
+				if (in_array($ttr, [TaskId::REBUILD_VHOST, TaskId::REBUILD_DNS, TaskId::REBUILD_RSPAMD, TaskId::CREATE_QUOTA, TaskId::REBUILD_CRON, TaskId::UPDATE_LE_SERVICES, TaskId::REBUILD_NSSUSERS])) {
 					Cronjob::inserttask($ttr);
 					$jobs[] = 'tasks';
 				} else {
@@ -148,14 +149,22 @@ final class MasterCron extends CliCommand
 			}
 		}
 
-		// regenerate nss-extrausers files / invalidate nscd cache (if used)
-		$this->refreshUsers((int)$tasks_cnt['jobcnt']);
+		// possible long-running jobs disconnect from the database
+		Settings::refreshState();
 
 		// we have to check the system's last guid with every cron run
 		// in case the admin installed new software which added a new user
 		//so users in the database don't conflict with system users
 		$this->cronLog->logAction(FroxlorLogger::CRON_ACTION, LOG_NOTICE, 'Checking system\'s last guid');
 		Cronjob::checkLastGuid();
+		$this->cronLog->logAction(FroxlorLogger::CRON_ACTION, LOG_NOTICE, 'Checking system\'s OS version');
+		Cronjob::checkCurrentDistro();
+		// validate if we're on fcgid/php-fpm that the local froxlor user is in the http-group to access log files
+		if ((int)Settings::Get('phpfpm.enabled') == 1 || (int)Settings::Get('system.mod_fcgid') == 1) {
+			$this->cronLog->logAction(FroxlorLogger::CRON_ACTION, LOG_NOTICE, 'Checking group membership of local user');
+			Cronjob::checkLocalUserGroupMembership();
+		}
+
 
 		// check for cron.d-generation task and create it if necessary
 		CronConfig::checkCrondConfigurationFile();
@@ -214,9 +223,14 @@ final class MasterCron extends CliCommand
 
 		if (file_exists($this->lockFile)) {
 			$jobinfo = json_decode(file_get_contents($this->lockFile), true);
-			$check_pid_return = null;
-			// get status of process
-			system("kill -CHLD " . (int)$jobinfo['pid'] . " 1> /dev/null 2> /dev/null", $check_pid_return);
+			if ($jobinfo === false || !is_array($jobinfo)) {
+				// looks like an invalid lockfile
+				$check_pid_return = 1;
+			} else {
+				$check_pid_return = null;
+				// get status of process
+				system("kill -CHLD " . (int)$jobinfo['pid'] . " 1> /dev/null 2> /dev/null", $check_pid_return);
+			}
 			if ($check_pid_return == 1) {
 				// Process does not seem to run, most likely it has died
 				$this->unlockJob();
@@ -236,8 +250,7 @@ final class MasterCron extends CliCommand
 			'startts' => time(),
 			'pid' => getmypid()
 		];
-		file_put_contents($this->lockFile, json_encode($jobinfo));
-		return true;
+		return file_put_contents($this->lockFile, json_encode($jobinfo)) !== false;
 	}
 
 	private function unlockJob(): bool
@@ -258,30 +271,5 @@ final class MasterCron extends CliCommand
 		}
 		$output->writeln("<error>Requested cronjob '" . $cronname . "' could not be found.</>");
 		return false;
-	}
-
-	private function refreshUsers(int $jobcount = 0)
-	{
-		if ($jobcount > 0) {
-			if (Settings::Get('system.nssextrausers') == 1) {
-				Extrausers::generateFiles($this->cronLog);
-				// reload crond as shell users might use crontab and the user is only known to crond if reloaded
-				FileDir::safe_exec(escapeshellcmd(Settings::Get('system.crondreload')));
-				return;
-			}
-
-			// clear NSCD cache if using fcgid or fpm, #1570 - not needed for nss-extrausers
-			if ((Settings::Get('system.mod_fcgid') == 1 || (int)Settings::Get('phpfpm.enabled') == 1) && Settings::Get('system.nssextrausers') == 0) {
-				$false_val = false;
-				FileDir::safe_exec('nscd -i passwd 1> /dev/null', $false_val, [
-					'>'
-				]);
-				FileDir::safe_exec('nscd -i group 1> /dev/null', $false_val, [
-					'>'
-				]);
-				// reload crond as shell users might use crontab and the user is only known to crond if reloaded
-				FileDir::safe_exec(escapeshellcmd(Settings::Get('system.crondreload')));
-			}
-		}
 	}
 }

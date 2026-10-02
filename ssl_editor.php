@@ -1,8 +1,8 @@
 <?php
 
 /**
- * This file is part of the Froxlor project.
- * Copyright (c) 2010 the Froxlor Team (see authors).
+ * This file is part of the froxlor project.
+ * Copyright (c) 2010 the froxlor Team (see authors).
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,7 +19,7 @@
  * https://files.froxlor.org/misc/COPYING.txt
  *
  * @copyright  the authors
- * @author     Froxlor team <team@froxlor.org>
+ * @author     froxlor team <team@froxlor.org>
  * @license    https://files.froxlor.org/misc/COPYING.txt GPLv2
  */
 
@@ -52,6 +52,14 @@ if ($action == '' || $action == 'view') {
 
 	if ($result_domain['email_only']) {
 		Response::dynamicError("There are no ssl-certificates for email only domains.");
+	}
+
+	if ($result_domain['letsencrypt']) {
+		// mirrors Domain::canEditSSL(), which hides the editor link/button for these
+		// domains in the UI - certificates (and their private key) are managed fully
+		// automatically for Let's Encrypt enabled domains and must not be editable or
+		// viewable here
+		Response::dynamicError("SSL certificates for Let's Encrypt enabled domains are managed automatically and cannot be edited manually.");
 	}
 
 	if (Request::post('send') == 'send') {

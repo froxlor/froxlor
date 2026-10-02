@@ -1,8 +1,8 @@
 <?php
 
 /**
- * This file is part of the Froxlor project.
- * Copyright (c) 2010 the Froxlor Team (see authors).
+ * This file is part of the froxlor project.
+ * Copyright (c) 2010 the froxlor Team (see authors).
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,7 +19,7 @@
  * https://files.froxlor.org/misc/COPYING.txt
  *
  * @copyright  the authors
- * @author     Froxlor team <team@froxlor.org>
+ * @author     froxlor team <team@froxlor.org>
  * @license    https://files.froxlor.org/misc/COPYING.txt GPLv2
  */
 
@@ -34,7 +34,7 @@ use Froxlor\UI\Panel\UI;
 use Froxlor\UI\Request;
 use Froxlor\UI\Response;
 
-if ($page == 'log' && $userinfo['change_serversettings'] == '1') {
+if ($page == 'log') {
 	if ($action == '') {
 		try {
 			$syslog_list_data = include_once dirname(__FILE__) . '/lib/tablelisting/tablelisting.syslog.php';
@@ -46,16 +46,16 @@ if ($page == 'log' && $userinfo['change_serversettings'] == '1') {
 
 		UI::view('user/table.html.twig', [
 			'listing' => Listing::format($collection, $syslog_list_data, 'syslog_list'),
-			'actions_links' => [
+			'actions_links' => ($userinfo['change_serversettings'] == '1' ? [
 				[
 					'href' => $linker->getLink(['section' => 'logger', 'page' => 'log', 'action' => 'truncate']),
 					'label' => lng('logger.truncate'),
 					'icon' => 'fa-solid fa-recycle',
 					'class' => 'btn-warning'
 				]
-			]
+			] : [])
 		]);
-	} elseif ($action == 'truncate') {
+	} elseif ($action == 'truncate' && $userinfo['change_serversettings'] == '1') {
 		if (Request::post('send') == 'send') {
 			try {
 				SysLog::getLocal($userinfo, [

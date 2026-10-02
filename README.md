@@ -10,6 +10,7 @@ Developed by experienced server administrators, this panel simplifies the effort
 ## Installation
 
 ### Fast install
+
 1. Ensure that your webserver serves /var/www/html
 2. Extract froxlor into /var/www/html
 3. Point your browser to http://[ip-of-webserver]/froxlor
@@ -24,6 +25,7 @@ If you have chosen to do the configuration by hand during the installation, you 
 3. Follow the steps for your services
 
 ### Detailed installation
+
 https://docs.froxlor.org/latest/general/installation/
 
 ## Help
@@ -49,6 +51,7 @@ May be found in [COPYING](COPYING)
 ## Downloads
 
 ### Tarball
+
 https://files.froxlor.org/releases/froxlor-latest.tar.gz [MD5](https://files.froxlor.org/releases/froxlor-latest.tar.gz.md5) [SHA1](https://files.froxlor.org/releases/froxlor-latest.tar.gz.sha1)
 
 ### Debian / Ubuntu repository

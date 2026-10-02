@@ -55,7 +55,7 @@
 							<div class="progress-bar bg-success"></div>
 						</div>
 						<div class="progress" role="progressbar"
-							 style="width: {{ 100 - apcuinfo.num_misses_percentage }}%"
+							 style="width: {{ apcuinfo.num_misses_percentage }}%"
 							 aria-valuenow="{{ apcuinfo.num_misses }}" aria-valuemin="0"
 							 aria-valuemax="{{ apcuinfo.num_hits_and_misses }}">
 							<div class="progress-bar bg-danger"></div>

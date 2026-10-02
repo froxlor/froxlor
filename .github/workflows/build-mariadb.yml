@@ -8,18 +8,18 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php-versions: [ '7.4', '8.2' ]
-        mariadb-version: [ 10.11, 10.5 ]
+        php-versions: [ '7.4', '8.4' ]
+        mariadb-version: [ 10.11, 11.7 ]
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup PHP, with composer and extensions
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php-versions }}
           tools: composer:v2
-          extensions: mbstring, xml, ctype, pdo_mysql, mysql, curl, json, zip, session, filter, posix, openssl, fileinfo, bcmath, gmp, gnupg
+          extensions: mbstring, xml, ctype, pdo_mysql, mysql, curl, json, zip, session, filter, posix, openssl, fileinfo, bcmath, gmp
 
       - name: Install tools
         run: sudo apt-get install -y ant
@@ -30,19 +30,20 @@ jobs:
           sudo ufw allow in 3306/tcp
 
       - name: Setup MariaDB
-        uses: getong/mariadb-action@v1.1
+        uses: shogo82148/actions-setup-mysql@v1.53.1
         with:
-          mariadb version: ${{ matrix.mariadb-version }}
-          mysql database: 'froxlor010'
-          mysql root password: 'fr0xl0r.TravisCI'
+          distribution: "mariadb"
+          mysql-version: ${{ matrix.mariadb-version }}
+          root-password: 'fr0xl0r.TravisCI'
+          user: 'froxlor010'
+          password: 'fr0xl0r.TravisCI'
 
       - name: Wait for database
         run: sleep 15
 
       - name: Setup databases
         run: |
-          mysql -h 127.0.0.1 --protocol=TCP -u root -pfr0xl0r.TravisCI -e "CREATE USER 'froxlor010'@'%' IDENTIFIED BY 'fr0xl0r.TravisCI';"
-          mysql -h 127.0.0.1 --protocol=TCP -u root -pfr0xl0r.TravisCI -e "GRANT ALL ON froxlor010.* TO 'froxlor010'@'%';"
+          mysql -h 127.0.0.1 --protocol=TCP -u root -pfr0xl0r.TravisCI -e "CREATE DATABASE froxlor010;"
           php -r "echo include('install/froxlor.sql.php');" > /tmp/froxlor.sql
           mysql -h 127.0.0.1 --protocol=TCP -u root -pfr0xl0r.TravisCI froxlor010 < /tmp/froxlor.sql
 
@@ -53,11 +54,11 @@ jobs:
     name: Create nightly/testing tarball
     runs-on: ubuntu-latest
     needs: froxlor
-    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/v2' }}
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup PHP with PECL extension
         uses: shivammathur/setup-php@v2
@@ -70,9 +71,9 @@ jobs:
         run: composer install --no-dev
 
       - name: Install Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
-          node-version: '20.x'
+          node-version: '22.x'
 
       - name: Install npm dependencies
         run: npm install
@@ -120,7 +121,7 @@ jobs:
 
       - name: Deploy nightly to server
         uses: easingthemes/ssh-deploy@main
-        env:
+        with:
           ARGS: "-rltDzvO --chown=${{ secrets.WEB_USER }}:${{ secrets.WEB_USER }}"
           SOURCE: "dist/"
           SSH_PRIVATE_KEY: ${{ secrets.SERVER_SSH_KEY }}

@@ -1,8 +1,8 @@
 <?php
 
 /**
- * This file is part of the Froxlor project.
- * Copyright (c) 2010 the Froxlor Team (see authors).
+ * This file is part of the froxlor project.
+ * Copyright (c) 2010 the froxlor Team (see authors).
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,7 +19,7 @@
  * https://files.froxlor.org/misc/COPYING.txt
  *
  * @copyright  the authors
- * @author     Froxlor team <team@froxlor.org>
+ * @author     froxlor team <team@froxlor.org>
  * @license    https://files.froxlor.org/misc/COPYING.txt GPLv2
  */
 
@@ -42,6 +42,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 final class ConfigServices extends CliCommand
 {
 	private $yes_to_all_supported = [
+		'trixie',
 		'bookworm',
 		'bullseye',
 		'focal',
@@ -58,7 +59,8 @@ final class ConfigServices extends CliCommand
 			->addOption('list', 'l', InputOption::VALUE_NONE, 'Output the services that are going to be configured using a given config file (--apply option). No services will be configured.')
 			->addOption('daemon', 'd', InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY, 'When used with --apply you can specify one or multiple daemons. These will be the only services that get configured.')
 			->addOption('import-settings', 'i', InputOption::VALUE_REQUIRED, 'Import settings from another froxlor installation. This can be done standalone or in addition to --apply.')
-			->addOption('yes-to-all', 'A', InputOption::VALUE_NONE, 'Install packages without asking questions (Debian/Ubuntu only currently)');
+			->addOption('yes-to-all', 'A', InputOption::VALUE_NONE, 'Install packages without asking questions (Debian/Ubuntu only currently)')
+			->addOption('delete-file', 'D', InputOption::VALUE_NONE, 'If --apply is called with a local file, remove it after successful configurations.');
 	}
 
 	protected function execute(InputInterface $input, OutputInterface $output): int
@@ -151,7 +153,6 @@ final class ConfigServices extends CliCommand
 		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
 		// get curl response
 		curl_exec($ch);
-		curl_close($ch);
 		fclose($fp);
 	}
 
@@ -171,8 +172,8 @@ final class ConfigServices extends CliCommand
 		$distributions_select_data = [];
 
 		//set default os.
-		$os_dist = ['ID' => 'bookworm'];
-		$os_version = ['0' => '12'];
+		$os_dist = ['ID' => 'trixie'];
+		$os_version = ['0' => '13'];
 		$os_default = $os_dist['ID'];
 
 		//read os-release
@@ -217,7 +218,7 @@ final class ConfigServices extends CliCommand
 		$_daemons_config['distro'] = $io->choice('Choose distribution', $valid_dists, $os_default);
 
 		// go through all services and let user check whether to include it or not
-		if (empty($_daemons_config['distro']) || !file_exists($config_dir . '/' . $_daemons_config['distro']. ".xml")) {
+		if (empty($_daemons_config['distro']) || !file_exists($config_dir . '/' . $_daemons_config['distro'] . ".xml")) {
 			$output->writeln('<error>Empty or non-existing distribution given.</>');
 			return self::INVALID;
 		}
@@ -358,13 +359,16 @@ final class ConfigServices extends CliCommand
 		if (!empty($decoded_config)) {
 
 			$config_dir = Froxlor::getInstallDir() . 'lib/configfiles/';
-			if (empty($decoded_config['distro']) || !file_exists($config_dir . '/' . $decoded_config['distro']. ".xml")) {
+			if (empty($decoded_config['distro']) || !file_exists($config_dir . '/' . $decoded_config['distro'] . ".xml")) {
 				$output->writeln('<error>Empty or non-existing distribution given. Please login with an admin, go to "System -> Configuration" and select your correct distribution in the top-right corner or specify valid distribution name for "distro" parameter.</>');
 				return self::INVALID;
 			}
-			$configfiles = new ConfigParser($config_dir . '/' . $decoded_config['distro']. ".xml");
+			$configfiles = new ConfigParser($config_dir . '/' . $decoded_config['distro'] . ".xml");
 			$services = $configfiles->getServices();
 			$replace_arr = $this->getReplacerArray();
+			$clean_replace_arr = array_map(function ($v) {
+				return escapeshellarg((string)($v ?? ''));
+			}, $replace_arr);
 
 			// be sure the fallback certificate specified in the settings exists
 			$certFile = Settings::Get('system.ssl_cert_file');
@@ -399,13 +403,13 @@ final class ConfigServices extends CliCommand
 							case "install":
 								$output->writeln("Installing required packages");
 								$result = null;
-								passthru(strtr($action['content'], $replace_arr), $result);
+								passthru(strtr($action['content'], $clean_replace_arr), $result);
 								if (strlen($result) > 1) {
 									echo $result;
 								}
 								break;
 							case "command":
-								exec(strtr($action['content'], $replace_arr));
+								exec(strtr($action['content'], $clean_replace_arr));
 								break;
 							case "file":
 								if (array_key_exists('content', $action)) {
@@ -434,6 +438,10 @@ final class ConfigServices extends CliCommand
 			exec('php ' . Froxlor::getInstallDir() . 'bin/froxlor-cli froxlor:cron --force');
 			// and done
 			$output->writeln('<info>All services have been configured</>');
+
+			if ($input->getOption('delete-file') && file_exists($applyFile)) {
+				@unlink($applyFile);
+			}
 			return self::SUCCESS;
 		} else {
 			$output->writeln('<error>Unable to decode given JSON file</>');

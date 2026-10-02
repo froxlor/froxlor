@@ -1,8 +1,8 @@
 <?php
 
 /**
- * This file is part of the Froxlor project.
- * Copyright (c) 2010 the Froxlor Team (see authors).
+ * This file is part of the froxlor project.
+ * Copyright (c) 2010 the froxlor Team (see authors).
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,7 +19,7 @@
  * https://files.froxlor.org/misc/COPYING.txt
  *
  * @copyright  the authors
- * @author     Froxlor team <team@froxlor.org>
+ * @author     froxlor team <team@froxlor.org>
  * @license    https://files.froxlor.org/misc/COPYING.txt GPLv2
  */
 
@@ -121,6 +121,18 @@ class Pagination
 			}
 		}
 
+		$this->checkPageNumber();
+
+		// pagination additional parameters for url
+		if (!empty($pagination_additional_params)) {
+			foreach ($pagination_additional_params as $pap) {
+				$this->paginationAdditional .= "&" . $pap;
+			}
+		}
+	}
+
+	private function checkPageNumber(): void
+	{
 		// check current page / pages
 		$pageno = Request::any('pageno');
 		if (!empty($pageno) && intval($pageno) != 0) {
@@ -130,13 +142,6 @@ class Pagination
 			$this->pageno = 1;
 		}
 		$this->addOffset(($this->pageno - 1) * Settings::Get('panel.paging'));
-
-		// pagination additional parameters for url
-		if (!empty($pagination_additional_params)) {
-			foreach ($pagination_additional_params as $pap) {
-				$this->paginationAdditional .= "&" . $pap;
-			}
-		}
 	}
 
 	/**
@@ -162,7 +167,7 @@ class Pagination
 	 *
 	 * @return Pagination
 	 */
-	public function addSearch(string $searchtext = null, string $field = null, string $operator = null): Pagination
+	public function addSearch(?string $searchtext = null, ?string $field = null, ?string $operator = null): Pagination
 	{
 		if (!isset($this->data['sql_search'])) {
 			$this->data['sql_search'] = [];
@@ -171,12 +176,8 @@ class Pagination
 			'value' => $searchtext,
 			'op' => $operator
 		];
-		// if a search is performed, the result-entries-count is irrelevant
-		// we do not want pagination
+		// remember this is a search (-result)
 		$this->is_search = true;
-		// unset any limit as we do not have pagination when showing search-results
-		unset($this->data['sql_limit']);
-		unset($this->data['sql_offset']);
 		return $this;
 	}
 
@@ -216,6 +217,12 @@ class Pagination
 	public function getEntries(): int
 	{
 		return $this->entries;
+	}
+
+	public function setEntries(int $entries): void
+	{
+		$this->entries = $entries;
+		$this->checkPageNumber();
 	}
 
 	public function getApiCommandParams(): array

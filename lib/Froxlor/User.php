@@ -1,8 +1,8 @@
 <?php
 
 /**
- * This file is part of the Froxlor project.
- * Copyright (c) 2010 the Froxlor Team (see authors).
+ * This file is part of the froxlor project.
+ * Copyright (c) 2010 the froxlor Team (see authors).
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,7 +19,7 @@
  * https://files.froxlor.org/misc/COPYING.txt
  *
  * @copyright  the authors
- * @author     Froxlor team <team@froxlor.org>
+ * @author     froxlor team <team@froxlor.org>
  * @license    https://files.froxlor.org/misc/COPYING.txt GPLv2
  */
 
@@ -152,7 +152,7 @@ class User
 			]);
 			$customer['emails_used_new'] = (int)$customer_emails['number_emails'];
 
-			$customer_emails_result_stmt = Database::prepare('SELECT `email`, `email_full`, `destination`, `popaccountid` AS `number_email_forwarders` FROM `' . TABLE_MAIL_VIRTUAL . '`
+			$customer_emails_result_stmt = Database::prepare('SELECT `email`, `email_full`, `destination`, `popaccountid` FROM `' . TABLE_MAIL_VIRTUAL . '`
 			WHERE `customerid` = :cid');
 			Database::pexecute($customer_emails_result_stmt, [
 				"cid" => $customer['customerid']

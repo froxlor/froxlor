@@ -1,8 +1,8 @@
 <?php
 
 /**
- * This file is part of the Froxlor project.
- * Copyright (c) 2010 the Froxlor Team (see authors).
+ * This file is part of the froxlor project.
+ * Copyright (c) 2010 the froxlor Team (see authors).
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,7 +19,7 @@
  * https://files.froxlor.org/misc/COPYING.txt
  *
  * @copyright  the authors
- * @author     Froxlor team <team@froxlor.org>
+ * @author     froxlor team <team@froxlor.org>
  * @license    https://files.froxlor.org/misc/COPYING.txt GPLv2
  */
 
@@ -29,6 +29,7 @@ use Exception;
 use Froxlor\Api\ApiCommand;
 use Froxlor\Api\ResourceEntity;
 use Froxlor\Database\Database;
+use Froxlor\FileDir;
 use Froxlor\Froxlor;
 use Froxlor\FroxlorLogger;
 use Froxlor\PhpHelper;
@@ -103,6 +104,8 @@ class MysqlServer extends ApiCommand implements ResourceEntity
 			}
 		}
 		$mysql_port = Validate::validate($mysql_port, 'port', Validate::REGEX_PORT, '', [3306], true);
+		$mysql_ca = !empty($mysql_ca) ? FileDir::makeCorrectFile($mysql_ca) : '';
+		$privileged_user = Validate::validate($privileged_user, 'privileged_user', '/^[a-z][a-z0-9\-_]+$/i', '', [], true);
 		$privileged_password = Validate::validate($privileged_password, 'password', '', '', [], true);
 		$description = Validate::validate(trim($description), 'description', Validate::REGEX_DESC_TEXT, '', [], true);
 
@@ -233,6 +236,13 @@ class MysqlServer extends ApiCommand implements ResourceEntity
 	 */
 	public function listing()
 	{
+		// a reseller (admin-type account without change_serversettings) is not permitted to see mysql
+		// server configuration at all - same boundary the admin UI and the write commands (validateAccess())
+		// already enforce; customers are handled further down via their own allowed_mysqlserver restriction
+		if ($this->isAdmin() && $this->getUserDetail('change_serversettings') == 0) {
+			throw new Exception("You cannot access this resource", 405);
+		}
+
 		$sql = [];
 		$sql_root = [];
 		// get all data from lib/userdata
@@ -272,6 +282,11 @@ class MysqlServer extends ApiCommand implements ResourceEntity
 	 */
 	public function listingCount()
 	{
+		// see listing() - a reseller is not permitted to see mysql server configuration at all
+		if ($this->isAdmin() && $this->getUserDetail('change_serversettings') == 0) {
+			throw new Exception("You cannot access this resource", 405);
+		}
+
 		if ($this->isAdmin() == false) {
 			$allowed_mysqls = json_decode($this->getUserDetail('allowed_mysqlserver'), true);
 			if ($allowed_mysqls) {
@@ -299,6 +314,11 @@ class MysqlServer extends ApiCommand implements ResourceEntity
 	 */
 	public function get()
 	{
+		// see listing() - a reseller is not permitted to see mysql server configuration at all
+		if ($this->isAdmin() && $this->getUserDetail('change_serversettings') == 0) {
+			throw new Exception("You cannot access this resource", 405);
+		}
+
 		$id = (int)$this->getParam('id', true, -1);
 		$dn_optional = $id >= 0;
 		$dbserver = (int)$this->getParam('dbserver', $dn_optional, -1);
@@ -402,6 +422,8 @@ class MysqlServer extends ApiCommand implements ResourceEntity
 			}
 		}
 		$mysql_port = Validate::validate($mysql_port, 'port', Validate::REGEX_PORT, '', [3306], true);
+		$mysql_ca = !empty($mysql_ca) ? FileDir::makeCorrectFile($mysql_ca) : '';
+		$privileged_user = Validate::validate($privileged_user, 'privileged_user', '/^[a-z][a-z0-9\-_]+$/i', '', [], true);
 		$privileged_password = Validate::validate($privileged_password, 'password', '', '', [], true);
 		$description = Validate::validate(trim($description), 'description', Validate::REGEX_DESC_TEXT, '', [], true);
 

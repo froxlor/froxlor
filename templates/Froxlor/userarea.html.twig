@@ -11,7 +11,23 @@
 
 			<span>
 				<a href="{{ linker({'section': 'configfiles', 'page': 'configfiles'}) }}" class="btn btn-light btn-sm">
-					Setup starten
+					{{ lng('panel.start_setup') }}
+				</a>
+			</span>
+		</div>
+	{% endif %}
+	{% if get_setting('system.distro_mismatch') == 1 and userinfo.adminsession == 1 and userinfo.change_serversettings == 1 %}
+		<div class="alert alert-warning rounded-0 mb-0 d-flex justify-content-between align-items-baseline" role="alert">
+			<span>
+				<i class="alert-icon fa-solid fa-info-circle"></i> {{ lng('panel.distro_mismatch') }}
+			</span>
+
+			<span>
+				<a href="{{ linker({'section': 'configfiles', 'reselect': '1'}) }}" class="btn btn-light btn-sm">
+					{{ lng('panel.set_new_distro') }}
+				</a>
+				<a href="{{ linker({'section': 'configfiles', 'reselect': '2'}) }}" class="ms-2 btn btn-outline-info btn-sm">
+					{{ lng('panel.dismiss') }}
 				</a>
 			</span>
 		</div>

@@ -1,8 +1,8 @@
 <?php
 
 /**
- * This file is part of the Froxlor project.
- * Copyright (c) 2010 the Froxlor Team (see authors).
+ * This file is part of the froxlor project.
+ * Copyright (c) 2010 the froxlor Team (see authors).
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,7 +19,7 @@
  * https://files.froxlor.org/misc/COPYING.txt
  *
  * @copyright  the authors
- * @author     Froxlor team <team@froxlor.org>
+ * @author     froxlor team <team@froxlor.org>
  * @license    https://files.froxlor.org/misc/COPYING.txt GPLv2
  */
 
@@ -123,12 +123,15 @@ class Collection
 		// Prepare pagination
 		$this->pagination = new Pagination($sortableColumns, $this->count(), (int)Settings::Get('panel.paging'), $default_sorting, $pagination_additional_params);
 		$this->params = array_merge($this->params, $this->pagination->getApiCommandParams());
-
+		$this->pagination->setEntries($this->count(true));
 		return $this;
 	}
 
-	public function count(): int
+	public function count(bool $with_pagination = false): int
 	{
+		if ($with_pagination) {
+			$this->params = array_merge($this->params, $this->pagination->getApiCommandParams());
+		}
 		return json_decode($this->class::getLocal($this->userinfo, $this->params, $this->internal)->listingCount(), true)['data'];
 	}
 

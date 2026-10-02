@@ -1,8 +1,8 @@
 <?php
 
 /**
- * This file is part of the Froxlor project.
- * Copyright (c) 2010 the Froxlor Team (see authors).
+ * This file is part of the froxlor project.
+ * Copyright (c) 2010 the froxlor Team (see authors).
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,7 +19,7 @@
  * https://files.froxlor.org/misc/COPYING.txt
  *
  * @copyright  the authors
- * @author     Froxlor team <team@froxlor.org>
+ * @author     froxlor team <team@froxlor.org>
  * @license    https://files.froxlor.org/misc/COPYING.txt GPLv2
  */
 
@@ -30,9 +30,10 @@ use Froxlor\Api\Commands\EmailAccounts;
 use Froxlor\Api\Commands\EmailDomains;
 use Froxlor\Api\Commands\EmailForwarders;
 use Froxlor\Api\Commands\Emails;
-use Froxlor\Cron\Mail\Rspamd;
+use Froxlor\Api\Commands\EmailSender;
 use Froxlor\CurrentUser;
 use Froxlor\Database\Database;
+use Froxlor\Froxlor;
 use Froxlor\FroxlorLogger;
 use Froxlor\PhpHelper;
 use Froxlor\Settings;
@@ -77,7 +78,7 @@ if ($page == 'overview' || $page == 'emails') {
 		}
 
 		$actions_links[] = [
-			'href' => \Froxlor\Froxlor::getDocsUrl() . 'user-guide/emails/',
+			'href' => Froxlor::getDocsUrl() . 'user-guide/emails/',
 			'target' => '_blank',
 			'icon' => 'fa-solid fa-circle-info',
 			'class' => 'btn-outline-secondary'
@@ -105,7 +106,7 @@ if ($page == 'email_domain') {
 			$email_list_data = include_once dirname(__FILE__) . '/lib/tablelisting/customer/tablelisting.emails.php';
 			$collection = (new Collection(Emails::class, $userinfo, $sql_search))
 				->withPagination($email_list_data['email_list']['columns'],
-					$email_list_data['email_list']['default_sorting']);
+					$email_list_data['email_list']['default_sorting'], ['domainid=' . $email_domainid]);
 		} catch (Exception $e) {
 			Response::dynamicError($e->getMessage());
 		}
@@ -139,7 +140,7 @@ if ($page == 'email_domain') {
 			];
 		}
 		$actions_links[] = [
-			'href' => \Froxlor\Froxlor::getDocsUrl() . 'user-guide/emails/',
+			'href' => Froxlor::getDocsUrl() . 'user-guide/emails/',
 			'target' => '_blank',
 			'icon' => 'fa-solid fa-circle-info',
 			'class' => 'btn-outline-secondary'
@@ -247,11 +248,7 @@ if ($page == 'email_domain') {
 		if (isset($result['email']) && $result['email'] != '') {
 			if (Request::post('send') == 'send') {
 				try {
-					Emails::getLocal($userinfo, [
-						'id' => $id,
-						'spam_tag_level' => Request::post('spam_tag_level', Rspamd::DEFAULT_MARK_LVL),
-						'spam_kill_level' => Request::post('spam_kill_level', Rspamd::DEFAULT_REJECT_LVL)
-					])->update();
+					Emails::getLocal($userinfo, Request::postAll())->update();
 				} catch (Exception $e) {
 					Response::dynamicError($e->getMessage());
 				}
@@ -285,15 +282,42 @@ if ($page == 'email_domain') {
 				}
 				$result['destination'][$dest_id] = $destination;
 			}
-
 			$destinations_count = count($result['destination']);
+
+			// allowed senders listing
+			$senders = [];
+			$senders_count = 0;
+			if (Settings::Get('mail.enable_allow_sender') == '1') {
+				try {
+					$json_result = EmailSender::getLocal($userinfo, [
+						'id' => $id
+					])->listing();
+					$sender_listing = json_decode($json_result, true)['data'];
+					if ($sender_listing['count'] > 0) {
+						foreach ($sender_listing['list'] as $sender) {
+							$senders[] = [
+								'item' => $sender['allowed_sender'],
+								'href' => $linker->getLink([
+									'section' => 'email',
+									'page' => 'senders',
+									'action' => 'delete',
+									'id' => $id,
+									'senderid' => $sender['id']
+								]),
+								'label' => lng('panel.delete'),
+								'classes' => 'btn btn-sm btn-danger'
+							];
+							$senders_count++;
+						}
+					}
+				} catch (Exception $e) {
+					// nothing
+				}
+			}
+
 			$result = PhpHelper::htmlentitiesArray($result);
 
 			$email_edit_data = include_once dirname(__FILE__) . '/lib/formfields/customer/email/formfield.emails_edit.php';
-
-			if (Settings::Get('catchall.catchall_enabled') != '1') {
-				unset($email_edit_data['emails_edit']['sections']['section_a']['fields']['mail_catchall']);
-			}
 
 			UI::view('user/form.html.twig', [
 				'formaction' => $linker->getLink(['section' => 'email']),
@@ -301,78 +325,6 @@ if ($page == 'email_domain') {
 				'editid' => $id
 			]);
 		}
-	} elseif ($action == 'togglebypass' && $id != 0) {
-		try {
-			$json_result = Emails::getLocal($userinfo, [
-				'id' => $id
-			])->get();
-		} catch (Exception $e) {
-			Response::dynamicError($e->getMessage());
-		}
-		$result = json_decode($json_result, true)['data'];
-
-		try {
-			Emails::getLocal($userinfo, [
-				'id' => $id,
-				'bypass_spam' => ($result['bypass_spam'] == '1' ? 0 : 1)
-			])->update();
-		} catch (Exception $e) {
-			Response::dynamicError($e->getMessage());
-		}
-		Response::redirectTo($filename, [
-			'page' => $page,
-			'domainid' => $email_domainid,
-			'action' => 'edit',
-			'id' => $id,
-		]);
-	} elseif ($action == 'togglegreylist' && $id != 0) {
-		try {
-			$json_result = Emails::getLocal($userinfo, [
-				'id' => $id
-			])->get();
-		} catch (Exception $e) {
-			Response::dynamicError($e->getMessage());
-		}
-		$result = json_decode($json_result, true)['data'];
-
-		try {
-			Emails::getLocal($userinfo, [
-				'id' => $id,
-				'policy_greylist' => ($result['policy_greylist'] == '1' ? 0 : 1)
-			])->update();
-		} catch (Exception $e) {
-			Response::dynamicError($e->getMessage());
-		}
-		Response::redirectTo($filename, [
-			'page' => $page,
-			'domainid' => $email_domainid,
-			'action' => 'edit',
-			'id' => $id,
-		]);
-	} elseif ($action == 'togglecatchall' && $id != 0) {
-		try {
-			$json_result = Emails::getLocal($userinfo, [
-				'id' => $id
-			])->get();
-		} catch (Exception $e) {
-			Response::dynamicError($e->getMessage());
-		}
-		$result = json_decode($json_result, true)['data'];
-
-		try {
-			Emails::getLocal($userinfo, [
-				'id' => $id,
-				'iscatchall' => ($result['iscatchall'] == '1' ? 0 : 1)
-			])->update();
-		} catch (Exception $e) {
-			Response::dynamicError($e->getMessage());
-		}
-		Response::redirectTo($filename, [
-			'page' => $page,
-			'domainid' => $email_domainid,
-			'action' => 'edit',
-			'id' => $id,
-		]);
 	}
 } elseif ($page == 'accounts') {
 	$email_domainid = Request::any('domainid', 0);
@@ -701,6 +653,147 @@ if ($page == 'email_domain') {
 						'action' => $action
 					], $idna_convert->decode($result['email_full']) . ' -> ' . $idna_convert->decode($forwarder));
 				}
+			}
+		}
+	}
+} elseif ($page == 'senders' && Settings::Get('mail.enable_allow_sender') == '1') {
+	$email_domainid = Request::any('domainid', 0);
+	if ($action == 'add' && $id != 0) {
+		try {
+			$json_result = Emails::getLocal($userinfo, [
+				'id' => $id
+			])->get();
+		} catch (Exception $e) {
+			Response::dynamicError($e->getMessage());
+		}
+		$result = json_decode($json_result, true)['data'];
+
+		if (isset($result['email']) && $result['email'] != '') {
+			if (Request::post('send') == 'send') {
+				try {
+					// build target-sender
+					$allowed_sender = Request::post('allowed_sender', '');
+					$allowed_sender .= '@' . Request::post('allowed_domain', '');
+					$postdata = [
+						'id' => $id,
+						'allowed_sender' => $allowed_sender
+					];
+					EmailSender::getLocal($userinfo, $postdata)->add();
+				} catch (Exception $e) {
+					Response::dynamicError($e->getMessage());
+				}
+				Response::redirectTo($filename, [
+					'page' => 'email_domain',
+					'domainid' => $email_domainid,
+					'action' => 'edit',
+					'id' => $id
+				]);
+			} else {
+				$result['email_full'] = $idna_convert->decode($result['email_full']);
+				$result = PhpHelper::htmlentitiesArray($result);
+
+				if (Settings::Get('mail.allow_external_domains') == '0') {
+					$result_stmt = Database::prepare("SELECT `id`, `domain`, `customerid` FROM `" . TABLE_PANEL_DOMAINS . "`
+						WHERE `customerid`= :cid
+						AND `isemaildomain`='1'
+						ORDER BY `domain_ace` ASC
+					");
+					Database::pexecute($result_stmt, [
+						"cid" => $userinfo['customerid']
+					]);
+					$domains = [];
+					$selected_domain = "";
+					while ($row = $result_stmt->fetch(PDO::FETCH_ASSOC)) {
+						if ($email_domainid == $row['id']) {
+							$selected_domain = $row['domain'];
+						}
+						$domains[$row['domain']] = $idna_convert->decode($row['domain']);
+					}
+
+					if (count($domains) == 0) {
+						Response::standardError('emails.noemaildomainaddedyet');
+					}
+				}
+
+				$sender_add_data = include_once dirname(__FILE__) . '/lib/formfields/customer/email/formfield.emails_addsender.php';
+
+				UI::view('user/form-note.html.twig', [
+					'formaction' => $linker->getLink(['section' => 'email', 'id' => $id]),
+					'formdata' => $sender_add_data['emails_addsender'],
+					'actions_links' => [
+						[
+							'class' => 'btn-secondary',
+							'href' => $linker->getLink([
+								'section' => 'email',
+								'page' => 'email_domain',
+								'domainid' => $email_domainid,
+								'action' => 'edit',
+								'id' => $id
+							]),
+							'label' => lng('emails.emails_edit'),
+							'icon' => 'fa-solid fa-pen'
+						],
+						[
+							'class' => 'btn-secondary',
+							'href' => $linker->getLink([
+								'section' => 'email',
+								'page' => 'email_domain',
+								'domainid' => $email_domainid
+							]),
+							'label' => lng('menue.email.emails'),
+							'icon' => 'fa-solid fa-envelope'
+						]
+					],
+					// alert-box
+					'type' => 'info',
+					'alert_msg' => lng('emails.allowed_sender_info')
+				]);
+			}
+		}
+	} elseif ($action == 'delete' && $id != 0) {
+		try {
+			$json_result = Emails::getLocal($userinfo, [
+				'id' => $id
+			])->get();
+		} catch (Exception $e) {
+			Response::dynamicError($e->getMessage());
+		}
+		$result = json_decode($json_result, true)['data'];
+
+		if (!empty($result['popaccountid'])) {
+			$senderid = Request::any('senderid', 0);
+
+			if (Request::post('send') == 'send') {
+				try {
+					EmailSender::getLocal($userinfo, Request::postAll())->delete();
+				} catch (Exception $e) {
+					Response::dynamicError($e->getMessage());
+				}
+				Response::redirectTo($filename, [
+					'page' => 'email_domain',
+					'domainid' => $email_domainid,
+					'action' => 'edit',
+					'id' => $id
+				]);
+			} else {
+				$sel_stmt = Database::prepare("
+					SELECT s.`allowed_sender`
+					FROM `" . TABLE_MAIL_SENDER_ALIAS . "` s
+					LEFT JOIN `" . TABLE_MAIL_USERS . "` u ON u.username = s.email
+					WHERE u.id = :popaccountid AND u.customerid = :cid AND s.id = :senderid
+				");
+				$sender_data = Database::pexecute_first($sel_stmt, ['popaccountid' => $result['popaccountid'], 'cid' => $userinfo['customerid'], 'senderid' => (int)$senderid]);
+
+				if ($sender_data) {
+					HTML::askYesNo('email_reallydelete_sender', $filename, [
+						'id' => $id,
+						'senderid' => $senderid,
+						'page' => $page,
+						'domainid' => $email_domainid,
+						'action' => $action
+					], $idna_convert->decode($result['email_full']) . ' -> ' . $sender_data['allowed_sender']);
+				}
+				Response::dynamicError('No such entity');
 			}
 		}
 	}
