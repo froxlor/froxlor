@@ -1912,7 +1912,7 @@ postlog   unix-dgram n  -       n       -       1       postlogd
 #
 # Dovecot LDA
 dovecot	  unix	-	n	n	-	-	pipe
-	flags=DORhu user=vmail:vmail argv=/usr/lib/dovecot/deliver -f ${sender} -d ${recipient}
+	flags=DORhu user=vmail:vmail argv=/usr/lib/dovecot/deliver -f ${sender} -d ${user}@${domain} -a ${recipient}
 ]]>
 						</content>
 					</file>
