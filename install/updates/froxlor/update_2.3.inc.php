@@ -266,3 +266,14 @@ if (Froxlor::isFroxlorVersion('2.3.13')) {
 	Update::showUpdateStep("Updating from 2.3.13 to 2.3.14", false);
 	Froxlor::updateToVersion('2.3.14');
 }
+
+if (Froxlor::isDatabaseVersion('202608210')) {
+
+	Update::showUpdateStep("Adding per-domain mail SNI settings");
+	Settings::AddNew('mail.sni_enabled', '0');
+	Settings::AddNew('system.mda_reload_command', 'systemctl reload dovecot');
+	Settings::AddNew('system.mta_reload_command', 'systemctl reload postfix');
+	Update::lastStepStatus(0);
+
+	Froxlor::updateToDbVersion('202610020');
+}

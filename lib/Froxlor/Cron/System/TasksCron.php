@@ -30,6 +30,7 @@ use Froxlor\Cron\FroxlorCron;
 use Froxlor\Cron\Http\ConfigIO;
 use Froxlor\Cron\Http\HttpConfigBase;
 use Froxlor\Cron\Http\LetsEncrypt\AcmeSh;
+use Froxlor\Cron\Mail\MailSni;
 use Froxlor\Cron\Mail\Rspamd;
 use Froxlor\Cron\TaskId;
 use Froxlor\Database\Database;
@@ -155,6 +156,13 @@ class TasksCron extends FroxlorCron
 		}
 
 		Database::query("UPDATE `" . TABLE_PANEL_SETTINGS . "` SET `value` = UNIX_TIMESTAMP() WHERE `settinggroup` = 'system' AND `varname` = 'last_tasks_run';");
+
+		// keep the per-domain mail SNI configuration (Dovecot/Postfix) in sync, this also removes it again if the setting is turned off
+		try {
+			(new MailSni(FroxlorLogger::getInstanceOf()))->configure();
+		} catch (\Throwable $e) {
+			FroxlorLogger::getInstanceOf()->logAction(FroxlorLogger::CRON_ACTION, LOG_ERR, 'Error while updating the per-domain mail SNI configuration: ' . $e->getMessage());
+		}
 	}
 
 	private static function rebuildWebserverConfigs()

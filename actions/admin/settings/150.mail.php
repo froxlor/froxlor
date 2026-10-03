@@ -139,6 +139,17 @@ return [
 					'save_method' => 'storeSettingField',
 					'advanced_mode' => true
 				],
+				'system_mda_reload_command' => [
+					'label' => lng('serversettings.mda_reload_command'),
+					'settinggroup' => 'system',
+					'varname' => 'mda_reload_command',
+					'type' => 'text',
+					'string_regexp' => '/^[a-z0-9\/\._\- ]+$/i',
+					'default' => 'systemctl reload dovecot',
+					'save_method' => 'storeSettingField',
+					'required_otp' => true,
+					'advanced_mode' => true
+				],
 				'system_mtaserver' => [
 					'label' => lng('serversettings.mtaserver'),
 					'settinggroup' => 'system',
@@ -163,6 +174,17 @@ return [
 					'save_method' => 'storeSettingField',
 					'advanced_mode' => true
 				],
+				'system_mta_reload_command' => [
+					'label' => lng('serversettings.mta_reload_command'),
+					'settinggroup' => 'system',
+					'varname' => 'mta_reload_command',
+					'type' => 'text',
+					'string_regexp' => '/^[a-z0-9\/\._\- ]+$/i',
+					'default' => 'systemctl reload postfix',
+					'save_method' => 'storeSettingField',
+					'required_otp' => true,
+					'advanced_mode' => true
+				],
 				'mail_enable_allow_sender' => [
 					'label' => lng('serversettings.mail_enable_allow_sender'),
 					'settinggroup' => 'mail',
@@ -175,6 +197,14 @@ return [
 					'label' => lng('serversettings.mail_allow_external_domains'),
 					'settinggroup' => 'mail',
 					'varname' => 'allow_external_domains',
+					'type' => 'checkbox',
+					'default' => false,
+					'save_method' => 'storeSettingField'
+				],
+				'mail_sni_enabled' => [
+					'label' => lng('serversettings.mail_sni_enabled'),
+					'settinggroup' => 'mail',
+					'varname' => 'sni_enabled',
 					'type' => 'checkbox',
 					'default' => false,
 					'save_method' => 'storeSettingField'

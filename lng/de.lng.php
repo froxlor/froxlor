@@ -1717,6 +1717,10 @@ Vielen Dank, Ihr Administrator',
 			'title' => 'Erlaube externe Domains für "Erlaubte Absendeadressen"',
 			'description' => 'Wenn aktiviert können Kunden beliebige Domains (außer diese auf diesem System, die nicht dem Kunden gehören) als "Erlaubte Absendeadressen" nutzen.<br>Standard: aus',
 		],
+		'mail_sni_enabled' => [
+			'title' => 'Dovecot/Postfix SNI pro Domain aktivieren',
+			'description' => 'Gibt jeder Domain mit eigenem Let\'s-Encrypt-Zertifikat ein eigenes TLS-Zertifikat für IMAP/POP3S/SMTPS (SNI), statt dass Mailclients immer nur das eine zentrale Server-Zertifikat sehen. Unterstützt Dovecot 2.3 und 2.4 (wird automatisch erkannt) sowie Postfix. Wird vom Tasks-Cron laufend mit den Zertifikaten in system.customer_ssl_path abgeglichen (auch bei Erneuerungen); Domains ohne gültiges Zertifikat werden automatisch übersprungen. Hinweis: Solange die Option aktiv ist, verwaltet froxlor den Postfix-Parameter tls_server_sni_maps.<br>Standard: aus',
+		],
 		'session_allow_multiple_login' => [
 			'title' => 'Erlaube gleichzeitigen Login',
 			'description' => 'Wenn diese Option aktiviert ist, können sich Nutzer mehrmals gleichzeitig anmelden.',
@@ -1965,6 +1969,10 @@ Vielen Dank, Ihr Administrator',
 			'title' => 'Logdatei des MDA',
 			'description' => 'Die Logdatei des Mail Delivery Server',
 		],
+		'mda_reload_command' => [
+			'title' => 'MDA Reload-Befehl',
+			'description' => 'Befehl, um den Mail Delivery Server (z.B. Dovecot) nach einer Konfigurationsänderung durch froxlor neu zu laden.<br>Standard: systemctl reload dovecot',
+		],
 		'mtaserver' => [
 			'title' => 'Typ des MTA',
 			'description' => 'Der eingesetzte Mail Transfer Agent',
@@ -1972,6 +1980,10 @@ Vielen Dank, Ihr Administrator',
 		'mtalog' => [
 			'title' => 'Logdatei des MTA',
 			'description' => 'Die Logdatei des Mail Transfer Agent',
+		],
+		'mta_reload_command' => [
+			'title' => 'MTA Reload-Befehl',
+			'description' => 'Befehl, um den Mail Transfer Agent (z.B. Postfix) nach einer Konfigurationsänderung durch froxlor neu zu laden.<br>Standard: systemctl reload postfix',
 		],
 		'system_cronconfig' => [
 			'title' => 'Cron-Konfigurationsdatei',

@@ -1839,6 +1839,10 @@ Yours sincerely, your administrator',
 			'title' => 'Allow external domains for "allowed sender"',
 			'description' => 'If enabled, customer can enter any domain (except not owned domains on this system) as "allowed sender" for email accounts.<br>Default: off',
 		],
+		'mail_sni_enabled' => [
+			'title' => 'Enable per-domain Dovecot/Postfix SNI',
+			'description' => 'Gives every domain with its own Let\'s Encrypt certificate its own TLS certificate for IMAP/POP3S/SMTPS (SNI), instead of mail clients always seeing the one central server certificate. Supports Dovecot 2.3 and 2.4 (detected automatically) and Postfix. Kept in sync with the certificates in system.customer_ssl_path by the tasks cron (renewals included); domains without a valid certificate are skipped automatically. Note: froxlor manages the Postfix parameter tls_server_sni_maps while this is enabled.<br>Default: off',
+		],
 		'session_allow_multiple_login' => [
 			'title' => 'Allow multiple login',
 			'description' => 'If activated a user could login multiple times.',
@@ -2087,6 +2091,10 @@ Yours sincerely, your administrator',
 			'title' => 'MDA log',
 			'description' => 'Logfile of the Mail Delivery Server',
 		],
+		'mda_reload_command' => [
+			'title' => 'MDA reload command',
+			'description' => 'Command to reload the Mail Delivery Server (e.g. Dovecot) after its configuration has been changed by froxlor.<br>Default: systemctl reload dovecot',
+		],
 		'mtaserver' => [
 			'title' => 'MTA type',
 			'description' => 'Type of the Mail Transfer Agent',
@@ -2094,6 +2102,10 @@ Yours sincerely, your administrator',
 		'mtalog' => [
 			'title' => 'MTA log',
 			'description' => 'Logfile of the Mail Transfer Agent',
+		],
+		'mta_reload_command' => [
+			'title' => 'MTA reload command',
+			'description' => 'Command to reload the Mail Transfer Agent (e.g. Postfix) after its configuration has been changed by froxlor.<br>Default: systemctl reload postfix',
 		],
 		'system_cronconfig' => [
 			'title' => 'Cron configuration file',
