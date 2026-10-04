@@ -112,11 +112,11 @@ class MysqlServer extends ApiCommand implements ResourceEntity
 		// testing connection with given credentials
 		if ($test_connection) {
 			$options = array(
-				PDO::MYSQL_ATTR_INIT_COMMAND => 'SET names utf8'
+				Database::pdoMysqlAttribute('INIT_COMMAND') => 'SET names utf8'
 			);
 			if (!empty($mysql_ca)) {
-				$options[PDO::MYSQL_ATTR_SSL_CA] = $mysql_ca;
-				$options[PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = (bool)$mysql_verifycert;
+				$options[Database::pdoMysqlAttribute('SSL_CA')] = $mysql_ca;
+				$options[Database::pdoMysqlAttribute('SSL_VERIFY_SERVER_CERT')] = (bool)$mysql_verifycert;
 			}
 
 			$dsn = "mysql:host=" . $mysql_host . ";port=" . $mysql_port . ";";
@@ -443,11 +443,11 @@ class MysqlServer extends ApiCommand implements ResourceEntity
 		// testing connection with given credentials
 		if ($test_connection) {
 			$options = array(
-				PDO::MYSQL_ATTR_INIT_COMMAND => 'SET names utf8'
+				Database::pdoMysqlAttribute('INIT_COMMAND') => 'SET names utf8'
 			);
 			if (!empty($mysql_ca)) {
-				$options[PDO::MYSQL_ATTR_SSL_CA] = $mysql_ca;
-				$options[PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = (bool)$mysql_verifycert;
+				$options[Database::pdoMysqlAttribute('SSL_CA')] = $mysql_ca;
+				$options[Database::pdoMysqlAttribute('SSL_VERIFY_SERVER_CERT')] = (bool)$mysql_verifycert;
 			}
 
 			$dsn = "mysql:host=" . $mysql_host . ";port=" . $mysql_port . ";";

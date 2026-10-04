@@ -64,7 +64,10 @@ class NginxGetWebrootTest extends TestCase
 		$nginx->method('getLogFiles')->willReturn('');
 
 		$method = new ReflectionMethod(Nginx::class, 'getVhostContent');
-		$method->setAccessible(true);
+		// setAccessible() is needed before PHP 8.1 and deprecated as of PHP 8.5
+		if (PHP_VERSION_ID < 80100) {
+			$method->setAccessible(true);
+		}
 		$vhost_content = $method->invoke($nginx, $domain, false);
 
 		// the redirect-to-https content must still be generated correctly

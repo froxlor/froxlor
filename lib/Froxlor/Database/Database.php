@@ -513,8 +513,8 @@ class Database
 			$dbconf["dsn"]['port'] = $port;
 
 			if (!empty(self::$sqldata['ssl_ca_file'])) {
-				$options[PDO::MYSQL_ATTR_SSL_CA] = self::$sqldata['ssl_ca_file'];
-				$options[PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = (bool)self::$sqldata['ssl_verify_server_certificate'];
+				$options[self::pdoMysqlAttribute('SSL_CA')] = self::$sqldata['ssl_ca_file'];
+				$options[self::pdoMysqlAttribute('SSL_VERIFY_SERVER_CERT')] = (bool)self::$sqldata['ssl_verify_server_certificate'];
 			}
 		}
 
@@ -589,6 +589,22 @@ class Database
 			}
 		}
 		return $mysql_max;
+	}
+
+	/**
+	 * returns the value of a pdo_mysql driver specific attribute (e.g. 'SSL_CA');
+	 * PHP 8.4 added Pdo\Mysql::ATTR_* and PHP 8.5 deprecates the PDO::MYSQL_ATTR_* constants
+	 *
+	 * @param string $name
+	 *
+	 * @return int
+	 */
+	public static function pdoMysqlAttribute(string $name): int
+	{
+		if (defined('Pdo\\Mysql::ATTR_' . $name)) {
+			return constant('Pdo\\Mysql::ATTR_' . $name);
+		}
+		return constant('PDO::MYSQL_ATTR_' . $name);
 	}
 
 	/**

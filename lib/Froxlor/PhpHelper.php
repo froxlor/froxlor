@@ -102,7 +102,7 @@ class PhpHelper
 			$errfile = str_replace(Froxlor::getInstallDir(), "", $errfile);
 			// build alert
 			$type = 'danger';
-			if ($errno == E_NOTICE || $errno == E_DEPRECATED || $errno == E_STRICT) {
+			if ($errno == E_NOTICE || $errno == E_DEPRECATED) {
 				$type = 'info';
 			} elseif ($errno = E_WARNING) {
 				$type = 'warning';
