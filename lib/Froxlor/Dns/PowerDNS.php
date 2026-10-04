@@ -25,6 +25,7 @@
 
 namespace Froxlor\Dns;
 
+use Froxlor\Database\Database;
 use Froxlor\FileDir;
 use Froxlor\Settings;
 use PDO;
@@ -122,8 +123,8 @@ class PowerDNS
 			$dbconf["dsn"]['port'] = $mysql_data['gmysql-port'];
 
 			if (!empty($mysql_data['gmysql-ssl-ca-file'])) {
-				$options[PDO::MYSQL_ATTR_SSL_CA] = $mysql_data['gmysql-ssl-ca-file'];
-				$options[PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = (bool)$mysql_data['gmysql-ssl-verify-server-certificate'];
+				$options[Database::pdoMysqlAttribute('SSL_CA')] = $mysql_data['gmysql-ssl-ca-file'];
+				$options[Database::pdoMysqlAttribute('SSL_VERIFY_SERVER_CERT')] = (bool)$mysql_data['gmysql-ssl-verify-server-certificate'];
 			}
 		}
 

@@ -52,7 +52,10 @@ class ApacheAdminDocumentrootTest extends TestCase
 
 		$apache = new Apache();
 		$method = new ReflectionMethod(Apache::class, 'getWebroot');
-		$method->setAccessible(true);
+		// setAccessible() is needed before PHP 8.1 and deprecated as of PHP 8.5
+		if (PHP_VERSION_ID < 80100) {
+			$method->setAccessible(true);
+		}
 		$webroot_text = $method->invoke($apache, $domain);
 
 		// the admin-authorized out-of-bounds documentroot must survive write-time

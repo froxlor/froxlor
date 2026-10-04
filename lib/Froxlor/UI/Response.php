@@ -100,7 +100,7 @@ class Response
 	public static function standardError($errors = '', $replacer = '', $throw_exception = false)
 	{
 		$_SESSION['requestData'] = $_POST;
-		$replacer = htmlentities($replacer);
+		$replacer = htmlentities((string)$replacer);
 
 		if (!is_array($errors)) {
 			$errors = [
@@ -176,7 +176,7 @@ class Response
 		if (strpos($success_message, ".") === false) {
 			$success_message = 'success.' . $success_message;
 		}
-		$success_message = lng($success_message, [htmlentities($replacer)]);
+		$success_message = lng($success_message, [htmlentities((string)$replacer)]);
 
 		if ($throw_exception) {
 			throw new Exception(strip_tags($success_message), 200);

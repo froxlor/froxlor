@@ -27,6 +27,7 @@ namespace Froxlor\Install\Install;
 
 use Exception;
 use Froxlor\Config\ConfigParser;
+use Froxlor\Database\Database;
 use Froxlor\FileDir;
 use Froxlor\Froxlor;
 use Froxlor\PhpHelper;
@@ -59,8 +60,8 @@ class Core
 		];
 
 		if (!empty($this->validatedData['mysql_ssl_ca_file'])) {
-			$options[PDO::MYSQL_ATTR_SSL_CA] = $this->validatedData['mysql_ssl_ca_file'];
-			$options[PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = (bool)$this->validatedData['mysql_ssl_verify_server_certificate'];
+			$options[Database::pdoMysqlAttribute('SSL_CA')] = $this->validatedData['mysql_ssl_ca_file'];
+			$options[Database::pdoMysqlAttribute('SSL_VERIFY_SERVER_CERT')] = (bool)$this->validatedData['mysql_ssl_verify_server_certificate'];
 		}
 
 		$dsn = "mysql:host=" . $this->validatedData['mysql_host'] . ";";
@@ -104,8 +105,8 @@ class Core
 		];
 
 		if (!empty($this->validatedData['mysql_ssl_ca_file']) && isset($this->validatedData['mysql_ssl_verify_server_certificate'])) {
-			$options[PDO::MYSQL_ATTR_SSL_CA] = $this->validatedData['mysql_ssl_ca_file'];
-			$options[PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = (bool)$this->validatedData['mysql_ssl_verify_server_certificate'];
+			$options[Database::pdoMysqlAttribute('SSL_CA')] = $this->validatedData['mysql_ssl_ca_file'];
+			$options[Database::pdoMysqlAttribute('SSL_VERIFY_SERVER_CERT')] = (bool)$this->validatedData['mysql_ssl_verify_server_certificate'];
 		}
 
 		$pdo = $this->getUnprivilegedPdo();
@@ -131,8 +132,8 @@ class Core
 		];
 
 		if (!empty($this->validatedData['mysql_ssl_ca_file'])) {
-			$options[PDO::MYSQL_ATTR_SSL_CA] = $this->validatedData['mysql_ssl_ca_file'];
-			$options[PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = (bool)$this->validatedData['mysql_ssl_verify_server_certificate'];
+			$options[Database::pdoMysqlAttribute('SSL_CA')] = $this->validatedData['mysql_ssl_ca_file'];
+			$options[Database::pdoMysqlAttribute('SSL_VERIFY_SERVER_CERT')] = (bool)$this->validatedData['mysql_ssl_verify_server_certificate'];
 		}
 
 		$dsn = "mysql:host=" . $this->validatedData['mysql_host'] . ";dbname=" . $this->validatedData['mysql_database'] . ";";
