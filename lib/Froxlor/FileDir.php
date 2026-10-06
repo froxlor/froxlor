@@ -482,12 +482,19 @@ class FileDir
 			if (substr($filename_to_check, 0, strlen($fixed_homedir)) != $fixed_homedir) {
 				throw new Exception("Target path/file not within the required customer home directory");
 			}
-			// check whether file is symlink itself
+			// check whether file is symlink itself - only validate where it points to, but keep
+			// returning the path of the link (callers like 'ln -fTs' or unlink() need the link
+			// itself, not its target)
 			if (is_link($filename)) {
-				$filename = readlink($filename);
-				$check_dir = FileDir::makeCorrectDir(dirname($filename), $fixed_homedir);
+				$link_target = readlink($filename);
+				if (substr($link_target, 0, 1) != '/') {
+					// relative target, resolve against the directory containing the link
+					$link_target = dirname($filename) . '/' . $link_target;
+				}
+				$link_target = self::resolveDotSegments($link_target);
+				$check_dir = FileDir::makeCorrectDir(dirname($link_target), $fixed_homedir);
 				if (substr($check_dir, 0, strlen($fixed_homedir)) != $fixed_homedir) {
-					throw new Exception("Found symlink pointing outside of customer home directory: " . substr($filename, strlen($fixed_homedir)));
+					throw new Exception("Found symlink pointing outside of customer home directory: " . substr($link_target, strlen($fixed_homedir)));
 				}
 			}
 		}

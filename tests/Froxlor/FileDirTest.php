@@ -294,4 +294,29 @@ class FileDirTest extends TestCase
 		$this->expectExceptionMessage('Found symlink pointing outside of customer home directory: evil');
 		FileDir::makeCorrectFile($this->workdir . 'evil/secret.txt', $homedir);
 	}
+
+	/**
+	 * regression test: when the file itself is a symlink pointing within $fixed_homedir
+	 * (e.g. awstats' "current" -> "2026-10"), makeCorrectFile() has to return the path of
+	 * the link and not its target - 'ln -fTs <target> <link>' and unlink() act on the
+	 * returned path and would otherwise operate on the target directory
+	 */
+	public function testMakeCorrectFileReturnsLinkPathNotTargetForSymlinkWithinHomedir()
+	{
+		mkdir($this->workdir . 'stats/2026-10', 0777, true);
+		symlink($this->workdir . 'stats/2026-10/', $this->workdir . 'stats/current');
+		symlink('2026-10', $this->workdir . 'stats/current_rel');
+
+		$this->assertEquals($this->workdir . 'stats/current', FileDir::makeCorrectFile($this->workdir . 'stats/current', $this->workdir));
+		$this->assertEquals($this->workdir . 'stats/current_rel', FileDir::makeCorrectFile($this->workdir . 'stats/current_rel', $this->workdir));
+	}
+
+	public function testMakeCorrectFileRejectsFinalSymlinkPointingOutsideHomedir()
+	{
+		mkdir($this->workdir . 'stats', 0777, true);
+		symlink($this->outsidedir, $this->workdir . 'stats/current');
+
+		$this->expectException(Exception::class);
+		FileDir::makeCorrectFile($this->workdir . 'stats/current', $this->workdir);
+	}
 }
