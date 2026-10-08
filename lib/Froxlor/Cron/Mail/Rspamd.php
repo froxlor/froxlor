@@ -180,7 +180,14 @@ class Rspamd
 				$this->frx_settings_file .= '	' . $type . ' = "' . $email['email'] . '";' . "\n";
 			}
 			if ((int)$email['bypass_spam'] == 1) {
-				$this->frx_settings_file .= '	want_spam = yes;' . "\n";
+				if ($type == 'rcpt') {
+					$this->frx_settings_file .= '	want_spam = yes;' . "\n";
+				} else {
+					$this->frx_settings_file .= '	apply {' . "\n";
+					$this->frx_settings_file .= '		symbols_enabled = ["DKIM_SIGNED"];' . "\n";
+					$this->frx_settings_file .= '		flags = ["skip_process"];' . "\n";
+					$this->frx_settings_file .= '	}' . "\n";
+				}
 			} else {
 				$this->frx_settings_file .= '	apply {' . "\n";
 				$this->frx_settings_file .= '		actions {' . "\n";
