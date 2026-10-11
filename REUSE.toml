@@ -1,0 +1,43 @@
+version = 1
+
+# Own files that cannot carry a license header.
+[[annotations]]
+path = ["AUTHORS", "README.md", "pint.json"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 the froxlor Team (see AUTHORS)"
+SPDX-License-Identifier = "LGPL-3.0-or-later WITH LicenseRef-froxlor-Extension-Package-Exception"
+
+# Unchanged files of the Laravel application skeleton (laravel/laravel v12.6.0).
+[[annotations]]
+path = [
+    ".editorconfig",
+    ".gitattributes",
+    "artisan",
+    "bootstrap/cache/.gitignore",
+    "database/.gitignore",
+    "public/.htaccess",
+    "public/favicon.ico",
+    "public/index.php",
+    "public/robots.txt",
+    "storage/**/.gitignore",
+]
+precedence = "override"
+SPDX-FileCopyrightText = "Taylor Otwell"
+SPDX-License-Identifier = "MIT"
+
+# Files of the Laravel application skeleton (laravel/laravel v12.6.0) with froxlor changes:
+# the Laravel parts stay MIT, the changes are licensed like the rest of froxlor.
+[[annotations]]
+path = [
+    ".env.example",
+    ".gitignore",
+    "bootstrap/app.php",
+    "bootstrap/providers.php",
+    "composer.json",
+    "database/seeders/DatabaseSeeder.php",
+    "phpunit.xml",
+    "tests/TestCase.php",
+]
+precedence = "override"
+SPDX-FileCopyrightText = ["Taylor Otwell", "2026 the froxlor Team (see AUTHORS)"]
+SPDX-License-Identifier = "MIT AND LGPL-3.0-or-later WITH LicenseRef-froxlor-Extension-Package-Exception"

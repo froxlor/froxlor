@@ -1,0 +1,41 @@
+froxlor Extension Package Exception, version 1.0
+
+As an additional permission under section 7 of the GNU General Public
+License, version 3 (which is incorporated into the GNU Lesser General
+Public License, version 3), the copyright holders of froxlor grant you
+the following additional permission for froxlor:
+
+1. Definitions
+   "froxlor" means the froxlor software distributed under
+   LGPL-3.0-or-later together with this exception.
+   "Public Extension Package API" means the interfaces, contracts,
+   abstract classes, events, hooks and extension points that are
+   documented as public in the file docs/extension-package-api.md of the
+   froxlor/core package for the respective version of froxlor.
+   "Extension Package" means a separate work, such as a package installed
+   through the package management of froxlor, that interacts with
+   froxlor solely through the Public Extension Package API and that
+   neither contains nor modifies any other part of froxlor.
+
+2. Permission
+   You may create, use, convey and distribute Extension Packages and
+   license them under terms of your choice, including proprietary terms.
+   In particular, the requirements of section 4 of the GNU LGPL version 3
+   (and any corresponding requirements of other versions), including
+   permission to modify the Extension Package for your own use and to
+   reverse engineer it for debugging such modifications, do not apply to
+   the Extension Package.
+
+3. Conditions
+   a) This permission applies only to the Extension Package itself.
+      froxlor, and any modification of it, remain licensed under the GNU
+      LGPL version 3 or later.
+   b) If you convey the Extension Package together with froxlor, you must
+      retain the copyright notices and license texts of froxlor and comply
+      with the LGPL for froxlor.
+   c) The license of your Extension Package must not restrict the rights
+      granted to recipients for froxlor.
+
+4. Removal
+   If you modify froxlor, you may remove this exception from your version.
+   You are not required to do so.

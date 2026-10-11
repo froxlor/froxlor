@@ -1,0 +1,13 @@
+# Authors of froxlor/froxlor
+
+"the froxlor Team" in the copyright notices of this repository means the
+following people, who hold the copyright of their contributions:
+
+Michael Kaufmann <d00p@froxlor.org>
+Maurice Preuß <envoyr@froxlor.org>
+
+Contributors are listed with the name and address they use in the git history.
+
+The skeleton is based on the Laravel application skeleton (laravel/laravel
+v12.6.0, MIT license, Copyright (c) Taylor Otwell); see REUSE.toml for the
+files that come from it.

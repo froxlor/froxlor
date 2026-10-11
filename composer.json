@@ -9,7 +9,7 @@
         "panel"
     ],
     "homepage": "https://www.froxlor.org",
-    "license": "LGPL-2.1-only",
+    "license": "LGPL-3.0-or-later",
     "authors": [
         {
             "name": "Michael Kaufmann",
@@ -39,8 +39,8 @@
     "require": {
         "php": "^8.5",
         "froxlor/framework": "*",
-        "laravel/framework": "^12.0",
-        "laravel/tinker": "^2.10.1"
+        "laravel/framework": "^13.0",
+        "laravel/tinker": "^3.0"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
@@ -49,7 +49,7 @@
         "laravel/sail": "^1.41",
         "mockery/mockery": "^1.6",
         "nunomaduro/collision": "^8.6",
-        "phpunit/phpunit": "^11.5.3"
+        "phpunit/phpunit": "^12.5"
     },
     "autoload": {
         "psr-4": {
@@ -86,11 +86,11 @@
         ],
         "dev": [
             "Composer\\Config::disableProcessTimeout",
-            "npx concurrently -c \"#93c5fd,#c4b5fd,#fb7185,#bd74fd,#fdba74\" \"php artisan serve\" \"php artisan queue:listen --tries=1 --timeout=0\" \"php artisan pail --timeout=0\" \"npm run dev\" \"php artisan schedule:work --quiet\" --names=server,queue,logs,vite,schedule --kill-others"
+            "npx concurrently -c \"#93c5fd,#c4b5fd,#fb7185,#bd74fd,#86efac,#fde68a\" \"php artisan serve\" \"php artisan queue:listen --tries=1 --timeout=0\" \"php artisan pail --timeout=0\" \"php artisan schedule:work --quiet\" \"php artisan queue:listen node-setup --queue=node-setup --tries=1 --timeout=1260\" \"php artisan queue:listen environment-jails --queue=environment-jails --tries=3 --timeout=1860\" --names=server,queue,logs,schedule,setup,jails --kill-others"
         ],
         "serve": [
             "Composer\\Config::disableProcessTimeout",
-            "npx concurrently -c \"#93c5fd,#c4b5fd,#fb7185,#bd74fd\" \"php artisan serve --host=0.0.0.0\" \"php artisan queue:listen --tries=1 --timeout=0\" \"php artisan pail --timeout=0\" \"php artisan schedule:work --quiet\" --names=server,queue,logs,schedule --kill-others"
+            "npx concurrently -c \"#93c5fd,#c4b5fd,#fb7185,#bd74fd,#86efac,#fde68a\" \"php artisan serve --host=0.0.0.0\" \"php artisan queue:listen --tries=1 --timeout=0\" \"php artisan pail --timeout=0\" \"php artisan schedule:work --quiet\" \"php artisan queue:listen node-setup --queue=node-setup --tries=1 --timeout=1260\" \"php artisan queue:listen environment-jails --queue=environment-jails --tries=3 --timeout=1860\" --names=server,queue,logs,schedule,setup,jails --kill-others"
         ],
         "test": [
             "@php artisan config:clear --ansi",

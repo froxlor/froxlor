@@ -1,0 +1,28 @@
+{
+    "preset": "laravel",
+    "rules": {
+        "header_comment": {
+            "header": "SPDX-FileCopyrightText: 2026 the froxlor Team (see AUTHORS)\nSPDX-License-Identifier: LGPL-3.0-or-later WITH LicenseRef-froxlor-Extension-Package-Exception\n\nThis file is part of the froxlor project.\n\nThis library is free software: you can redistribute it and/or modify\nit under the terms of the GNU Lesser General Public License as\npublished by the Free Software Foundation, either version 3 of the\nLicense, or (at your option) any later version, with the froxlor\nExtension Package Exception (see LICENSE-EXCEPTION).\n\nThis library is distributed in the hope that it will be useful, but\nWITHOUT ANY WARRANTY; without even the implied warranty of\nMERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU\nLesser General Public License for more details.\n\nYou should have received a copy of the GNU Lesser General Public\nLicense along with this library. If not, see\n<https://www.gnu.org/licenses/>.",
+            "comment_type": "comment",
+            "location": "after_open",
+            "separate": "both"
+        }
+    },
+    "notPath": [
+        "bootstrap/app.php",
+        "bootstrap/providers.php",
+        "config/app.php",
+        "config/auth.php",
+        "config/cache.php",
+        "config/database.php",
+        "config/filesystems.php",
+        "config/logging.php",
+        "config/mail.php",
+        "config/queue.php",
+        "config/services.php",
+        "config/session.php",
+        "database/seeders/DatabaseSeeder.php",
+        "public/index.php",
+        "tests/TestCase.php"
+    ]
+}

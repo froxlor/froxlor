@@ -6,9 +6,28 @@
 >
     <testsuites>
         <testsuite name="Core Package">
-            <directory>../framework/packages/core/tests</directory>
+            <directory>vendor/froxlor/core/tests</directory>
+        </testsuite>
+        <testsuite name="UI Package">
+            <directory>vendor/froxlor/ui/tests</directory>
+        </testsuite>
+        <testsuite name="Packages Package">
+            <directory>vendor/froxlor/packages/tests</directory>
+        </testsuite>
+        <testsuite name="Feature Packages">
+            <directory>vendor/froxlor/*/tests</directory>
+            <exclude>vendor/froxlor/core/tests</exclude>
+            <exclude>vendor/froxlor/ui/tests</exclude>
+            <exclude>vendor/froxlor/packages/tests</exclude>
         </testsuite>
     </testsuites>
+    <php>
+        <ini name="memory_limit" value="512M"/>
+        <env name="CACHE_STORE" value="array" force="true"/>
+        <env name="DB_DATABASE" value="froxlor_testing" force="true"/>
+        <server name="DB_DATABASE" value="froxlor_testing" force="true"/>
+        <server name="CACHE_STORE" value="array" force="true"/>
+    </php>
     <source>
         <include>
             <directory>app</directory>

@@ -1,6 +1,6 @@
 <p align="center">
     <a href="https://froxlor.org" target="_blank">
-        <img src="https://raw.githubusercontent.com/froxlor/framework/refs/heads/main/packages/ui/resources/img/icon.png" width="80" alt="froxlor logo">
+        <img src="https://raw.githubusercontent.com/froxlor/ui/refs/heads/main/resources/img/icon.png" width="80" alt="froxlor logo">
     </a>
 </p>
 
@@ -35,7 +35,7 @@ actual functionality lives in Composer packages, which are pulled in via `compos
 
 ```text
 froxlor/froxlor            Laravel application (this repository)
-└── froxlor/framework      Core framework, bundles the packages below
+└── froxlor/framework      Metapackage, requires the packages below
     ├── froxlor/core       Tenants, users, environments, nodes, roles/permissions,
     │                      plans/resources, settings, audit logging, shared services
     ├── froxlor/packages   Package management
@@ -60,7 +60,10 @@ Infrastructure changes follow this flow: Controller → Service → Domain Actio
 
 | Repository                                                    | Purpose                                            |
 |---------------------------------------------------------------|----------------------------------------------------|
-| [froxlor/framework](https://github.com/froxlor/framework)     | Framework packages (`core`, `packages`, `ui`) |
+| [froxlor/framework](https://github.com/froxlor/framework)     | Metapackage, requires `core`, `packages` and `ui`  |
+| [froxlor/core](https://github.com/froxlor/core)               | Core                                               |
+| [froxlor/ui](https://github.com/froxlor/ui)                   | UI toolkit                                         |
+| [froxlor/packages](https://github.com/froxlor/packages)       | Package management                                 |
 | [froxlor/container](https://github.com/froxlor/container)     | Docker image and development setup                 |
 
 ## Getting started
@@ -68,7 +71,7 @@ Infrastructure changes follow this flow: Controller → Service → Domain Actio
 The easiest way to try froxlor or to set up a development environment is the
 [froxlor container](https://github.com/froxlor/container) (see its `DEVELOPERS.md`).
 
-Running the application directly requires PHP 8.5+, Composer and Node.js:
+Running the application directly requires PHP 8.5+ and Composer (`composer dev` also needs Node.js for `npx`):
 
 ```bash
 composer install
@@ -76,10 +79,9 @@ cp .env.example .env
 php artisan key:generate
 php artisan migrate
 php artisan froxlor:install
-npm install && npm run build
 ```
 
-Start the development services (web server, queue worker, log tail, Vite, scheduler):
+Start the development services (web server, queue workers, log tail, scheduler):
 
 ```bash
 composer dev
@@ -93,4 +95,13 @@ composer test
 
 ## License
 
-froxlor is licensed under the [LGPL-2.1-only](LICENSE).
+froxlor is licensed under the **GNU Lesser General Public License, version 3 or (at your option) any later version**,
+with the **froxlor Extension Package Exception** (SPDX: `LGPL-3.0-or-later WITH LicenseRef-froxlor-Extension-Package-Exception`).
+
+- [COPYING.LESSER](COPYING.LESSER): GNU Lesser General Public License, version 3
+- [COPYING](COPYING): GNU General Public License, version 3 (incorporated by the LGPL)
+- [LICENSE-EXCEPTION](LICENSE-EXCEPTION): froxlor Extension Package Exception
+- [AUTHORS](AUTHORS): the copyright holders
+
+The skeleton is based on the [Laravel application skeleton](https://github.com/laravel/laravel) (MIT license); the files
+taken from it keep the MIT license, see [REUSE.toml](REUSE.toml) and [LICENSES/](LICENSES).

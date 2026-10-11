@@ -24,9 +24,9 @@
 /vendor
 build
 composer.lock
-composer.dev.json
-composer.dev.lock
-docker-compose.yml
+composer.local.json
+composer.local.lock
+compose.yml
 Homestead.json
 Homestead.yaml
 Makefile
