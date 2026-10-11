@@ -1,5 +1,5 @@
-[![Froxlor-CI](https://github.com/Froxlor/Froxlor/actions/workflows/build-mariadb.yml/badge.svg?branch=main)](https://github.com/Froxlor/Froxlor/actions/workflows/build-mariadb.yml)
-[![Froxlor-CI](https://github.com/Froxlor/Froxlor/actions/workflows/build-mysql.yml/badge.svg?branch=main)](https://github.com/Froxlor/Froxlor/actions/workflows/build-mysql.yml)
+[![Froxlor-CI](https://github.com/Froxlor/Froxlor/actions/workflows/build-mariadb.yml/badge.svg?branch=v2)](https://github.com/Froxlor/Froxlor/actions/workflows/build-mariadb.yml)
+[![Froxlor-CI](https://github.com/Froxlor/Froxlor/actions/workflows/build-mysql.yml/badge.svg?branch=v2)](https://github.com/Froxlor/Froxlor/actions/workflows/build-mysql.yml)
 [![Discord](https://badgen.net/badge/icon/discord?icon=discord&label)](https://discord.froxlor.org)
 
 # Froxlor
