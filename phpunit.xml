@@ -24,6 +24,9 @@
     <php>
         <ini name="memory_limit" value="512M"/>
         <env name="CACHE_STORE" value="array" force="true"/>
+        <!-- jobs of the tests never reach the queue workers of the development stack (they work on the panel database) -->
+        <env name="QUEUE_CONNECTION" value="null" force="true"/>
+        <server name="QUEUE_CONNECTION" value="null" force="true"/>
         <env name="DB_DATABASE" value="froxlor_testing" force="true"/>
         <server name="DB_DATABASE" value="froxlor_testing" force="true"/>
         <server name="CACHE_STORE" value="array" force="true"/>
