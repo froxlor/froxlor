@@ -1,6 +1,6 @@
 <p align="center">
     <a href="https://froxlor.org" target="_blank">
-        <img src="https://raw.githubusercontent.com/froxlor/ui/refs/heads/main/resources/img/icon.png" width="80" alt="froxlor logo">
+        <img src="https://froxlor.org/img/brand/logo_gradient_text_white.png" height="60" alt="froxlor logo">
     </a>
 </p>
 
@@ -69,29 +69,7 @@ Infrastructure changes follow this flow: Controller → Service → Domain Actio
 ## Getting started
 
 The easiest way to try froxlor or to set up a development environment is the
-[froxlor container](https://github.com/froxlor/container) (see its `DEVELOPERS.md`).
-
-Running the application directly requires PHP 8.5+ and Composer (`composer dev` also needs Node.js for `npx`):
-
-```bash
-composer install
-cp .env.example .env
-php artisan key:generate
-php artisan migrate
-php artisan froxlor:install
-```
-
-Start the development services (web server, queue workers, log tail, scheduler):
-
-```bash
-composer dev
-```
-
-Run the tests:
-
-```bash
-composer test
-```
+[froxlor container](https://github.com/froxlor/container) (see its `README.md` and `DEVELOPERS.md`).
 
 ## License
 
