@@ -55,7 +55,7 @@ class Rspamd
 
 		// get all email addresses
 		$antispam_stmt = Database::prepare("
-			SELECT email, spam_tag_level, rewrite_subject, spam_kill_level, bypass_spam, policy_greylist, iscatchall
+			SELECT email_full, spam_tag_level, rewrite_subject, spam_kill_level, bypass_spam, policy_greylist, iscatchall
 			FROM `" . TABLE_MAIL_VIRTUAL . "`
 			ORDER BY email
 		");
@@ -162,25 +162,36 @@ class Rspamd
 
 	private function generateEmailAddrConfig(array $email): void
 	{
-		$this->logger->logAction(FroxlorLogger::CRON_ACTION, LOG_DEBUG, 'Generating antispam config for ' . $email['email']);
+		$this->logger->logAction(FroxlorLogger::CRON_ACTION, LOG_DEBUG, 'Generating antispam config for ' . $email['email_full']);
 
 		$email['spam_tag_level'] = floatval($email['spam_tag_level']);
 		$email['spam_kill_level'] = $email['spam_kill_level'] == -1 ? "null" : floatval($email['spam_kill_level']);
-		$email_id = md5($email['email']);
+		$email_id = md5($email['email_full']);
 
-		$this->frx_settings_file .= '# Email: ' . $email['email'] . "\n";
-		foreach (['rcpt', 'from'] as $type) {
-			$this->frx_settings_file .= 'frx_' . $email_id . '_' . $type . ' {' . "\n";
+		$this->frx_settings_file .= '# Email: ' . $email['email_full'] . "\n";
+		foreach (['rcpt', 'from', 'user' ] as $order => $type) {
+			$this->frx_settings_file .= 'frx_' . $email_id . '_' . $order . '_' . $type . ' {' . "\n";
 			$this->frx_settings_file .= '	id = "frx_' . $email_id . '_' . $type . '";' . "\n";
 			if ($email['iscatchall']) {
 				$this->frx_settings_file .= '	priority = low;' . "\n";
-				$this->frx_settings_file .= '	' . $type . ' = "' . substr($email['email'], strpos($email['email'], '@')) . '";' . "\n";
+				if ($type == 'rcpt'){
+					$this->frx_settings_file .= '	' . $type . ' = "' . substr($email['email_full'], strpos($email['email_full'], '@')) . '";' . "\n";
+				} else {
+					$this->frx_settings_file .= '	' . $type . ' = "' . $email['email_full'] . '";' . "\n";
+				}
 			} else {
 				$this->frx_settings_file .= '	priority = medium;' . "\n";
-				$this->frx_settings_file .= '	' . $type . ' = "' . $email['email'] . '";' . "\n";
+				$this->frx_settings_file .= '	' . $type . ' = "' . $email['email_full'] . '";' . "\n";
 			}
 			if ((int)$email['bypass_spam'] == 1) {
-				$this->frx_settings_file .= '	want_spam = yes;' . "\n";
+				if ($type == 'rcpt') {
+					$this->frx_settings_file .= '	want_spam = yes;' . "\n";
+				} else {
+					$this->frx_settings_file .= '	apply {' . "\n";
+					$this->frx_settings_file .= '		symbols_enabled = ["DKIM_SIGNED"];' . "\n";
+					$this->frx_settings_file .= '		flags = ["skip_process"];' . "\n";
+					$this->frx_settings_file .= '	}' . "\n";
+				}
 			} else {
 				$this->frx_settings_file .= '	apply {' . "\n";
 				$this->frx_settings_file .= '		actions {' . "\n";
