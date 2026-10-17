@@ -30,7 +30,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: REUSE lint
-        uses: fsfe/reuse-action@v5
+        uses: fsfe/reuse-action@v6
