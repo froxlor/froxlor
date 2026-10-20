@@ -30,6 +30,7 @@ use Froxlor\Api\ApiCommand;
 use Froxlor\Api\ResourceEntity;
 use Froxlor\Database\Database;
 use Froxlor\FroxlorLogger;
+use Froxlor\Settings;
 use PDO;
 
 /**
@@ -82,6 +83,10 @@ class SysLog extends ApiCommand implements ResourceEntity
 			}
 			$query_fields['loginname'] = $this->getUserDetail('loginname');
 		} else {
+			// customer: the logger feature may be hidden by the admin
+			if (Settings::IsInList('panel.customer_hide_options', 'extras.logger')) {
+				throw new Exception("You cannot access this resource", 405);
+			}
 			// every one else just sees their logs
 			$result_stmt = Database::prepare("
 			SELECT * FROM `" . TABLE_PANEL_LOG . "`
@@ -139,6 +144,10 @@ class SysLog extends ApiCommand implements ResourceEntity
 				'loginname' => $this->getUserDetail('loginname')
 			];
 		} else {
+			// customer: the logger feature may be hidden by the admin
+			if (Settings::IsInList('panel.customer_hide_options', 'extras.logger')) {
+				throw new Exception("You cannot access this resource", 405);
+			}
 			// every one else just sees their logs
 			$result_stmt = Database::prepare("
 				SELECT COUNT(*) as num_logs FROM `" . TABLE_PANEL_LOG . "`
