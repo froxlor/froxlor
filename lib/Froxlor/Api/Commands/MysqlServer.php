@@ -33,6 +33,7 @@ use Froxlor\FileDir;
 use Froxlor\Froxlor;
 use Froxlor\FroxlorLogger;
 use Froxlor\PhpHelper;
+use Froxlor\Settings;
 use Froxlor\Validate\Validate;
 use PDO;
 use PDOException;
@@ -242,6 +243,9 @@ class MysqlServer extends ApiCommand implements ResourceEntity
 		if ($this->isAdmin() && $this->getUserDetail('change_serversettings') == 0) {
 			throw new Exception("You cannot access this resource", 405);
 		}
+		if ($this->isAdmin() == false && Settings::IsInList('panel.customer_hide_options', 'mysql')) {
+			throw new Exception("You cannot access this resource", 405);
+		}
 
 		$sql = [];
 		$sql_root = [];
@@ -286,6 +290,9 @@ class MysqlServer extends ApiCommand implements ResourceEntity
 		if ($this->isAdmin() && $this->getUserDetail('change_serversettings') == 0) {
 			throw new Exception("You cannot access this resource", 405);
 		}
+		if ($this->isAdmin() == false && Settings::IsInList('panel.customer_hide_options', 'mysql')) {
+			throw new Exception("You cannot access this resource", 405);
+		}
 
 		if ($this->isAdmin() == false) {
 			$allowed_mysqls = json_decode($this->getUserDetail('allowed_mysqlserver'), true);
@@ -316,6 +323,9 @@ class MysqlServer extends ApiCommand implements ResourceEntity
 	{
 		// see listing() - a reseller is not permitted to see mysql server configuration at all
 		if ($this->isAdmin() && $this->getUserDetail('change_serversettings') == 0) {
+			throw new Exception("You cannot access this resource", 405);
+		}
+		if ($this->isAdmin() == false && Settings::IsInList('panel.customer_hide_options', 'mysql')) {
 			throw new Exception("You cannot access this resource", 405);
 		}
 
@@ -507,7 +517,7 @@ class MysqlServer extends ApiCommand implements ResourceEntity
 			return (int)$result['num_dbs'];
 		} else {
 			$dbserver = $this->getParam('mysql_server');
-			$customer_ids = $this->getAllowedCustomerIds();
+			$customer_ids = $this->getAllowedCustomerIds('mysql');
 			$result_stmt = Database::prepare("
 				SELECT COUNT(*) num_dbs FROM `" . TABLE_PANEL_DATABASES . "`
 				WHERE `customerid` IN (" . implode(", ", $customer_ids) . ") AND `dbserver` = :dbserver

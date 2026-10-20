@@ -304,6 +304,9 @@ class Certificates extends ApiCommand implements ResourceEntity
 			$qry_params['adminid'] = $this->getUserDetail('adminid');
 		} elseif ($this->isAdmin() == false) {
 			// customer-area
+			if (Settings::IsInList('panel.customer_hide_options', 'domains')) {
+				throw new Exception("You cannot access this resource", 405);
+			}
 			$certs_stmt_query .= "d.customerid = :cid ";
 			$qry_params['cid'] = $this->getUserDetail('customerid');
 		} else {
@@ -421,6 +424,9 @@ class Certificates extends ApiCommand implements ResourceEntity
 			$qry_params['adminid'] = $this->getUserDetail('adminid');
 		} elseif ($this->isAdmin() == false) {
 			// customer-area
+			if (Settings::IsInList('panel.customer_hide_options', 'domains')) {
+				throw new Exception("You cannot access this resource", 405);
+			}
 			$certs_stmt_query .= "d.customerid = :cid ";
 			$qry_params['cid'] = $this->getUserDetail('customerid');
 		} else {

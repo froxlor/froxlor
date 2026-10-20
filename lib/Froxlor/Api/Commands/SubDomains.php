@@ -100,6 +100,10 @@ class SubDomains extends ApiCommand implements ResourceEntity
 	 */
 	public function add()
 	{
+		if ($this->isAdmin() == false && Settings::IsInList('panel.customer_hide_options', 'domains')) {
+			throw new Exception("You cannot access this resource", 405);
+		}
+
 		if (($this->getUserDetail('subdomains_used') < $this->getUserDetail('subdomains') || $this->getUserDetail('subdomains') == '-1') || $this->isAdmin()) {
 			// parameters
 			$subdomain = $this->getParam('subdomain');
