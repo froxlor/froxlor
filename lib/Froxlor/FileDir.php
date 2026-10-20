@@ -90,7 +90,7 @@ class FileDir
 			sort($subdirs);
 			foreach ($subdirs as $sdir) {
 				if (!is_dir($sdir)) {
-					// re-validate right before mkdir/chown -R: a customer-controlled path
+					// re-validate right before mkdir/chown: a customer-controlled path
 					// component could have been swapped for a symlink after $dirToCreate was
 					// first stored/validated. Skip only this component if it now escapes
 					// $homeDir - do not touch it, do not abort sibling directories.
@@ -104,15 +104,46 @@ class FileDir
 					} else {
 						$sdir = self::makeCorrectDir($sdir);
 					}
-					self::safe_exec('mkdir -p ' . escapeshellarg($sdir));
+
+					// The customer can swap any component of this path for a symlink at any
+					// time, so the checks above can be outdated by the time root acts on it.
+					// Keep every step as race-tolerant as possible:
+					// - plain mkdir (no -p) for everything below the homedir, so we only ever
+					//   chown a directory that *we* just created - if something already exists
+					//   there (e.g. a swapped-in symlink to an existing directory) mkdir fails
+					//   and we leave it alone
+					// - verify where the new directory really ended up before chown'ing it
+					// - chown -h without trailing slash: never dereference a symlink at the
+					//   last component, neither the operand nor anything found while recursing
+					$mkdir_status = 1;
+					if ($within_homedir && $sdir !== $homeDir) {
+						self::safe_exec('mkdir -- ' . escapeshellarg(rtrim($sdir, '/')), $mkdir_status);
+					} else {
+						self::safe_exec('mkdir -p -- ' . escapeshellarg(rtrim($sdir, '/')), $mkdir_status);
+					}
+					if ($mkdir_status !== 0) {
+						FroxlorLogger::getInstanceOf()->logAction(FroxlorLogger::CRON_ACTION, LOG_ERR, 'mkDirWithCorrectOwnership: could not create "' . $sdir . '", skipping chown');
+						continue;
+					}
+					$target = rtrim($sdir, '/');
+					if ($within_homedir) {
+						$real_target = realpath($target);
+						$real_home = realpath($homeDir);
+						if ($real_target === false || $real_home === false || strpos($real_target . '/', rtrim($real_home, '/') . '/') !== 0) {
+							FroxlorLogger::getInstanceOf()->logAction(FroxlorLogger::CRON_ACTION, LOG_ERR, 'mkDirWithCorrectOwnership: "' . $sdir . '" ended up outside of "' . $homeDir . '", skipping chown');
+							continue;
+						}
+						// from here on only use the resolved path
+						$target = $real_target;
+					}
 					// place index
 					if ($placeindex) {
 						$loginname = Customer::getLoginNameByUid($uid);
 						if ($loginname !== false) {
-							self::storeDefaultIndex($loginname, $sdir, null);
+							self::storeDefaultIndex($loginname, $target . '/', null);
 						}
 					}
-					self::safe_exec('chown -R ' . (int)$uid . ':' . (int)$gid . ' ' . escapeshellarg($sdir));
+					self::safe_exec('chown -hR ' . (int)$uid . ':' . (int)$gid . ' -- ' . escapeshellarg($target));
 				}
 			}
 			return true;
