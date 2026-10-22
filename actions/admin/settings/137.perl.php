@@ -52,9 +52,9 @@ return [
 						'apache2'
 					]
 				],
-				'serversettings_perl_server' => [
+				'system_perl_server' => [
 					'label' => lng('serversettings.perl_server'),
-					'settinggroup' => 'serversettings',
+					'settinggroup' => 'system',
 					'varname' => 'perl_server',
 					'type' => 'text',
 					'string_regexp' => '/^[a-zA-Z0-9\/._:\-\[\]]+$/D',
