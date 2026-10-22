@@ -396,4 +396,33 @@ class Check
 		}
 		return $returnvalue;
 	}
+
+	/**
+	 * check whether the given name is an existing system group
+	 *
+	 * @param string $fieldname
+	 * @param array $fielddata
+	 * @param mixed $newfieldvalue
+	 * @param array $allnewfieldvalues
+	 *
+	 * @return array
+	 */
+	public static function checkSystemGroupname($fieldname, $fielddata, $newfieldvalue, $allnewfieldvalues)
+	{
+		if (empty($newfieldvalue) || $fielddata['value'] == $newfieldvalue) {
+			$returnvalue = [
+				self::FORMFIELDS_PLAUSIBILITY_CHECK_OK
+			];
+		} elseif (function_exists('posix_getgrnam') && posix_getgrnam($newfieldvalue) == false) {
+			$returnvalue = [
+				self::FORMFIELDS_PLAUSIBILITY_CHECK_ERROR,
+				'local_group_notexists'
+			];
+		} else {
+			$returnvalue = [
+				self::FORMFIELDS_PLAUSIBILITY_CHECK_OK
+			];
+		}
+		return $returnvalue;
+	}
 }

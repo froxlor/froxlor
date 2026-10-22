@@ -999,6 +999,7 @@ return [
 		'local_group_exists' => 'Die angegebene Gruppe existiert bereits auf dem System',
 		'local_group_invalid' => 'Der angegebene Gruppen-Name ist nicht gültig',
 		'local_user_invalid' => 'Der angegebene Benutzer-Name ist nicht gültig oder existiert nicht',
+		'local_group_notexists' => 'Der angegebene Gruppen-Name ist nicht gültig oder existiert nicht',
 		'local_user_isfroxloruser' => 'Der angegebene Benutzer-Name ist ein von froxlor verwalteter Benutzer und kann in diesem Kontext nicht verwendet werden.',
 		'invaliddnsforletsencrypt' => 'Die DNS-Einträge der Domain enthalten keine der gewählten IP Adressen. Let\'s Encrypt Zertifikats-Erstellung ist nicht möglich.',
 		'notallowedphpconfigused' => 'Nutzung einer PHP-Konfiguration welche nicht dem Kunden zugeordnet ist',

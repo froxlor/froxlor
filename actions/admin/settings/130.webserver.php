@@ -114,6 +114,7 @@ return [
 					'settinggroup' => 'system',
 					'varname' => 'httpuser',
 					'type' => 'text',
+					'string_regexp' => '/^[a-zA-Z0-9_][a-zA-Z0-9_.-]*$/D',
 					'default' => 'www-data',
 					'plausibility_check_method' => [
 						'\\Froxlor\\Validate\\Check',
@@ -126,6 +127,11 @@ return [
 					'settinggroup' => 'system',
 					'varname' => 'httpgroup',
 					'type' => 'text',
+					'string_regexp' => '/^[a-zA-Z0-9_][a-zA-Z0-9_.-]*$/D',
+					'plausibility_check_method' => [
+						'\\Froxlor\\Validate\\Check',
+						'checkSystemGroupname'
+					],
 					'default' => 'www-data',
 					'save_method' => 'storeSettingField'
 				],

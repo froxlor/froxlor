@@ -80,7 +80,7 @@ class ApacheFcgi extends Apache
 
 			// all the files and folders have to belong to the local user
 			// now because we also use fcgid for our own vhost
-			FileDir::safe_exec('chown -R ' . $user . ':' . $group . ' ' . escapeshellarg($mypath));
+			FileDir::safe_exec('chown -R ' . escapeshellarg($user . ':' . $group) . ' ' . escapeshellarg($mypath));
 
 			// get php.ini for our own vhost
 			$php = new PhpInterface($domain);

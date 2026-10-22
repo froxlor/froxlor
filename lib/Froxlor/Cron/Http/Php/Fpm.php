@@ -358,7 +358,7 @@ pm.max_children = 1
 
 		if (!is_dir($socketdir) && $createifnotexists) {
 			FileDir::safe_exec('mkdir -p ' . escapeshellarg($socketdir));
-			FileDir::safe_exec('chown -R ' . Settings::Get('system.httpuser') . ':' . Settings::Get('system.httpgroup') . ' ' . escapeshellarg($socketdir));
+			FileDir::safe_exec('chown -R ' . escapeshellarg(Settings::Get('system.httpuser') . ':' . Settings::Get('system.httpgroup')) . ' ' . escapeshellarg($socketdir));
 		}
 
 		return $socket;

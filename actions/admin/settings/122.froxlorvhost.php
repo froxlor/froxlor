@@ -175,6 +175,7 @@ return [
 					'settinggroup' => 'system',
 					'varname' => 'mod_fcgid_httpuser',
 					'type' => 'text',
+					'string_regexp' => '/^[a-zA-Z0-9_][a-zA-Z0-9_.-]*$/D',
 					'default' => 'froxlorlocal',
 					'string_emptyallowed' => false,
 					'plausibility_check_method' => [
@@ -196,6 +197,11 @@ return [
 					'settinggroup' => 'system',
 					'varname' => 'mod_fcgid_httpgroup',
 					'type' => 'text',
+					'string_regexp' => '/^[a-zA-Z0-9_][a-zA-Z0-9_.-]*$/D',
+					'plausibility_check_method' => [
+						'\\Froxlor\\Validate\\Check',
+						'checkSystemGroupname'
+					],
 					'default' => 'froxlorlocal',
 					'save_method' => 'storeSettingField',
 					'string_emptyallowed' => false,
@@ -248,6 +254,7 @@ return [
 					'settinggroup' => 'phpfpm',
 					'varname' => 'vhost_httpuser',
 					'type' => 'text',
+					'string_regexp' => '/^[a-zA-Z0-9_][a-zA-Z0-9_.-]*$/D',
 					'default' => 'froxlorlocal',
 					'string_emptyallowed' => false,
 					'plausibility_check_method' => [
@@ -266,6 +273,11 @@ return [
 					'settinggroup' => 'phpfpm',
 					'varname' => 'vhost_httpgroup',
 					'type' => 'text',
+					'string_regexp' => '/^[a-zA-Z0-9_][a-zA-Z0-9_.-]*$/D',
+					'plausibility_check_method' => [
+						'\\Froxlor\\Validate\\Check',
+						'checkSystemGroupname'
+					],
 					'default' => 'froxlorlocal',
 					'string_emptyallowed' => false,
 					'save_method' => 'storeSettingField',

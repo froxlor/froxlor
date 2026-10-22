@@ -206,12 +206,12 @@ final class MasterCron extends CliCommand
 				$group = Settings::Get('phpfpm.vhost_httpgroup');
 			}
 			// all the files and folders have to belong to the local user
-			FileDir::safe_exec('chown -R ' . $user . ':' . $group . ' ' . escapeshellarg($_mypath));
+			FileDir::safe_exec('chown -R ' . escapeshellarg($user . ':' . $group) . ' ' . escapeshellarg($_mypath));
 		} else {
 			// back to webserver permission
 			$user = Settings::Get('system.httpuser');
 			$group = Settings::Get('system.httpgroup');
-			FileDir::safe_exec('chown -R ' . $user . ':' . $group . ' ' . escapeshellarg($_mypath));
+			FileDir::safe_exec('chown -R ' . escapeshellarg($user . ':' . $group) . ' ' . escapeshellarg($_mypath));
 		}
 		$output->writeln('OK');
 	}
