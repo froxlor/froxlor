@@ -179,6 +179,8 @@ return [
 					'settinggroup' => 'system',
 					'varname' => 'logfiles_script',
 					'type' => 'text',
+					'string_regexp' => '/^[a-zA-Z0-9\/._\-{}=%:,+@ ]*$/D',
+					'required_otp' => true,
 					'default' => '',
 					'save_method' => 'storeSettingField',
 					'websrv_avail' => [
@@ -265,6 +267,7 @@ return [
 					'settinggroup' => 'system',
 					'varname' => 'phpappendopenbasedir',
 					'type' => 'text',
+					'string_regexp' => '/^[a-zA-Z0-9\/._:+@\-]*$/D',
 					'string_emptyallowed' => true,
 					'default' => '',
 					'save_method' => 'storeSettingField',
@@ -350,6 +353,7 @@ return [
 					'settinggroup' => 'system',
 					'varname' => 'nginx_php_backend',
 					'type' => 'text',
+					'string_regexp' => '/^[a-zA-Z0-9\/._:\-\[\]]+$/D',
 					'default' => '127.0.0.1:8888',
 					'save_method' => 'storeSettingField',
 					'websrv_avail' => [

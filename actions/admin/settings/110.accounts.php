@@ -188,6 +188,7 @@ return [
 					'settinggroup' => 'customer',
 					'varname' => 'ftpprefix',
 					'type' => 'text',
+					'string_regexp' => '/^[a-zA-Z0-9_\-]*$/D',
 					'default' => '',
 					'save_method' => 'storeSettingField'
 				],

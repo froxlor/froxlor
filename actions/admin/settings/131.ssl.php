@@ -123,6 +123,7 @@ return [
 					'settinggroup' => 'system',
 					'varname' => 'apache24_ocsp_cache_path',
 					'type' => 'text',
+					'string_regexp' => '/^[a-zA-Z0-9\/._:()\-]+$/D',
 					'string_emptyallowed' => false,
 					'default' => 'shmcb:/var/run/apache2/ocsp-stapling.cache(131072)',
 					'visible' => Settings::Get('system.webserver') == "apache2" && Settings::Get('system.apache24') == 1,

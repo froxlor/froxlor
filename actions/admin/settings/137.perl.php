@@ -57,6 +57,7 @@ return [
 					'settinggroup' => 'serversettings',
 					'varname' => 'perl_server',
 					'type' => 'text',
+					'string_regexp' => '/^[a-zA-Z0-9\/._:\-\[\]]+$/D',
 					'default' => 'unix:/var/run/nginx/cgiwrap-dispatch.sock',
 					'save_method' => 'storeSettingField',
 					'websrv_avail' => [
