@@ -53,6 +53,13 @@ return [
 						'value' => '/etc/php/7.4/fpm/pool.d/',
 						'mandatory' => true
 					],
+					'socket_dir' => [
+						'label' => lng('serversettings.phpfpm_settings.socketdir.title'),
+						'desc' => lng('serversettings.phpfpm_settings.socketdir.description'),
+						'type' => 'text',
+						'maxlength' => 255,
+						'value' => ''
+					],
 					'pm' => [
 						'label' => lng('serversettings.phpfpm_settings.pm'),
 						'type' => 'select',

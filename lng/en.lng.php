@@ -1943,6 +1943,10 @@ Yours sincerely, your administrator',
 			'description' => '<b>This needs a special webserver configuration see <a target="_blank" href="https://docs.froxlor.org/latest/admin-guide/configuration/php-fpm/">PHP-FPM handbook</a></b>',
 		],
 		'phpfpm_settings' => [
+			'socketdir' => [
+				'title' => 'Socket directory',
+				'description' => 'Leave empty to use the global PHP-FPM socket directory. For containers, mount this directory at the same absolute path on the host and in the container. Existing directory ownership and permissions are preserved.',
+			],
 			'configdir' => 'Configuration directory of php-fpm',
 			'aliasconfigdir' => 'Configuration Alias-directory of php-fpm',
 			'reload' => 'php-fpm restart command',

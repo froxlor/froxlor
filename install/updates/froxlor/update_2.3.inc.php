@@ -276,3 +276,12 @@ if (Froxlor::isFroxlorVersion('2.3.15')) {
 	Update::showUpdateStep("Updating from 2.3.15 to 2.3.16", false);
 	Froxlor::updateToVersion('2.3.16');
 }
+
+if (Froxlor::isDatabaseVersion('202608210')) {
+
+	Update::showUpdateStep("Adding per-daemon PHP-FPM socket directory");
+	Database::query("ALTER TABLE `" . TABLE_PANEL_FPMDAEMONS . "` ADD `socket_dir` varchar(255) NOT NULL DEFAULT '' AFTER `config_dir`;");
+	Update::lastStepStatus(0);
+
+	Froxlor::updateToDbVersion('202610230');
+}

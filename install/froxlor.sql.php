@@ -749,7 +749,7 @@ opcache.validate_timestamps'),
 	('panel', 'settings_mode', '0'),
 	('panel', 'menu_collapsed', '1'),
 	('panel', 'version', '2.3.16'),
-	('panel', 'db_version', '202608210');
+	('panel', 'db_version', '202610230');
 
 
 DROP TABLE IF EXISTS `panel_tasks`;
@@ -846,6 +846,7 @@ CREATE TABLE `panel_fpmdaemons` (
   `description` varchar(50) NOT NULL,
   `reload_cmd` varchar(255) NOT NULL,
   `config_dir` varchar(255) NOT NULL,
+  `socket_dir` varchar(255) NOT NULL DEFAULT '',
   `pm` varchar(15) NOT NULL DEFAULT 'dynamic',
   `max_children` int(4) NOT NULL DEFAULT '5',
   `start_servers` int(4) NOT NULL DEFAULT '2',

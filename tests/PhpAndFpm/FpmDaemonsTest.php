@@ -27,10 +27,27 @@ class FpmDaemonsTest extends TestCase
 		$json_result = FpmDaemons::getLocal($admin_userdata, $data)->add();
 		$result = json_decode($json_result, true)['data'];
 		$this->assertEquals('/etc/php/8.1/fpm/pool.d/', $result['config_dir']);
+		$this->assertEquals('', $result['socket_dir']);
 		$this->assertEquals('dynamic', $result['pm']);
 		$this->assertEquals(5, $result['max_children']);
 		$this->assertEquals('.php', $result['limit_extensions']);
 		self::$id = $result['id'];
+	}
+
+	public function testAdminFpmDaemonsAddSocketDirectory()
+	{
+		global $admin_userdata;
+		$result = json_decode(FpmDaemons::getLocal($admin_userdata, [
+			'description' => 'isolated fpm',
+			'reload_cmd' => '/usr/local/sbin/isolated-fpm-reload',
+			'config_dir' => '/opt/isolated-fpm/pools',
+			'socket_dir' => '/run/isolated-fpm'
+		])->add(), true)['data'];
+		try {
+			$this->assertSame('/run/isolated-fpm/', $result['socket_dir']);
+		} finally {
+			FpmDaemons::getLocal($admin_userdata, ['id' => $result['id']])->delete();
+		}
 	}
 
 	public function testAdminFpmDaemonsAddUnknownPM()
@@ -70,6 +87,7 @@ class FpmDaemonsTest extends TestCase
 		$data = [
 			'id' => self::$id,
 			'description' => 'test2 fpm edit',
+			'socket_dir' => '/run/php81-test',
 			'pm' => 'dynamic',
 			'max_children' => '10',
 			'start_servers' => '4',
@@ -78,6 +96,7 @@ class FpmDaemonsTest extends TestCase
 		$json_result = FpmDaemons::getLocal($admin_userdata, $data)->update();
 		$result = json_decode($json_result, true)['data'];
 		$this->assertEquals('/etc/php/8.1/fpm/pool.d/', $result['config_dir']);
+		$this->assertEquals('/run/php81-test/', $result['socket_dir']);
 		$this->assertEquals(10, $result['max_children']);
 		$this->assertEquals('.php .php.xml', $result['limit_extensions']);
 	}
@@ -96,6 +115,34 @@ class FpmDaemonsTest extends TestCase
 		$json_result = FpmDaemons::getLocal($admin_userdata, $data)->update();
 		$result = json_decode($json_result, true)['data'];
 		$this->assertEquals('.php', $result['limit_extensions']);
+		$this->assertEquals('/run/php81-test/', $result['socket_dir']);
+	}
+
+	/**
+	 * @depends testAdminFpmDaemonsUpdate
+	 */
+	public function testSocketDirectoryCanBeCleared()
+	{
+		global $admin_userdata;
+		$result = json_decode(FpmDaemons::getLocal($admin_userdata, [
+			'id' => self::$id,
+			'socket_dir' => ''
+		])->update(), true)['data'];
+		$this->assertSame('', $result['socket_dir']);
+	}
+
+	/**
+	 * @depends testAdminFpmDaemonsAdd
+	 */
+	public function testRelativeSocketDirectoryRejected()
+	{
+		global $admin_userdata;
+		$this->expectExceptionCode(406);
+		$this->expectExceptionMessage('Socket directory must be an absolute path');
+		FpmDaemons::getLocal($admin_userdata, [
+			'id' => self::$id,
+			'socket_dir' => 'run/php56'
+		])->update();
 	}
 
 	/**

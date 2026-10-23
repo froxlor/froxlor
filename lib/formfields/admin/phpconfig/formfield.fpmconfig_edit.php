@@ -54,6 +54,13 @@ return [
 						'value' => $result['config_dir'],
 						'mandatory' => true
 					],
+					'socket_dir' => [
+						'label' => lng('serversettings.phpfpm_settings.socketdir.title'),
+						'desc' => lng('serversettings.phpfpm_settings.socketdir.description'),
+						'type' => 'text',
+						'maxlength' => 255,
+						'value' => $result['socket_dir']
+					],
 					'pm' => [
 						'label' => lng('serversettings.phpfpm_settings.pm'),
 						'type' => 'select',

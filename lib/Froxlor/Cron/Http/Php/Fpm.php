@@ -100,8 +100,9 @@ class Fpm
 	 * (this is used whenever a config directory is empty but needs at least one pool to startup/restart)
 	 *
 	 * @param string $configdir
+	 * @param string $socketdir
 	 */
-	public static function createDummyPool($configdir)
+	public static function createDummyPool($configdir, $socketdir = '/run/')
 	{
 		if (!is_dir($configdir)) {
 			FileDir::safe_exec('mkdir -p ' . escapeshellarg($configdir));
@@ -109,7 +110,7 @@ class Fpm
 		$config = FileDir::makeCorrectFile($configdir . '/dummy.conf');
 		$dummy = "[dummy]
 user = " . Settings::Get('system.httpuser') . "
-listen = /run/" . md5($configdir) . "-fpm.sock
+listen = " . FileDir::makeCorrectDir($socketdir) . md5($configdir) . "-fpm.sock
 pm = static
 pm.max_children = 1
 ";
@@ -343,7 +344,9 @@ pm.max_children = 1
 	 */
 	public function getSocketFile($createifnotexists = true)
 	{
-		$socketdir = FileDir::makeCorrectDir(Settings::Get('phpfpm.fastcgi_ipcdir'));
+		$socketdir = FileDir::makeCorrectDir(!empty($this->fpm_cfg['socket_dir'])
+			? $this->fpm_cfg['socket_dir']
+			: Settings::Get('phpfpm.fastcgi_ipcdir'));
 		// add fpm-config-id to filename, so it's unique for the fpm-daemon and doesn't interfere with running configs when reuilding
 		$socket_filename = $socketdir . '/' . $this->domain['fpm_config_id'] . '-' . $this->domain['loginname'] . '-' . $this->domain['domain'] . '-php-fpm.socket';
 		if (strlen($socket_filename) > 100) {
@@ -354,11 +357,14 @@ pm.max_children = 1
 				$socket_filename = $socketdir . '/' . $this->domain['fpm_config_id'] . '-' . $this->domain['guid'] . '-' . $this->domain['id'] . '-php-fpm.socket';
 			}
 		}
-		$socket = strtolower(FileDir::makeCorrectFile($socket_filename));
+		$socket = FileDir::makeCorrectFile($socketdir . '/' . strtolower(basename($socket_filename)));
+		if (strlen($socket) > 100) {
+			throw new InvalidArgumentException('PHP-FPM socket path exceeds 100 characters: ' . $socket);
+		}
 
 		if (!is_dir($socketdir) && $createifnotexists) {
 			FileDir::safe_exec('mkdir -p ' . escapeshellarg($socketdir));
-			FileDir::safe_exec('chown -R ' . Settings::Get('system.httpuser') . ':' . Settings::Get('system.httpgroup') . ' ' . escapeshellarg($socketdir));
+			FileDir::safe_exec('chown ' . Settings::Get('system.httpuser') . ':' . Settings::Get('system.httpgroup') . ' ' . escapeshellarg($socketdir));
 		}
 
 		return $socket;

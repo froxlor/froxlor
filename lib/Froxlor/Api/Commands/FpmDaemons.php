@@ -159,6 +159,8 @@ class FpmDaemons extends ApiCommand implements ResourceEntity
 	 * @param string $description
 	 * @param string $reload_cmd
 	 * @param string $config_dir
+	 * @param string $socket_dir
+	 *            optional, socket directory; empty uses the global PHP-FPM socket directory
 	 * @param string $pm
 	 *            optional, process-manager, one of 'static', 'dynamic' or 'ondemand', default 'dynamic'
 	 * @param int $max_children
@@ -189,6 +191,7 @@ class FpmDaemons extends ApiCommand implements ResourceEntity
 			$description = $this->getParam('description');
 			$reload_cmd = $this->getParam('reload_cmd');
 			$config_dir = $this->getParam('config_dir');
+			$socket_dir = $this->getParam('socket_dir', true, '');
 
 			// parameters
 			$pmanager = $this->getParam('pm', true, 'dynamic');
@@ -210,6 +213,10 @@ class FpmDaemons extends ApiCommand implements ResourceEntity
 				throw new Exception("PHP-FPM version with the given restart command already exists", 406);
 			}
 			$config_dir = Validate::validate($config_dir, 'config_dir', Validate::REGEX_DIR, '', [], true);
+			$socket_dir = Validate::validate($socket_dir, 'socket_dir', Validate::REGEX_DIR, '', [], true);
+			if ($socket_dir !== '' && ($socket_dir[0] !== '/' || strlen($socket_dir) > 255)) {
+				throw new Exception('Socket directory must be an absolute path of at most 255 characters', 406);
+			}
 			if (!in_array($pmanager, [
 				'static',
 				'dynamic',
@@ -231,6 +238,7 @@ class FpmDaemons extends ApiCommand implements ResourceEntity
 				`description` = :desc,
 				`reload_cmd` = :reload_cmd,
 				`config_dir` = :config_dir,
+				`socket_dir` = :socket_dir,
 				`pm` = :pm,
 				`max_children` = :max_children,
 				`start_servers` = :start_servers,
@@ -245,6 +253,7 @@ class FpmDaemons extends ApiCommand implements ResourceEntity
 				'desc' => $description,
 				'reload_cmd' => $reload_cmd,
 				'config_dir' => FileDir::makeCorrectDir($config_dir),
+				'socket_dir' => $socket_dir !== '' ? FileDir::makeCorrectDir($socket_dir) : '',
 				'pm' => $pmanager,
 				'max_children' => $max_children,
 				'start_servers' => $start_servers,
@@ -279,6 +288,8 @@ class FpmDaemons extends ApiCommand implements ResourceEntity
 	 *            optional
 	 * @param string $config_dir
 	 *            optional
+	 * @param string $socket_dir
+	 *            optional, socket directory; empty uses the global PHP-FPM socket directory
 	 * @param string $pm
 	 *            optional, process-manager, one of 'static', 'dynamic' or 'ondemand', default 'dynamic'
 	 * @param int $max_children
@@ -316,6 +327,7 @@ class FpmDaemons extends ApiCommand implements ResourceEntity
 			$description = $this->getParam('description', true, $result['description']);
 			$reload_cmd = $this->getParam('reload_cmd', true, $result['reload_cmd']);
 			$config_dir = $this->getParam('config_dir', true, $result['config_dir']);
+			$socket_dir = $this->getParam('socket_dir', true, $result['socket_dir']);
 			$pmanager = $this->getParam('pm', true, $result['pm']);
 			$max_children = $this->getParam('max_children', true, $result['max_children']);
 			$start_servers = $this->getParam('start_servers', true, $result['start_servers']);
@@ -335,6 +347,10 @@ class FpmDaemons extends ApiCommand implements ResourceEntity
 				throw new Exception("PHP-FPM version with the given restart command already exists", 406);
 			}
 			$config_dir = Validate::validate($config_dir, 'config_dir', Validate::REGEX_DIR, '', [], true);
+			$socket_dir = Validate::validate($socket_dir, 'socket_dir', Validate::REGEX_DIR, '', [], true);
+			if ($socket_dir !== '' && ($socket_dir[0] !== '/' || strlen($socket_dir) > 255)) {
+				throw new Exception('Socket directory must be an absolute path of at most 255 characters', 406);
+			}
 			if (!in_array($pmanager, [
 				'static',
 				'dynamic',
@@ -356,6 +372,7 @@ class FpmDaemons extends ApiCommand implements ResourceEntity
 				`description` = :desc,
 				`reload_cmd` = :reload_cmd,
 				`config_dir` = :config_dir,
+				`socket_dir` = :socket_dir,
 				`pm` = :pm,
 				`max_children` = :max_children,
 				`start_servers` = :start_servers,
@@ -371,6 +388,7 @@ class FpmDaemons extends ApiCommand implements ResourceEntity
 				'desc' => $description,
 				'reload_cmd' => $reload_cmd,
 				'config_dir' => FileDir::makeCorrectDir($config_dir),
+				'socket_dir' => $socket_dir !== '' ? FileDir::makeCorrectDir($socket_dir) : '',
 				'pm' => $pmanager,
 				'max_children' => $max_children,
 				'start_servers' => $start_servers,

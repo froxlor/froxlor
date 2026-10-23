@@ -1821,6 +1821,10 @@ Vielen Dank, Ihr Administrator',
 			'description' => '<b>Dies benötigt eine spezielle Webserver-Konfiguration, siehe <a target="_blank" href="https://docs.froxlor.org/latest/admin-guide/configuration/php-fpm/">PHP-FPM Handbuch</a></b>',
 		],
 		'phpfpm_settings' => [
+			'socketdir' => [
+				'title' => 'Socket-Verzeichnis',
+				'description' => 'Leer lassen, um das globale PHP-FPM-Socket-Verzeichnis zu verwenden. Bei Containern muss dieses Verzeichnis auf dem Host und im Container unter demselben absoluten Pfad eingebunden sein. Besitzer und Rechte bestehender Verzeichnisse bleiben erhalten.',
+			],
 			'configdir' => 'Pfad zu php-fpm-Konfigurationen',
 			'aliasconfigdir' => 'Alias-Ordner der php-fpm Konfiguration',
 			'reload' => 'Kommando zum Neustarten von php-fpm',

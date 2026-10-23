@@ -82,7 +82,7 @@ EOC;
 		$called_class = get_called_class();
 		if ((int)Settings::Get('phpfpm.enabled') == 1) {
 			// get all start/stop commands
-			$startstop_sel = Database::prepare("SELECT reload_cmd, config_dir FROM `" . TABLE_PANEL_FPMDAEMONS . "`");
+			$startstop_sel = Database::prepare("SELECT reload_cmd, config_dir, socket_dir FROM `" . TABLE_PANEL_FPMDAEMONS . "`");
 			Database::pexecute($startstop_sel);
 			$restart_cmds = $startstop_sel->fetchAll(PDO::FETCH_ASSOC);
 			// restart all php-fpm instances
@@ -92,7 +92,7 @@ EOC;
 				$_conffiles = glob(FileDir::makeCorrectFile($restart_cmd['config_dir'] . "/*.conf"));
 				if ($_conffiles === false || empty($_conffiles)) {
 					FroxlorLogger::getInstanceOf()->logAction(FroxlorLogger::CRON_ACTION, LOG_INFO, $called_class . '::reload: fpm config directory "' . $restart_cmd['config_dir'] . '" is empty. Creating dummy.');
-					Fpm::createDummyPool($restart_cmd['config_dir']);
+					Fpm::createDummyPool($restart_cmd['config_dir'], $restart_cmd['socket_dir'] ?: '/run/');
 				}
 				FroxlorLogger::getInstanceOf()->logAction(FroxlorLogger::CRON_ACTION, LOG_INFO, $called_class . '::reload: running ' . $restart_cmd['reload_cmd']);
 				FileDir::safe_exec(escapeshellcmd($restart_cmd['reload_cmd']));
