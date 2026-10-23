@@ -633,6 +633,12 @@ return [
 		'phpsetting_reallydelete' => 'Você realmente deseja apagar esta configuração? Todos os domínios que atualmente utilizam esta configuração serão alterada para a configuração padrão.',
 	],
 	'serversettings' => [
+		'phpfpm_settings' => [
+			'socketdir' => [
+				'title' => 'Diretório de sockets',
+				'description' => 'Deixe este campo vazio para usar o diretório global de sockets do PHP-FPM. Para contêineres, monte este diretório no mesmo caminho absoluto no host e no contêiner. O proprietário e as permissões existentes do diretório são preservados.',
+			],
+		],
 		'session_timeout' => [
 			'title' => 'Tempo esgotado',
 			'description' => 'Quanto tempo o usuario deve estar inativo para ser desconectado (segundos)?',

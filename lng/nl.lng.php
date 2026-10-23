@@ -1034,6 +1034,10 @@ Met vriendelijke groet, uw beheerder',
 		],
 		'phpfpm' => 'php-fpm inschakelen',
 		'phpfpm_settings' => [
+			'socketdir' => [
+				'title' => 'Socketmap',
+				'description' => 'Laat dit veld leeg om de globale PHP-FPM-socketmap te gebruiken. Koppel voor containers deze map op hetzelfde absolute pad op de host en in de container. De bestaande eigenaar en toegangsrechten van de map blijven behouden.',
+			],
 			'configdir' => 'Configuratiemap van php-fpm',
 			'reload' => 'Commando voor het herstarten van php-fpm',
 			'pm' => 'Process manager control (pm)',

@@ -1763,6 +1763,10 @@ Atentamente, su administrador'
 			'description' => '<b>Esto necesita una configuración especial del servidor web ver <a target="_blank" href="https://docs.froxlor.org/latest/admin-guide/configuration/php-fpm/">manual PHP-FPM</a></b>'
 		],
 		'phpfpm_settings' => [
+			'socketdir' => [
+				'title' => 'Directorio de sockets',
+				'description' => 'Deje este campo vacío para utilizar el directorio global de sockets de PHP-FPM. Para los contenedores, monte este directorio en la misma ruta absoluta en el anfitrión y en el contenedor. Se conservan el propietario y los permisos existentes del directorio.',
+			],
 			'configdir' => 'Directorio de configuración de php-fpm',
 			'aliasconfigdir' => 'Directorio Alias de configuración de php-fpm',
 			'reload' => 'Comando de reinicio de php-fpm',

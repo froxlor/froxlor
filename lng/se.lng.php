@@ -394,6 +394,12 @@ return [
 		'admin_cleartextmailpws_reallywipe' => 'Är du säker på att du vill radera alla okrupterade lösenord från tabellen mail_users? Du kan INTE ändra dig efteråt!',
 	],
 	'serversettings' => [
+		'phpfpm_settings' => [
+			'socketdir' => [
+				'title' => 'Socketkatalog',
+				'description' => 'Lämna fältet tomt för att använda den globala socketkatalogen för PHP-FPM. För containrar ska katalogen monteras på samma absoluta sökväg på värden och i containern. Katalogens befintliga ägare och behörigheter bevaras.',
+			],
+		],
 		'session_timeout' => [
 			'title' => 'Sessionen har avslutats för att den tog för lång tid att utföra (session Timeout)',
 			'description' => 'Tiden (i sekunder) som användaren får vara inaktiv innan han måste logga in igen är (seconds)?',

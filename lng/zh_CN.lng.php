@@ -1898,6 +1898,10 @@ return [
 			'description' => '<b>This needs a special webserver configuration see <a target="_blank" href="https://docs.froxlor.org/latest/admin-guide/configuration/php-fpm/">PHP-FPM handbook</a></b>',
 		],
 		'phpfpm_settings' => [
+			'socketdir' => [
+				'title' => '套接字目录',
+				'description' => '留空以使用 PHP-FPM 全局套接字目录。使用容器时，请将此目录挂载到宿主机和容器内相同的绝对路径。目录现有的所有权和访问权限将保持不变。',
+			],
 			'configdir' => 'php-fpm的配置目录',
 			'aliasconfigdir' => '配置别名-php-fpm目录',
 			'reload' => 'php-fpm restart命令',

@@ -1525,6 +1525,10 @@ Cordiali Saluti, Team froxlor',
 			'description' => 'questo viene utilizzato per ricaricare il backend PHP se è in uso<br />Predefinito: vuoto',
 		],
 		'phpfpm_settings' => [
+			'socketdir' => [
+				'title' => 'Directory dei socket',
+				'description' => 'Lasciare vuoto questo campo per utilizzare la directory globale dei socket PHP-FPM. Per i container, montare questa directory nello stesso percorso assoluto sull’host e nel container. Il proprietario e i permessi esistenti della directory vengono mantenuti.',
+			],
 			'configdir' => 'Cartella di configurazione php-fpm',
 			'reload' => 'comando di riavvio php-fpm',
 			'pm' => 'Gestore processi (pm)',

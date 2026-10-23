@@ -1920,6 +1920,10 @@ Ach upřímně, váš správce',
 			'description' => '<b>To vyžaduje speciální konfiguraci webserveru viz <a target="_blank" href="https://docs.froxlor.org/latest/admin-guide/configuration/php-fpm/">PHP-FPM příručka</a></b>',
 		],
 		'phpfpm_settings' => [
+			'socketdir' => [
+				'title' => 'Adresář socketů',
+				'description' => 'Pokud ponecháte pole prázdné, použije se globální adresář socketů PHP-FPM. U kontejnerů připojte tento adresář na stejnou absolutní cestu na hostiteli i v kontejneru. Stávající vlastnictví a přístupová práva adresáře zůstanou zachovány.',
+			],
 			'configdir' => 'Adresář konfigurace php-fpm',
 			'aliasconfigdir' => 'Konfigurace adresáře aliasu php-fpm',
 			'reload' => 'php-fpm restart příkaz',

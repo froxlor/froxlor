@@ -1921,6 +1921,10 @@ S úctou, váš správca',
 			'description' => '<b>To vyžaduje špeciálnu konfiguráciu webservera, pozri <a target="_blank" href="https://docs.froxlor.org/latest/admin-guide/configuration/php-fpm/">PHP-FPM príručka</a></b>',
 		],
 		'phpfpm_settings' => [
+			'socketdir' => [
+				'title' => 'Adresár socketov',
+				'description' => 'Ak ponecháte pole prázdne, použije sa globálny adresár socketov PHP-FPM. Pri kontajneroch pripojte tento adresár na rovnakú absolútnu cestu na hostiteľovi aj v kontajneri. Existujúce vlastníctvo a prístupové práva adresára sa zachovajú.',
+			],
 			'configdir' => 'Adresár konfigurácie php-fpm',
 			'aliasconfigdir' => 'Konfigurácia adresára aliasu php-fpm',
 			'reload' => 'príkaz na reštart php-fpm',

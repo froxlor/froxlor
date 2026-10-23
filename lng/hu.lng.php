@@ -1912,6 +1912,10 @@ Jelszó: {USR_PASS}
 			'description' => '<b>Ez speciális webszerver konfigurációt igényel, lásd <a target="_blank" href="https://docs.froxlor.org/latest/admin-guide/configuration/php-fpm/">PHP-FPM kézikönyv</a></b>',
 		],
 		'phpfpm_settings' => [
+			'socketdir' => [
+				'title' => 'Socketkönyvtár',
+				'description' => 'Hagyja üresen a globális PHP-FPM socketkönyvtár használatához. Konténerek esetén ezt a könyvtárat ugyanazon az abszolút elérési úton csatolja a gazdagépen és a konténerben. A könyvtár meglévő tulajdonosi beállításai és hozzáférési jogosultságai megmaradnak.',
+			],
 			'configdir' => 'php-fpm konfigurációs könyvtár',
 			'aliasconfigdir' => 'php-fpm konfigurációs alias-könyvtár',
 			'reload' => 'php-fpm újraindítási parancs',

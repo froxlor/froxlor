@@ -1776,6 +1776,10 @@ Atentament, el vostre administrador'
 			'description' => '<b>Això necessita una configuració especial del servidor web veure <a target="_blank" href="https://docs.froxlor.org/latest/admin-guide/configuration/php-fpm/">manual PHP-FPM</a></b>'
 		],
 		'phpfpm_settings' => [
+			'socketdir' => [
+				'title' => 'Directori dels sòcols',
+				'description' => 'Deixeu aquest camp buit per utilitzar el directori global de sòcols de PHP-FPM. Per als contenidors, munteu aquest directori al mateix camí absolut a l’amfitrió i al contenidor. Es conserven el propietari i els permisos existents del directori.',
+			],
 			'configdir' => 'Directori de configuració de php-fpm',
 			'aliasconfigdir' => 'Directori Àlies de configuració de php-fpm',
 			'reload' => 'Ordre de reinici de php-fpm',

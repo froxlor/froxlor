@@ -539,6 +539,12 @@ return [
 		'admin_quotas_reallywipe' => 'Etes-vous sûr de vouloir retirer tous les quotas de la table mail_users ? Cette action ne peut être annulée !',
 	],
 	'serversettings' => [
+		'phpfpm_settings' => [
+			'socketdir' => [
+				'title' => 'Répertoire des sockets',
+				'description' => 'Laissez ce champ vide pour utiliser le répertoire global des sockets PHP-FPM. Pour les conteneurs, montez ce répertoire au même chemin absolu sur l’hôte et dans le conteneur. Le propriétaire et les droits d’accès existants du répertoire sont conservés.',
+			],
+		],
 		'session_timeout' => [
 			'title' => 'Durée d\'inactivité maximale',
 			'description' => 'Combien de secondes d\'inactivité avant qu\'une session ne se ferme ?',
