@@ -601,6 +601,13 @@ class Core
 	 */
 	public function createUserdataConf()
 	{
+		// values end up in a php file, do not allow control characters
+		foreach (['mysql_host', 'mysql_unprivileged_user', 'mysql_unprivileged_pass', 'mysql_database', 'mysql_root_user', 'mysql_root_pass', 'mysql_ssl_ca_file'] as $field) {
+			if (isset($this->validatedData[$field]) && (!is_scalar($this->validatedData[$field]) || preg_match('/[\x00-\x1f\x7f]/', (string)$this->validatedData[$field]))) {
+				throw new Exception('Invalid value for ' . $field);
+			}
+		}
+
 		$userdata = [
 			'sql' => [
 				'debug' => false,

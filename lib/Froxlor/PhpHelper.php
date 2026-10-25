@@ -560,25 +560,21 @@ class PhpHelper
 	{
 		$str = '';
 		if (!is_null($key)) {
-			$str .= self::tabPrefix(($depth - 1), "'{$key}' => [\n");
+			$str .= self::tabPrefix(($depth - 1), self::quoteString((string)$key) . " => [\n");
 		} else {
 			$str .= self::tabPrefix(($depth - 1), "[\n");
 		}
 		foreach ($array as $key => $value) {
+			$qkey = self::quoteString((string)$key);
 			if (!is_array($value)) {
 				if (is_bool($value)) {
-					$str .= self::tabPrefix($depth, sprintf("'%s' => %s,\n", $key, $value ? 'true' : 'false'));
+					$str .= self::tabPrefix($depth, sprintf("%s => %s,\n", $qkey, $value ? 'true' : 'false'));
 				} elseif (is_int($value)) {
-					$str .= self::tabPrefix($depth, "'{$key}' => $value,\n");
+					$str .= self::tabPrefix($depth, "{$qkey} => $value,\n");
 				} else {
-					if ($key == 'password') {
-						// special case for passwords (nowdoc)
-						$str .= self::tabPrefix($depth, "'{$key}' => <<<'EOT'\n{$value}\nEOT,\n");
-					} else {
-						// escape backslashes first, then single quotes:
-						$escaped = str_replace(['\\', "'"], ['\\\\', "\\'"], $value);
-						$str .= self::tabPrefix($depth, "'{$key}' => '{$escaped}',\n");
-					}
+					// all strings (including passwords) are written as escaped single-quoted literals,
+					// a nowdoc with fixed delimiter could be terminated early by the value itself
+					$str .= self::tabPrefix($depth, "{$qkey} => " . self::quoteString((string)$value) . ",\n");
 				}
 			} else {
 				$str .= self::parseArrayToString($value, $key, ($depth + 1));
@@ -586,6 +582,18 @@ class PhpHelper
 		}
 		$str .= self::tabPrefix(($depth - 1), "],\n");
 		return $str;
+	}
+
+	/**
+	 * Return given string as safely escaped single-quoted php string literal.
+	 *
+	 * @param string $value
+	 * @return string
+	 */
+	private static function quoteString(string $value): string
+	{
+		// escape backslashes first, then single quotes
+		return "'" . str_replace(['\\', "'"], ['\\\\', "\\'"], $value) . "'";
 	}
 
 	/**
