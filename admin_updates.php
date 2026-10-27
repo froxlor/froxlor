@@ -38,6 +38,10 @@ use Froxlor\UI\Request;
 use Froxlor\UI\Response;
 use Froxlor\User;
 
+if ($userinfo['change_serversettings'] != '1') {
+	Response::redirectTo('admin_index.php');
+}
+
 if ($page == 'overview') {
 	$log->logAction(FroxlorLogger::ADM_ACTION, LOG_NOTICE, "viewed admin_updates");
 

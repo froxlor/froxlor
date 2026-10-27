@@ -32,7 +32,7 @@ use Froxlor\Database\IntegrityCheck;
 use Froxlor\Install\Update;
 
 if (!defined('_CRON_UPDATE')) {
-	if (!defined('AREA') || (defined('AREA') && AREA != 'admin') || !isset($userinfo['loginname']) || (isset($userinfo['loginname']) && $userinfo['loginname'] == '')) {
+	if (!defined('AREA') || (defined('AREA') && AREA != 'admin') || !isset($userinfo['loginname']) || (isset($userinfo['loginname']) && $userinfo['loginname'] == '') || !isset($userinfo['change_serversettings']) || $userinfo['change_serversettings'] != '1') {
 		header('Location: ../index.php');
 		exit();
 	}

@@ -35,6 +35,10 @@ use Froxlor\UI\Panel\UI;
 use Froxlor\UI\Request;
 use Froxlor\UI\Response;
 
+if ($userinfo['change_serversettings'] != '1') {
+	Response::redirectTo('admin_index.php');
+}
+
 if ($page != 'error') {
 	// check for webupdate to be enabled
 	if (Settings::Config('enable_webupdate') != true) {
