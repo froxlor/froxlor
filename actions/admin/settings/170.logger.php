@@ -69,7 +69,8 @@ return [
 					'settinggroup' => 'logger',
 					'varname' => 'logfile',
 					'type' => 'text',
-					'string_type' => 'file',
+					// plain filename only, file is always written to froxlor/logs/
+					'string_regexp' => '/^[a-zA-Z0-9_\-][a-zA-Z0-9._\-]*$/D',
 					'string_emptyallowed' => true,
 					'default' => '',
 					'save_method' => 'storeSettingField'

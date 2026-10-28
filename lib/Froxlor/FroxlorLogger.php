@@ -108,7 +108,12 @@ class FroxlorLogger
 						if (empty($setings_logfile)) {
 							Settings::Set('logger.logfile', 'froxlor.log');
 						}
-						$logger_logfile = FileDir::makeCorrectFile(Froxlor::getInstallDir() . '/logs/' . Settings::Get('logger.logfile'));
+						// only use the filename, older versions allowed paths here
+						$logfile_name = basename(Settings::Get('logger.logfile'));
+						if ($logfile_name == '' || $logfile_name[0] == '.') {
+							$logfile_name = 'froxlor.log';
+						}
+						$logger_logfile = FileDir::makeCorrectFile(Froxlor::getInstallDir() . '/logs/' . $logfile_name);
 						// is_writable needs an existing file to check if it's actually writable
 						if (!@touch($logger_logfile) || !is_writable($logger_logfile)) {
 							// not writable in our own directory? Skip

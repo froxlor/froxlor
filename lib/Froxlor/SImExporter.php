@@ -128,6 +128,10 @@ class SImExporter
 			// when there were changes in the variable-name or similar
 			unset($_data['panel.version']);
 			unset($_data['panel.db_version']);
+			// older versions allowed a full path for the logfile, it is a plain filename in froxlor/logs/ now
+			if (!empty($_data['logger.logfile'])) {
+				$_data['logger.logfile'] = basename($_data['logger.logfile']);
+			}
 			// validate we got ssl enabled ips when ssl is enabled
 			// otherwise deactivate it
 			if ($_data['system.use_ssl'] == 1) {
