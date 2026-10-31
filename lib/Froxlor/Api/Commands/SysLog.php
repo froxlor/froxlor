@@ -74,7 +74,7 @@ class SysLog extends ApiCommand implements ResourceEntity
 			if (count($customer_names) > 0) {
 				$result_stmt = Database::prepare("
 				SELECT * FROM `" . TABLE_PANEL_LOG . "`
-				WHERE `user` = :loginname OR `user` IN ('" . implode("', '", $customer_names) . "')" . $this->getSearchWhere($query_fields, true) . $this->getOrderBy() . $this->getLimit());
+				WHERE (`user` = :loginname OR `user` IN ('" . implode("', '", $customer_names) . "'))" . $this->getSearchWhere($query_fields, true) . $this->getOrderBy() . $this->getLimit());
 			} else {
 				$result_stmt = Database::prepare("
 				SELECT * FROM `" . TABLE_PANEL_LOG . "`
@@ -127,7 +127,7 @@ class SysLog extends ApiCommand implements ResourceEntity
 			if (count($customer_names) > 0) {
 				$result_stmt = Database::prepare("
 					SELECT COUNT(*) as num_logs FROM `" . TABLE_PANEL_LOG . "`
-					WHERE `user` = :loginname OR `user` IN ('" . implode("', '", $customer_names) . "')
+					WHERE (`user` = :loginname OR `user` IN ('" . implode("', '", $customer_names) . "'))
 				" . $this->getSearchWhere($query_fields, true));
 			} else {
 				$result_stmt = Database::prepare("
@@ -213,7 +213,7 @@ class SysLog extends ApiCommand implements ResourceEntity
 				}
 				if (count($customer_names) > 0) {
 					$result_stmt = Database::prepare("
-						DELETE FROM `" . TABLE_PANEL_LOG . "` WHERE `date` < :trunc AND `user` = :loginname OR `user` IN ('" . implode("', '", $customer_names) . "')
+						DELETE FROM `" . TABLE_PANEL_LOG . "` WHERE `date` < :trunc AND (`user` = :loginname OR `user` IN ('" . implode("', '", $customer_names) . "'))
 					");
 				} else {
 					$result_stmt = Database::prepare("
