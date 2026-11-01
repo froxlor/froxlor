@@ -84,7 +84,7 @@ class SysLog extends ApiCommand implements ResourceEntity
 			$query_fields['loginname'] = $this->getUserDetail('loginname');
 		} else {
 			// customer: the logger feature may be hidden by the admin
-			if (Settings::IsInList('panel.customer_hide_options', 'extras.logger')) {
+			if (Settings::IsInList('panel.customer_hide_options', 'extras') || Settings::IsInList('panel.customer_hide_options', 'extras.logger')) {
 				throw new Exception("You cannot access this resource", 405);
 			}
 			// every one else just sees their logs
@@ -145,7 +145,7 @@ class SysLog extends ApiCommand implements ResourceEntity
 			];
 		} else {
 			// customer: the logger feature may be hidden by the admin
-			if (Settings::IsInList('panel.customer_hide_options', 'extras.logger')) {
+			if (Settings::IsInList('panel.customer_hide_options', 'extras') || Settings::IsInList('panel.customer_hide_options', 'extras.logger')) {
 				throw new Exception("You cannot access this resource", 405);
 			}
 			// every one else just sees their logs

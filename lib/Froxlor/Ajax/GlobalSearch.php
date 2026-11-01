@@ -321,7 +321,27 @@ class GlobalSearch
 					$toSearch = [$module => $modSearch];
 				}
 
+				// customer: don't search entities hidden via panel.customer_hide_options,
+				// the collections below are internal calls which skip that check
+				if (!isset($userinfo['adminsession']) || $userinfo['adminsession'] != 1) {
+					$hide_options = [
+						'domains' => 'domains',
+						'emails' => 'email',
+						'email_domains' => 'email',
+						'databases' => 'mysql',
+						'ftpuser' => 'ftp'
+					];
+					foreach ($hide_options as $entity => $hide_option) {
+						if (Settings::IsInList('panel.customer_hide_options', $hide_option)) {
+							unset($toSearch[$entity]);
+						}
+					}
+				}
+
 				foreach ($toSearch as $entity => $edata) {
+					if (empty($edata['class'])) {
+						continue;
+					}
 					$collection = (new Collection($edata['class'], $userinfo))
 						->setInternal(true)
 						->addParam([

@@ -34,7 +34,7 @@ use Froxlor\UI\Panel\UI;
 use Froxlor\UI\Response;
 
 // redirect if this customer page is hidden via settings
-if (Settings::IsInList('panel.customer_hide_options', 'extras.logger')) {
+if (Settings::IsInList('panel.customer_hide_options', 'extras') || Settings::IsInList('panel.customer_hide_options', 'extras.logger')) {
 	Response::redirectTo('customer_index.php');
 }
 
