@@ -201,7 +201,7 @@ class SysLog extends ApiCommand implements ResourceEntity
 	 */
 	public function delete()
 	{
-		if ($this->isAdmin()) {
+		if ($this->isAdmin() && $this->getUserDetail('change_serversettings') == '1') {
 			$min_to_keep = self::getParam('min_to_keep', true, 10);
 			if ($min_to_keep < 0) {
 				$min_to_keep = 0;

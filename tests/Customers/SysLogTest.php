@@ -45,6 +45,17 @@ class SysLogTest extends TestCase
 		$result = json_decode($json_result, true)['data'];
 		$this->assertEquals(['old customer row', 'recent customer row'], $this->texts($result['list']));
 
+		// truncating requires change_serversettings (like admin_logger.php does)
+		try {
+			SysLog::getLocal($reseller_userdata, ['min_to_keep' => 10])->delete();
+			$this->fail('SysLog.delete must not be allowed without change_serversettings');
+		} catch (\PHPUnit\Framework\AssertionFailedError $e) {
+			throw $e;
+		} catch (\Exception $e) {
+			$this->assertEquals(403, $e->getCode());
+		}
+
+		$reseller_userdata['change_serversettings'] = 1;
 		SysLog::getLocal($reseller_userdata, ['min_to_keep' => 10])->delete();
 		$rows = Database::query("SELECT `text` FROM `" . TABLE_PANEL_LOG . "` WHERE `text` LIKE '% row'")->fetchAll(\PDO::FETCH_ASSOC);
 		$this->assertEquals(['recent customer row', 'reseller row'], $this->texts($rows));
