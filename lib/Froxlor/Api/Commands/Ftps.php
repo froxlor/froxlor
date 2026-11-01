@@ -161,7 +161,14 @@ class Ftps extends ApiCommand implements ResourceEntity
 					"customerid" => $customer['customerid']
 				], true, true);
 
-				if ($ftpdomain_check && $ftpdomain_check['domain'] != $ftpdomain) {
+				if ($ftpdomain == '') {
+					Response::standardError([
+						'stringisempty',
+						'mydomain'
+					], '', true);
+				}
+				// the check-query is scoped to the customer, so no result means foreign or unknown domain
+				if (!$ftpdomain_check || $ftpdomain_check['domain'] != $ftpdomain) {
 					Response::standardError('maindomainnonexist', $ftpdomain, true);
 				}
 				$username = $ftpusername . "@" . $ftpdomain;

@@ -573,7 +573,16 @@ if ($page == 'domains' || $page == 'overview') {
 		}
 	} elseif ($action == 'jqGetCustomerPHPConfigs') {
 		$customerid = intval(Request::post('customerid'));
-		$allowed_phpconfigs = Customer::getCustomerDetail($customerid, 'allowed_phpconfigs');
+		// go through the api so the customer has to be one of the current admin's
+		try {
+			$json_result = Customers::getLocal($userinfo, [
+				'id' => $customerid
+			])->get();
+			$result = json_decode($json_result, true)['data'];
+			$allowed_phpconfigs = $result['allowed_phpconfigs'] ?? '';
+		} catch (Exception $e) {
+			$allowed_phpconfigs = '';
+		}
 		echo !empty($allowed_phpconfigs) ? $allowed_phpconfigs : json_encode([]);
 		exit();
 	} elseif ($action == 'jqSpeciallogfileNote') {

@@ -335,4 +335,34 @@ class FtpsTest extends TestCase
 		$this->expectExceptionMessage('You cannot delete your main FTP account');
 		Ftps::getLocal($customer_userdata, $data)->delete();
 	}
+
+	/**
+	 * regression test: with customer.ftpatdomain enabled, Ftps::add() accepted any ftp_domain
+	 * because the customer-scoped lookup returning nothing never triggered the error
+	 */
+	public function testCustomerFtpsAddForeignFtpDomain()
+	{
+		global $admin_userdata;
+
+		// get customer
+		$json_result = Customers::getLocal($admin_userdata, array(
+			'loginname' => 'test1'
+		))->get();
+		$customer_userdata = json_decode($json_result, true)['data'];
+
+		\Froxlor\Settings::Set('customer.ftpatdomain', '1', true);
+		$data = [
+			'ftp_password' => 'h4xXx0r',
+			'path' => '/',
+			'ftp_username' => 'info',
+			'ftp_domain' => 'not-my-domain.local',
+			'sendinfomail' => 0
+		];
+		try {
+			$this->expectExceptionMessage('The main-domain not-my-domain.local does not exist.');
+			Ftps::getLocal($customer_userdata, $data)->add();
+		} finally {
+			\Froxlor\Settings::Set('customer.ftpatdomain', '0', true);
+		}
+	}
 }

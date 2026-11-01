@@ -1024,8 +1024,13 @@ class Domains extends ApiCommand implements ResourceEntity
 		$aip_param = [];
 		if ($this->getUserDetail('ip') != "-1") {
 			// handle multiple-ip-array
-			$additional_ip_ids = array_map('intval', json_decode($this->getUserDetail('ip'), true));
-			$additional_ip_condition = " AND `ip` IN (" . implode(",", $additional_ip_ids) . ") ";
+			$additional_ip_ids = json_decode($this->getUserDetail('ip') ?? '', true);
+			if (is_array($additional_ip_ids) && !empty($additional_ip_ids)) {
+				$additional_ip_condition = " AND `id` IN (" . implode(",", array_map('intval', $additional_ip_ids)) . ") ";
+			} else {
+				// no ip/port allowed at all
+				$additional_ip_condition = " AND 1 = 0 ";
+			}
 		}
 
 		if (!empty($p_ipandports) && is_array($p_ipandports)) {
