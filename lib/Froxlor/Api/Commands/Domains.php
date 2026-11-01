@@ -376,6 +376,9 @@ class Domains extends ApiCommand implements ResourceEntity
 						$p_ssl_protocols = $this->getParam('ssl_protocols', true, explode(',', Settings::Get('system.ssl_protocols')));
 						$ssl_cipher_list = $this->getParam('ssl_cipher_list', true, Settings::Get('system.ssl_cipher_list'));
 						$tlsv13_cipher_list = $this->getParam('tlsv13_cipher_list', true, Settings::Get('system.tlsv13_cipher_list'));
+						// both end up verbatim in the webserver config
+						$ssl_cipher_list = Validate::validate((string)$ssl_cipher_list, 'ssl_cipher_list', Validate::REGEX_CIPHER_LIST, '', [], true);
+						$tlsv13_cipher_list = Validate::validate((string)$tlsv13_cipher_list, 'tlsv13_cipher_list', Validate::REGEX_CIPHER_LIST, '', [], true);
 					}
 				}
 				$description = $this->getParam('description', true, '');
@@ -1298,6 +1301,9 @@ class Domains extends ApiCommand implements ResourceEntity
 					$p_ssl_protocols = $this->getParam('ssl_protocols', true, explode(',', $result['ssl_protocols']));
 					$ssl_cipher_list = $this->getParam('ssl_cipher_list', true, $result['ssl_cipher_list']);
 					$tlsv13_cipher_list = $this->getParam('tlsv13_cipher_list', true, $result['tlsv13_cipher_list']);
+					// both end up verbatim in the webserver config
+					$ssl_cipher_list = Validate::validate((string)$ssl_cipher_list, 'ssl_cipher_list', Validate::REGEX_CIPHER_LIST, '', [], true);
+					$tlsv13_cipher_list = Validate::validate((string)$tlsv13_cipher_list, 'tlsv13_cipher_list', Validate::REGEX_CIPHER_LIST, '', [], true);
 				} else {
 					$p_ssl_protocols = [];
 					$ssl_cipher_list = "";

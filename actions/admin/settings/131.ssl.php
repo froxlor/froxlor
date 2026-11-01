@@ -62,6 +62,8 @@ return [
 					'settinggroup' => 'system',
 					'varname' => 'ssl_cipher_list',
 					'type' => 'text',
+					// ends up verbatim in webserver configs (nginx directives are ';'-terminated)
+					'string_regexp' => '/^[a-zA-Z0-9:!@+=,_.\- ]*$/D',
 					'string_emptyallowed' => false,
 					'default' => 'ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:DHE-RSA-CHACHA20-POLY1305',
 					'save_method' => 'storeSettingField',
@@ -72,6 +74,7 @@ return [
 					'settinggroup' => 'system',
 					'varname' => 'tlsv13_cipher_list',
 					'type' => 'text',
+					'string_regexp' => '/^[a-zA-Z0-9:!@+=,_.\- ]*$/D',
 					'string_emptyallowed' => true,
 					'default' => '',
 					'visible' => Settings::Get('system.webserver') == "apache2" && Settings::Get('system.apache24') == 1,

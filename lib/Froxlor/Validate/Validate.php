@@ -45,6 +45,9 @@ class Validate
 
 	const REGEX_DESC_TEXT = '/^[^\0\r\n<>]*$/';
 
+	// openssl cipher-strings, e.g. ECDHE-RSA-AES128-GCM-SHA256:!aNULL:@SECLEVEL=2
+	const REGEX_CIPHER_LIST = '/^[a-zA-Z0-9:!@+=,_.\- ]*$/D';
+
 	// like REGEX_DESC_TEXT but allows newlines, for textarea fields (callers normalize \r\n to \n first)
 	const REGEX_DESC_TEXT_MULTILINE = '/^[^\0\r<>]*$/';
 
