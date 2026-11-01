@@ -36,6 +36,8 @@ return [
 			'c.desc_lng_key' => [
 				'label' => lng('cron.description'),
 				'field' => 'desc_lng_key',
+				// sql would sort by language-key, not by the translated description
+				'sortable' => false,
 				'callback' => [Text::class, 'crondesc']
 			],
 			'c.lastrun' => [
@@ -45,7 +47,9 @@ return [
 			],
 			'c.interval' => [
 				'label' => lng('cron.interval'),
-				'field' => 'interval'
+				'field' => 'interval',
+				// sql would sort the textual value (e.g. "1 DAY" < "5 MINUTE"), not the duration
+				'sortable' => false
 			],
 			'c.isactive' => [
 				'label' => lng('cron.isactive'),
