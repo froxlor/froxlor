@@ -124,7 +124,7 @@ class SubDomains extends ApiCommand implements ResourceEntity
 				$letsencrypt = $this->getBoolParam('letsencrypt', true, 0);
 				$http2 = $this->getBoolParam('http2', true, 0);
 				$http3 = $this->getBoolParam('http3', true, 0);
-				$hsts_maxage = $this->getParam('hsts_maxage', true, 0);
+				$hsts_maxage = intval($this->getParam('hsts_maxage', true, 0));
 				$hsts_sub = $this->getBoolParam('hsts_sub', true, 0);
 				$hsts_preload = $this->getBoolParam('hsts_preload', true, 0);
 			} else {
@@ -700,7 +700,7 @@ class SubDomains extends ApiCommand implements ResourceEntity
 			$letsencrypt = $this->getBoolParam('letsencrypt', true, $result['letsencrypt']);
 			$http2 = $this->getBoolParam('http2', true, $result['http2']);
 			$http3 = $this->getBoolParam('http3', true, $result['http3']);
-			$hsts_maxage = $this->getParam('hsts_maxage', true, $result['hsts']);
+			$hsts_maxage = intval($this->getParam('hsts_maxage', true, $result['hsts']));
 			$hsts_sub = $this->getBoolParam('hsts_sub', true, $result['hsts_sub']);
 			$hsts_preload = $this->getBoolParam('hsts_preload', true, $result['hsts_preload']);
 		} else {

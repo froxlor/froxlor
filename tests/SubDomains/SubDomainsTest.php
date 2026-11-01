@@ -313,4 +313,30 @@ class SubDomainsTest extends TestCase
 		$this->expectExceptionMessage('The domains DNS does not include any of the chosen IP addresses. Let\'s Encrypt certificate generation not possible.');
 		SubDomains::getLocal($customer_userdata, $data)->add();
 	}
+
+	/**
+	 * regression test: hsts_maxage was stored unvalidated and written verbatim
+	 * into the Strict-Transport-Security header line of the ssl-vhost
+	 */
+	public function testCustomerSubDomainsAddHstsMaxageIsInteger()
+	{
+		global $admin_userdata;
+
+		// get customer
+		$json_result = Customers::getLocal($admin_userdata, array(
+			'loginname' => 'test1'
+		))->get();
+		$customer_userdata = json_decode($json_result, true)['data'];
+
+		$data = [
+			'subdomain' => 'hststest',
+			'domain' => 'test2.local',
+			'hsts_maxage' => "0\"\n\""
+		];
+		$json_result = SubDomains::getLocal($customer_userdata, $data)->add();
+		$result = json_decode($json_result, true)['data'];
+		$this->assertSame('0', (string)$result['hsts']);
+
+		SubDomains::getLocal($customer_userdata, ['id' => $result['id']])->delete();
+	}
 }

@@ -206,4 +206,31 @@ class DirProtectionsTest extends TestCase
 		$this->assertEquals(1, $result['count']);
 		$this->assertEquals('test1', $result['list'][0]['username']);
 	}
+
+	/**
+	 * regression test: the username/authname regexes had no D-modifier, so a trailing
+	 * newline passed validation and broke the generated webserver config
+	 */
+	public function testCustomerDirProtectionsAddAuthnameTrailingNewline()
+	{
+		global $admin_userdata;
+
+		// get customer
+		$json_result = Customers::getLocal($admin_userdata, array(
+			'loginname' => 'test1'
+		))->get();
+		$customer_userdata = json_decode($json_result, true)['data'];
+
+		$data = [
+			'path' => '/test-newline',
+			'username' => 'nltest',
+			'directory_password' => \Froxlor\System\Crypt::generatePassword(),
+			'directory_authname' => "foo\n"
+		];
+		$json_result = DirProtections::getLocal($customer_userdata, $data)->add();
+		$result = json_decode($json_result, true)['data'];
+		DirProtections::getLocal($customer_userdata, ['id' => $result['id']])->delete();
+		// trimmed, no newline makes it into the database
+		$this->assertEquals('foo', $result['authname']);
+	}
 }

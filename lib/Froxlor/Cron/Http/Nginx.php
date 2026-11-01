@@ -439,7 +439,7 @@ class Nginx extends HttpConfigBase
 				}
 
 				if (isset($domain_or_ip['hsts']) && $domain_or_ip['hsts'] >= 0) {
-					$sslsettings .= 'add_header Strict-Transport-Security "max-age=' . $domain_or_ip['hsts'];
+					$sslsettings .= 'add_header Strict-Transport-Security "max-age=' . (int)$domain_or_ip['hsts'];
 					if ($domain_or_ip['hsts_sub'] == 1) {
 						$sslsettings .= '; includeSubDomains';
 					}

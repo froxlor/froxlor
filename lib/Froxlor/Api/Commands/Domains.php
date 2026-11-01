@@ -359,7 +359,7 @@ class Domains extends ApiCommand implements ResourceEntity
 				$p_ssl_ipandports = $this->getParam('ssl_ipandport', true, $dont_use_default_ssl_ipandport_if_empty ? [] : explode(',', Settings::Get('system.defaultsslip')));
 				$http2 = $this->getBoolParam('http2', true, 0);
 				$http3 = $this->getBoolParam('http3', true, 0);
-				$hsts_maxage = $this->getParam('hsts_maxage', true, 0);
+				$hsts_maxage = intval($this->getParam('hsts_maxage', true, 0));
 				$hsts_sub = $this->getBoolParam('hsts_sub', true, 0);
 				$hsts_preload = $this->getBoolParam('hsts_preload', true, 0);
 				$ocsp_stapling = $this->getBoolParam('ocsp_stapling', true, 0);
@@ -1284,7 +1284,7 @@ class Domains extends ApiCommand implements ResourceEntity
 			$sslenabled = $remove_ssl_ipandport ? false : $this->getBoolParam('sslenabled', true, $result['ssl_enabled']);
 			$http2 = $this->getBoolParam('http2', true, $result['http2']);
 			$http3 = $this->getBoolParam('http3', true, $result['http3']);
-			$hsts_maxage = $this->getParam('hsts_maxage', true, $result['hsts']);
+			$hsts_maxage = intval($this->getParam('hsts_maxage', true, $result['hsts']));
 			$hsts_sub = $this->getBoolParam('hsts_sub', true, $result['hsts_sub']);
 			$hsts_preload = $this->getBoolParam('hsts_preload', true, $result['hsts_preload']);
 			$ocsp_stapling = $this->getBoolParam('ocsp_stapling', true, $result['ocsp_stapling']);
