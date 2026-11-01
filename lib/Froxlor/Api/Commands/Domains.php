@@ -754,7 +754,9 @@ class Domains extends ApiCommand implements ResourceEntity
 					Response::standardError('adduserfirst', '', true);
 				} elseif ($domain_check && strtolower($domain_check['domain']) == strtolower($domain)) {
 					Response::standardError('domainalreadyexists', $idna_convert->decode($domain), true);
-				} elseif ($aliasdomain_check && $aliasdomain_check['id'] != $aliasdomain) {
+				} elseif ($aliasdomain != 0 && (!$aliasdomain_check || $aliasdomain_check['id'] != $aliasdomain)) {
+					// the check-query is scoped to the target customer, an empty result means the
+					// alias-target belongs to someone else (or is an alias / std-subdomain itself)
 					Response::standardError('domainisaliasorothercustomer', '', true);
 				} else {
 					$wwwserveralias = ($serveraliasoption == '1') ? '1' : '0';

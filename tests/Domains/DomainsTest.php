@@ -582,4 +582,45 @@ class DomainsTest extends TestCase
 			'id' => $domain_id
 		])->delete();
 	}
+
+	/**
+	 * regression test: Domains::add() only rejected an alias-target if the (customer-scoped)
+	 * check-query returned a row with a different id - an empty result (domain of another
+	 * customer/admin, or one that is an alias itself) was accepted, which e.g. made the new
+	 * domain a ServerAlias of a foreign vhost
+	 */
+	public function testAdminDomainsAddAliasOfInvalidTarget()
+	{
+		global $admin_userdata;
+		$json_result = Customers::getLocal($admin_userdata, array(
+			'loginname' => 'test1'
+		))->get();
+		$customer_userdata = json_decode($json_result, true)['data'];
+
+		$json_result = Domains::getLocal($admin_userdata, [
+			'domain' => 'aliastarget.local',
+			'customerid' => $customer_userdata['customerid']
+		])->add();
+		$target = json_decode($json_result, true)['data'];
+		$json_result = Domains::getLocal($admin_userdata, [
+			'domain' => 'aliasone.local',
+			'customerid' => $customer_userdata['customerid'],
+			'alias' => $target['id']
+		])->add();
+		$alias = json_decode($json_result, true)['data'];
+		$this->assertEquals($target['id'], $alias['aliasdomain']);
+
+		try {
+			// the alias-domain itself is no valid target, the check-query finds nothing for it
+			$this->expectExceptionMessage('The selected alias domain is either itself an alias domain, has a different ip/port combination or belongs to another customer.');
+			Domains::getLocal($admin_userdata, [
+				'domain' => 'aliastwo.local',
+				'customerid' => $customer_userdata['customerid'],
+				'alias' => $alias['id']
+			])->add();
+		} finally {
+			Domains::getLocal($admin_userdata, ['id' => $alias['id']])->delete();
+			Domains::getLocal($admin_userdata, ['id' => $target['id']])->delete();
+		}
+	}
 }
