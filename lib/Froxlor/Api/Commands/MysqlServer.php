@@ -576,9 +576,9 @@ class MysqlServer extends ApiCommand implements ResourceEntity
 			['sql' => $sql, 'sql_root' => $sql_root],
 			'automatically generated userdata.inc.php for froxlor'
 		);
-		chmod(Froxlor::getInstallDir() . "/lib/userdata.inc.php", 0700);
+		// only the owner (froxlor itself) needs to read and write the file, nobody else
+		chmod(Froxlor::getInstallDir() . "/lib/userdata.inc.php", 0600);
 		file_put_contents(Froxlor::getInstallDir() . "/lib/userdata.inc.php", $content);
-		chmod(Froxlor::getInstallDir() . "/lib/userdata.inc.php", 0400);
 		clearstatcache();
 		if (function_exists('opcache_invalidate')) {
 			@opcache_invalidate(Froxlor::getInstallDir() . "/lib/userdata.inc.php", true);

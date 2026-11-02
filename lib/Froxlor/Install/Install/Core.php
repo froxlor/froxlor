@@ -646,6 +646,8 @@ class Core
 			$fp = @fopen($userdata_file, 'w');
 			@fputs($fp, $userdata, strlen($userdata));
 			@fclose($fp);
+			// umask only applies to newly created files, enforce it for an already existing one
+			@chmod($userdata_file, 0600);
 		} else {
 			@unlink($userdata_file);
 			// try creating it in a temporary file

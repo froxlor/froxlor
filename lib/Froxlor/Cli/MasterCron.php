@@ -214,6 +214,20 @@ final class MasterCron extends CliCommand
 			FileDir::safe_exec('chown -R ' . escapeshellarg($user . ':' . $group) . ' ' . escapeshellarg($_mypath));
 		}
 		$output->writeln('OK');
+
+		// userdata.inc.php contains the database credentials (incl. the privileged sql-user),
+		// installations created before 0.10.16 (or copied/restored manually) may still have
+		// it readable for others; only the owner needs access (read + write for MysqlServer)
+		$userdata_file = $_mypath . 'lib/userdata.inc.php';
+		if (file_exists($userdata_file) && !is_link($userdata_file)) {
+			$perms = fileperms($userdata_file) & 0777;
+			if (($perms & 0077) !== 0) {
+				@chmod($userdata_file, 0600);
+				clearstatcache();
+				$output->writeln('<comment>Corrected permissions of ' . $userdata_file . ' from ' . sprintf('%04o', $perms) . ' to 0600</>');
+				FroxlorLogger::getInstanceOf(['loginname' => 'cronjob'])->logAction(FroxlorLogger::CRON_ACTION, LOG_WARNING, 'Corrected permissions of lib/userdata.inc.php from ' . sprintf('%04o', $perms) . ' to 0600');
+			}
+		}
 	}
 
 	private function lockJob(string $job, OutputInterface $output): bool
