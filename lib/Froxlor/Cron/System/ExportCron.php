@@ -63,12 +63,13 @@ class ExportCron extends FroxlorCron
 		if (is_array($row['data'])) {
 			if (isset($row['data']['customerid']) && isset($row['data']['loginname']) && isset($row['data']['destdir'])) {
 				$customerdocroot = FileDir::makeCorrectDir(Settings::Get('system.documentroot_prefix') . '/' . $row['data']['loginname'] . '/');
-				$row['data']['destdir'] = FileDir::makeCorrectDir($row['data']['destdir'], $customerdocroot);
-
-				// create folder if not exists
-				if (!file_exists($row['data']['destdir']) && $row['data']['destdir'] != '/' && $row['data']['destdir'] != Settings::Get('system.documentroot_prefix') && $row['data']['destdir'] != $customerdocroot) {
-					FroxlorLogger::getInstanceOf()->logAction(FroxlorLogger::CRON_ACTION, LOG_DEBUG, 'Creating data export destination path for customer: ' . escapeshellarg($row['data']['destdir']));
-					FileDir::safe_exec('mkdir -p ' . escapeshellarg($row['data']['destdir']));
+				try {
+					$row['data']['destdir'] = FileDir::makeCorrectDir($row['data']['destdir'], $customerdocroot);
+				} catch (Exception $e) {
+					// remove the job as well, the customer would otherwise block it forever
+					$cronlog->logAction(FroxlorLogger::CRON_ACTION, LOG_ERR, 'Export destination is unsafe, skipping export for security: ' . $e->getMessage());
+					Database::pexecute($del_stmt, ['id' => $row['id']]);
+					return;
 				}
 
 				self::createCustomerExport($row['data'], $customerdocroot, $cronlog);
@@ -221,8 +222,7 @@ class ExportCron extends FroxlorCron
 		}
 
 		if (!empty($create_export_tar_data)) {
-			// note: the staging folder and its content stay root-owned, only the final export-file
-			// is handed to the customer - otherwise files in it could be swapped for symlinks again
+			// note: the staging folder and its content stay root-owned
 			// create tar-file
 			$export_file = FileDir::makeCorrectFile($tmpdir . '/' . $data['loginname'] . '-export_' . date('YmdHi', time()) . '.tar.gz' . (!empty($data['pgp_public_key']) ? '.gpg' : ''));
 			$cronlog->logAction(FroxlorLogger::CRON_ACTION, LOG_INFO, 'Creating export-file "' . $export_file . '"');
@@ -238,12 +238,9 @@ class ExportCron extends FroxlorCron
 				$cronlog->logAction(FroxlorLogger::CRON_ACTION, LOG_DEBUG, 'shell> tar cfz ' . escapeshellarg($export_file) . ' -C ' . escapeshellarg($tmpdir) . ' ' . trim($create_export_tar_data));
 				FileDir::safe_exec('tar cfz ' . escapeshellarg($export_file) . ' -C ' . escapeshellarg($tmpdir) . ' ' . trim($create_export_tar_data));
 			}
-			// set owner of the export-file to customer (still in our root-owned staging folder)
-			$cronlog->logAction(FroxlorLogger::CRON_ACTION, LOG_DEBUG, 'shell> chown -h ' . (int)$data['uid'] . ':' . (int)$data['gid'] . ' ' . escapeshellarg($export_file));
-			FileDir::safe_exec('chown -h ' . (int)$data['uid'] . ':' . (int)$data['gid'] . ' ' . escapeshellarg($export_file));
 			// re-validate the destination immediately before writing to it: a path component
 			// could have been swapped for a symlink after this job was scheduled, or even while
-			// the dump above was running - the mv and chown below must never follow such a link
+			// the dump above was running
 			try {
 				FileDir::makeCorrectDir($data['destdir'], $customerdocroot);
 			} catch (Exception $e) {
@@ -251,17 +248,64 @@ class ExportCron extends FroxlorCron
 				FileDir::safe_exec('rm -rf ' . escapeshellarg($tmpdir));
 				return;
 			}
-			// move to destination directory
-			$cronlog->logAction(FroxlorLogger::CRON_ACTION, LOG_DEBUG, 'shell> mv ' . escapeshellarg($export_file) . ' ' . escapeshellarg($data['destdir']));
-			FileDir::safe_exec('mv ' . escapeshellarg($export_file) . ' ' . escapeshellarg($data['destdir']));
-			// set owner of the destination folder (might have been created by us) to customer,
-			// non-recursive and without trailing slash + -h so a symlink is never followed
-			$destdir_nolink = rtrim($data['destdir'], '/');
-			$cronlog->logAction(FroxlorLogger::CRON_ACTION, LOG_DEBUG, 'shell> chown -h ' . (int)$data['uid'] . ':' . (int)$data['gid'] . ' ' . escapeshellarg($destdir_nolink));
-			FileDir::safe_exec('chown -h ' . (int)$data['uid'] . ':' . (int)$data['gid'] . ' ' . escapeshellarg($destdir_nolink));
+			// any component can still be swapped right after that check, so the destination is
+			// only ever touched with the permissions of the customer
+			$cronlog->logAction(FroxlorLogger::CRON_ACTION, LOG_DEBUG, 'Storing export-file in ' . escapeshellarg($data['destdir']));
+			if (!self::storeExportAsCustomer($export_file, $data['destdir'], $data['loginname'], (int)$data['uid'], (int)$data['gid'])) {
+				$cronlog->logAction(FroxlorLogger::CRON_ACTION, LOG_ERR, 'Could not store export-file in "' . $data['destdir'] . '" with permissions of customer "' . $data['loginname'] . '"');
+			}
 		}
 		// remove tmp-files
 		$cronlog->logAction(FroxlorLogger::CRON_ACTION, LOG_DEBUG, 'shell> rm -rf ' . escapeshellarg($tmpdir));
 		FileDir::safe_exec('rm -rf ' . escapeshellarg($tmpdir));
+	}
+
+	/**
+	 * Creates the destination folder (if required) and copies the export-file into it with the
+	 * effective user/groups of the customer. The destination is fully controlled by the customer,
+	 * running this as customer means the kernel enforces that it can only end up where the
+	 * customer is allowed to write anyway - no matter which symlinks are being swapped in.
+	 *
+	 * @param string $export_file root-owned source file
+	 * @param string $destdir
+	 * @param string $loginname
+	 * @param int $uid
+	 * @param int $gid
+	 *
+	 * @return bool
+	 */
+	private static function storeExportAsCustomer(string $export_file, string $destdir, string $loginname, int $uid, int $gid): bool
+	{
+		// open and stat the source now, the customer has no access to the staging folder
+		$source = @fopen($export_file, 'rb');
+		$export_size = filesize($export_file);
+		if ($source === false || $export_size === false || $uid <= 0 || $gid <= 0) {
+			return false;
+		}
+
+		$stored = false;
+		try {
+			if (posix_initgroups($loginname, $gid) && posix_setegid($gid) && posix_seteuid($uid)) {
+				if (is_dir($destdir) || @mkdir($destdir, 0755, true)) {
+					$target = FileDir::makeCorrectFile($destdir . '/' . basename($export_file));
+					// 'x' fails if the target exists, also if it is a (dangling) symlink
+					$destination = @fopen($target, 'xb');
+					if ($destination !== false) {
+						$stored = stream_copy_to_stream($source, $destination) === $export_size;
+						$stored = fclose($destination) && $stored;
+						if (!$stored) {
+							@unlink($target);
+						}
+					}
+				}
+			}
+		} finally {
+			// failing to get back to root must never result in continuing as the wrong user
+			if (!posix_seteuid(0) || !posix_setegid(0) || !posix_initgroups('root', 0)) {
+				exit(1);
+			}
+			fclose($source);
+		}
+		return $stored;
 	}
 }

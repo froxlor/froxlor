@@ -161,7 +161,9 @@ class Statistics
 			// the customer (e.g. replacing the traffictool folder) can't make this recurse and
 			// chown an arbitrary root-owned directory outside of it
 			$homedir = FileDir::makeCorrectDir($row['documentroot']);
-			FileDir::safe_exec('chown -R ' . escapeshellarg($user) . ':' . escapeshellarg($group) . ' ' . escapeshellarg(FileDir::makeCorrectDir($dir, $homedir)));
+			// -h and no trailing slash: the folder could still be swapped for a symlink after this
+			// check, which then must not be followed
+			FileDir::safe_exec('chown -hR ' . escapeshellarg($user) . ':' . escapeshellarg($group) . ' -- ' . escapeshellarg(rtrim(FileDir::makeCorrectDir($dir, $homedir), '/')));
 		}
 	}
 }

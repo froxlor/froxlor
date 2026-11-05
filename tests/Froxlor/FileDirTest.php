@@ -319,4 +319,142 @@ class FileDirTest extends TestCase
 		$this->expectException(Exception::class);
 		FileDir::makeCorrectFile($this->workdir . 'stats/current', $this->workdir);
 	}
+
+	/**
+	 * GHSA-jpg6-j246-v2jh: the first link stays within the homedir, its target is another
+	 * link pointing outside
+	 */
+	public function testSymlinkChainEscapingHomedirIsRejected()
+	{
+		symlink($this->workdir . 'step2', $this->workdir . 'step1');
+		symlink($this->outsidedir, $this->workdir . 'step2');
+
+		$this->expectException(Exception::class);
+		$this->expectExceptionMessage('Found symlink pointing outside of customer home directory: step1');
+		FileDir::makeCorrectDir($this->workdir . 'step1/', $this->workdir);
+	}
+
+	public function testSymlinkChainEscapingHomedirIsRejectedWithSubdirectory()
+	{
+		symlink($this->workdir . 'step2', $this->workdir . 'step1');
+		symlink($this->outsidedir, $this->workdir . 'step2');
+
+		$this->expectException(Exception::class);
+		$this->expectExceptionMessage('Found symlink pointing outside of customer home directory: step1');
+		FileDir::makeCorrectDir($this->workdir . 'step1/sub/', $this->workdir);
+	}
+
+	/**
+	 * the target of the link is lexically within the homedir but leads through another link
+	 */
+	public function testSymlinkTargetThroughOtherSymlinkIsRejected()
+	{
+		symlink($this->outsidedir, $this->workdir . 'x');
+		symlink($this->workdir . 'x/y', $this->workdir . 'a');
+
+		$this->expectException(Exception::class);
+		$this->expectExceptionMessage('Found symlink pointing outside of customer home directory: a');
+		FileDir::makeCorrectDir($this->workdir . 'a/', $this->workdir);
+	}
+
+	/**
+	 * '..' in a target applies to where the link before it really points to,
+	 * not to what the path looks like
+	 */
+	public function testDotDotAfterSymlinkInTargetIsRejected()
+	{
+		mkdir($this->outsidedir . 'deep/er', 0777, true);
+		symlink($this->outsidedir . 'deep/er', $this->workdir . 'x');
+		symlink('x/..', $this->workdir . 'a');
+
+		$this->expectException(Exception::class);
+		$this->expectExceptionMessage('Found symlink pointing outside of customer home directory: a');
+		FileDir::makeCorrectDir($this->workdir . 'a/', $this->workdir);
+	}
+
+	/**
+	 * characters stripped by makeSecurePath() must not hide a link from the check
+	 */
+	public function testBadCharacterCannotHideSymlink()
+	{
+		symlink($this->outsidedir, $this->workdir . 'step');
+
+		$this->expectException(Exception::class);
+		$this->expectExceptionMessage('Found symlink pointing outside of customer home directory: step');
+		FileDir::makeCorrectDir($this->workdir . 'st:ep/', $this->workdir);
+	}
+
+	public function testDanglingSymlinkChainIsRejected()
+	{
+		symlink($this->workdir . 'step2', $this->workdir . 'step1');
+		symlink($this->outsidedir . 'does-not-exist', $this->workdir . 'step2');
+
+		$this->expectException(Exception::class);
+		FileDir::makeCorrectDir($this->workdir . 'step1/', $this->workdir);
+	}
+
+	public function testSymlinkLoopIsRejected()
+	{
+		symlink($this->workdir . 'b', $this->workdir . 'a');
+		symlink($this->workdir . 'a', $this->workdir . 'b');
+
+		$this->expectException(Exception::class);
+		FileDir::makeCorrectDir($this->workdir . 'a/', $this->workdir);
+	}
+
+	public function testMakeCorrectFileRejectsSymlinkChain()
+	{
+		touch($this->outsidedir . 'secret');
+		symlink($this->workdir . 'f2', $this->workdir . 'f1');
+		symlink($this->outsidedir . 'secret', $this->workdir . 'f2');
+
+		$this->expectException(Exception::class);
+		$this->expectExceptionMessage('Found symlink pointing outside of customer home directory: f1');
+		FileDir::makeCorrectFile($this->workdir . 'f1', $this->workdir);
+	}
+
+	public function testSymlinkChainStayingWithinHomedirIsAccepted()
+	{
+		mkdir($this->workdir . 'real');
+		symlink($this->workdir . 'real', $this->workdir . 'step2');
+		symlink('step2', $this->workdir . 'step1');
+
+		$this->assertEquals($this->workdir . 'step1/', FileDir::makeCorrectDir($this->workdir . 'step1/', $this->workdir));
+	}
+
+	/**
+	 * the homedir itself may be a symlink (e.g. documentroot-prefix on a data-disk) and
+	 * customer links may point to it using either of the two paths
+	 */
+	public function testSymlinkedHomedirKeepsWorking()
+	{
+		mkdir($this->outsidedir . 'real');
+		symlink(rtrim($this->outsidedir, '/'), $this->workdir . 'home');
+		$homedir = $this->workdir . 'home/';
+		symlink($homedir . 'real', $this->outsidedir . 'viahome');
+		symlink($this->outsidedir . 'real', $this->outsidedir . 'viareal');
+
+		$this->assertEquals($homedir . 'viahome/', FileDir::makeCorrectDir($homedir . 'viahome/', $homedir));
+		$this->assertEquals($homedir . 'viareal/', FileDir::makeCorrectDir($homedir . 'viareal/', $homedir));
+	}
+
+	/**
+	 * spaces are returned escaped, a link has to be found using either of the two names
+	 */
+	public function testSymlinkWithSpaceInNameIsRejected()
+	{
+		symlink($this->outsidedir, $this->workdir . 'my dir');
+
+		$this->expectException(Exception::class);
+		$this->expectExceptionMessage('Found symlink pointing outside of customer home directory: my dir');
+		FileDir::makeCorrectDir($this->workdir . 'my dir/', $this->workdir);
+	}
+
+	public function testSymlinkWithLiteralBackslashInNameIsRejected()
+	{
+		symlink($this->outsidedir, $this->workdir . 'my\\ dir');
+
+		$this->expectException(Exception::class);
+		FileDir::makeCorrectDir($this->workdir . 'my dir/', $this->workdir);
+	}
 }
