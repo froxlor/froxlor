@@ -660,7 +660,7 @@ class Nginx extends HttpConfigBase
 			$vhost_content .= $this->getWebroot($domain);
 
 			if ($this->deactivated == false) {
-				$vhost_content = $this->mergeVhostCustom($vhost_content, $this->createPathOptions($domain)) . "\n";
+				$vhost_content = $this->mergeVhostCustom($vhost_content, $this->createPathOptions($domain, $ssl_vhost)) . "\n";
 				$vhost_content .= $this->composePhpOptions($domain, $ssl_vhost);
 
 				$vhost_content .= isset($this->needed_htpasswds[$domain['id']]) ? $this->needed_htpasswds[$domain['id']] . "\n" : '';
@@ -900,9 +900,12 @@ class Nginx extends HttpConfigBase
 				if (in_array($currentBlock[0], $vhost_frx)) {
 					// Add to existing block
 					$pos = array_search($currentBlock[0], $vhost_frx);
+					// the end of this block, it may contain nested blocks
+					$depth = 1;
 					do {
 						$pos++;
-					} while ($vhost_frx[$pos] != "}");
+						$depth += substr_count($vhost_frx[$pos], "{") - substr_count($vhost_frx[$pos], "}");
+					} while ($depth > 0);
 
 					for ($i = 1; $i < count($currentBlock) - 1; $i++) {
 						array_splice($vhost_frx, $pos + $i - 1, 0, $currentBlock[$i]);
@@ -959,7 +962,7 @@ class Nginx extends HttpConfigBase
 		return $vhost;
 	}
 
-	protected function createPathOptions($domain)
+	protected function createPathOptions($domain, $ssl_vhost = false)
 	{
 		$result_stmt = Database::prepare("
 			SELECT * FROM " . TABLE_PANEL_HTACCESS . "
@@ -1018,12 +1021,23 @@ class Nginx extends HttpConfigBase
 
 				$this->vhost_root_autoindex = false;
 			} else {
-				$path_options .= "\t" . 'location ^~ ' . FileDir::makeCorrectFile($path) . ' {' . "\n";
+				// "^~" disables all regex locations for this path: only use it where php has to stay
+				// behind a protection, otherwise php files would be served as plain text. Having its
+				// own protection the block is merged with the one (including php) created further down
+				$inherited_auth = $this->getInheritedAuthBasic($path, $htpasswds);
+				$is_protected = $inherited_auth != '' || in_array($path, array_column($htpasswds, 'path'));
+				$path_options .= "\t" . 'location ' . ($is_protected ? '^~ ' : '') . FileDir::makeCorrectFile($path) . ' {' . "\n";
 				if ($this->vhost_root_autoindex || $row['options_indexes'] != '0') {
 					$path_options .= "\t\t" . 'autoindex  on;' . "\n";
 					$this->vhost_root_autoindex = false;
 				}
-				$path_options .= $this->getInheritedAuthBasic($path, $htpasswds);
+				if ($inherited_auth != '') {
+					$path_options .= $inherited_auth;
+					$path_options .= $this->getProtectedPhpLocation($domain, $ssl_vhost);
+				}
+				if (!$is_protected && $domain['phpenabled_customer'] == 1 && $domain['phpenabled_vhost'] == '1') {
+					$path_options .= "\t\t" . 'index    index.php index.html index.htm;' . "\n";
+				}
 				$path_options .= "\t" . '} ' . "\n";
 			}
 			// }
@@ -1070,11 +1084,7 @@ class Nginx extends HttpConfigBase
 						$path_options .= "\t\t" . 'auth_basic_user_file  ' . FileDir::makeCorrectFile($single['usrf']) . ';' . "\n";
 						if ($domain['phpenabled_customer'] == 1 && $domain['phpenabled_vhost'] == '1') {
 							$path_options .= "\t\t" . 'index    index.php index.html index.htm;' . "\n";
-							if ($domain['notryfiles'] != 1) {
-								$path_options .= "\t\t" . 'location ~ ^(.+?\.php)(/.*)?$ {' . "\n";
-								$path_options .= "\t\t\t" . 'try_files ' . $domain['nonexistinguri'] . ' @php;' . "\n";
-								$path_options .= "\t\t" . '}' . "\n\n";
-							}
+							$path_options .= $this->getProtectedPhpLocation($domain, $ssl_vhost);
 						} else {
 							$path_options .= "\t\t" . 'index    index.html index.htm;' . "\n";
 						}
@@ -1086,6 +1096,29 @@ class Nginx extends HttpConfigBase
 		}
 
 		return $path_options;
+	}
+
+	/**
+	 * php location to be used within a "location ^~" block of a protected folder, as
+	 * the regular one of the vhost is not used there. Without try_files there is no
+	 * @php location to refer to, so this has to be the complete one.
+	 *
+	 * @param array $domain
+	 * @param bool $ssl_vhost
+	 *
+	 * @return string
+	 */
+	protected function getProtectedPhpLocation(array &$domain, bool $ssl_vhost): string
+	{
+		if ($domain['phpenabled_customer'] != 1 || $domain['phpenabled_vhost'] != '1') {
+			return '';
+		}
+		if ($domain['notryfiles'] == 1) {
+			return $this->composePhpOptions($domain, $ssl_vhost);
+		}
+		return "\t\t" . 'location ~ ^(.+?\.php)(/.*)?$ {' . "\n"
+			. "\t\t\t" . 'try_files ' . $domain['nonexistinguri'] . ' @php;' . "\n"
+			. "\t\t" . '}' . "\n\n";
 	}
 
 	/**

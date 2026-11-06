@@ -55,4 +55,11 @@ class NginxDirProtectionTest extends TestCase
 		$this->assertSame('', $this->call('getInheritedAuthBasic', '/ab/', [$this->single('/'), $this->single('/a/')]));
 		$this->assertSame('', $this->call('getInheritedAuthBasic', '/other/', []));
 	}
+
+	public function testMergeIntoBlockWithNestedLocationEndsUpInOuterBlock()
+	{
+		$merged = $this->call('mergeVhostCustom', "location ^~ /a {\nindex a;\nlocation ~ b {\nc;\n}\n}", "location ^~ /a {\nadd_header x y;\n}");
+
+		$this->assertMatchesRegularExpression('/c;\s*\}\s*add_header x y;\s*\}/', $merged);
+	}
 }
