@@ -1014,32 +1014,6 @@ class Nginx extends HttpConfigBase
 					$this->vhost_root_autoindex = false;
 				}
 
-				// check if we have a htpasswd for this path
-				// (damn nginx does not like more than one
-				// 'location'-part with the same path)
-				if (count($htpasswds) > 0) {
-					foreach ($htpasswds as $idx => $single) {
-						switch ($single['path']) {
-							case '/awstats/':
-							case '/webalizer/':
-							case '/goaccess/':
-								// no stats-alias in "location /"-context
-								break;
-							default:
-								if ($single['path'] == '/') {
-									$path_options .= "\t\t" . 'auth_basic            "' . $single['authname'] . '";' . "\n";
-									$path_options .= "\t\t" . 'auth_basic_user_file  ' . FileDir::makeCorrectFile($single['usrf']) . ';' . "\n";
-									if ($domain['phpenabled_customer'] == 1 && $domain['phpenabled_vhost'] == '1') {
-										$path_options .= "\t\t" . 'index    index.php index.html index.htm;' . "\n";
-									} else {
-										$path_options .= "\t\t" . 'index    index.html index.htm;' . "\n";
-									}
-									// remove already used entries so we do not have doubles
-									unset($htpasswds[$idx]);
-								}
-						}
-					}
-				}
 				$path_options .= "\t" . '}' . "\n";
 
 				$this->vhost_root_autoindex = false;
@@ -1049,6 +1023,7 @@ class Nginx extends HttpConfigBase
 					$path_options .= "\t\t" . 'autoindex  on;' . "\n";
 					$this->vhost_root_autoindex = false;
 				}
+				$path_options .= $this->getInheritedAuthBasic($path, $htpasswds);
 				$path_options .= "\t" . '} ' . "\n";
 			}
 			// }
@@ -1087,10 +1062,10 @@ class Nginx extends HttpConfigBase
 						break;
 					default:
 						if ($single['path'] == '/') {
-							$path_options .= "\t" . 'location ' . FileDir::makeCorrectDir($single['path']) . ' {' . "\n";
-						} else {
-							$path_options .= "\t" . 'location ^~ ' . FileDir::makeCorrectFile($single['path']) . ' {' . "\n";
+							$path_options .= $this->getServerAuthBasic($single);
+							break;
 						}
+						$path_options .= "\t" . 'location ^~ ' . FileDir::makeCorrectFile($single['path']) . ' {' . "\n";
 						$path_options .= "\t\t" . 'auth_basic            "' . $single['authname'] . '";' . "\n";
 						$path_options .= "\t\t" . 'auth_basic_user_file  ' . FileDir::makeCorrectFile($single['usrf']) . ';' . "\n";
 						if ($domain['phpenabled_customer'] == 1 && $domain['phpenabled_vhost'] == '1') {
@@ -1111,6 +1086,56 @@ class Nginx extends HttpConfigBase
 		}
 
 		return $path_options;
+	}
+
+	/**
+	 * Protecting the documentroot has to happen on server-level: regex locations (php, images
+	 * in custom vhost settings, ...) take precedence over "location /" and do not inherit from it.
+	 * ACME challenges must stay reachable, as acme.conf cannot be changed on existing systems,
+	 * the realm is set to "off" for them. Tokens are base64url (RFC 8555), hence no dot in
+	 * the pattern, so this never matches a script or any other regular file extension.
+	 *
+	 * @param array $single
+	 *
+	 * @return string
+	 */
+	protected function getServerAuthBasic(array $single): string
+	{
+		$auth = "\t" . 'set $froxlor_auth_realm "' . $single['authname'] . '";' . "\n";
+		$auth .= "\t" . 'if ($uri ~ ^/\.well-known/acme-challenge/[A-Za-z0-9_-]+$) {' . "\n";
+		$auth .= "\t\t" . 'set $froxlor_auth_realm off;' . "\n";
+		$auth .= "\t" . '}' . "\n";
+		$auth .= "\t" . 'auth_basic            $froxlor_auth_realm;' . "\n";
+		$auth .= "\t" . 'auth_basic_user_file  ' . FileDir::makeCorrectFile($single['usrf']) . ';' . "\n";
+		return $auth;
+	}
+
+	/**
+	 * A "location ^~ /parent/child" takes over the request from "location ^~ /parent" without
+	 * inheriting from it, so it needs the settings of the closest protected parent folder
+	 *
+	 * @param string $path
+	 * @param array $htpasswds
+	 *
+	 * @return string
+	 */
+	protected function getInheritedAuthBasic(string $path, array $htpasswds): string
+	{
+		$parent = null;
+		foreach ($htpasswds as $single) {
+			if ($single['path'] == $path) {
+				// has its own protection which ends up in the same location-block
+				return '';
+			}
+			if ($single['path'] != '/' && strpos($path, $single['path']) === 0 && ($parent === null || strlen($single['path']) > strlen($parent['path']))) {
+				$parent = $single;
+			}
+		}
+		if ($parent === null) {
+			return '';
+		}
+		return "\t\t" . 'auth_basic            "' . $parent['authname'] . '";' . "\n"
+			. "\t\t" . 'auth_basic_user_file  ' . FileDir::makeCorrectFile($parent['usrf']) . ';' . "\n";
 	}
 
 	protected function getHtpasswds($domain)
