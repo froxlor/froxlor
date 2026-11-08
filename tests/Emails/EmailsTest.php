@@ -581,6 +581,29 @@ class MailsTest extends TestCase
 		$this->assertEquals(0, $result['popaccountid']);
 	}
 
+	public function testCustomerEmailsDeleteKeepsAdminForwarderCount()
+	{
+		global $admin_userdata;
+
+		$json_result = Customers::getLocal($admin_userdata, array(
+			'loginname' => 'test1'
+		))->get();
+		$customer_userdata = json_decode($json_result, true)['data'];
+
+		$usedBy = function () {
+			$stmt = Database::query("SELECT `email_forwarders_used` FROM `" . TABLE_PANEL_ADMINS . "` WHERE `adminid` = 1");
+			return (int)$stmt->fetch(\PDO::FETCH_ASSOC)['email_forwarders_used'];
+		};
+		Database::query("UPDATE `" . TABLE_PANEL_ADMINS . "` SET `email_forwarders_used` = 5 WHERE `adminid` = 1");
+
+		$json_result = Emails::getLocal($customer_userdata, ['email_part' => 'fwdcount', 'domain' => 'test2.local'])->add();
+		$address = json_decode($json_result, true)['data'];
+		EmailForwarders::getLocal($customer_userdata, ['emailaddr' => $address['email_full'], 'destination' => 'other@example.com'])->add();
+		Emails::getLocal($customer_userdata, ['emailaddr' => $address['email_full']])->delete();
+
+		$this->assertEquals(5, $usedBy());
+	}
+
 	public function testCustomerEmailsDelete()
 	{
 		global $admin_userdata;
