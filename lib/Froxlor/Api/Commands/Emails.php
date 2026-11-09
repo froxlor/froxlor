@@ -539,7 +539,6 @@ class Emails extends ApiCommand implements ResourceEntity
 
 		// decrease forwarder counter
 		Customers::decreaseUsage($customer['customerid'], 'email_forwarders_used', '', $number_forwarders);
-		Admins::decreaseUsage($customer['customerid'], 'email_forwarders_used', '', $number_forwarders);
 
 		// delete address
 		$stmt = Database::prepare("DELETE FROM `" . TABLE_MAIL_VIRTUAL . "` WHERE `customerid`= :customerid AND `id`= :id");
