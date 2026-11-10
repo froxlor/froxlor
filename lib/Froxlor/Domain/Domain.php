@@ -36,33 +36,22 @@ class Domain
 {
 
 	/**
-	 * return all ip addresses associated with given domain,
-	 * returns all ips if domain-id = 0 (froxlor.vhost)
+	 * returns all ip addresses known to froxlor - intentionally not only the ones assigned to
+	 * the given domain: this is used to check whether a domain points to this server before
+	 * requesting a Let's Encrypt certificate, and the acme-challenge alias is served by every
+	 * vhost, so pointing to any of the system's ips is enough for the validation to succeed
 	 *
-	 * @param int $domain_id
+	 * @param int $domain_id currently unused, see above
 	 * @return array
 	 * @throws \Exception
 	 */
 	public static function getIpsOfDomain(int $domain_id = 0): array
 	{
-		if ($domain_id > 0) {
-			$sel_stmt = Database::prepare("
-				SELECT i.ip FROM `" . TABLE_PANEL_IPSANDPORTS . "` `i`
-				LEFT JOIN `" . TABLE_DOMAINTOIP . "` `dip` ON dip.id_ipandports = i.id
-				AND dip.id_domain = :domainid
-				GROUP BY i.ip
-			");
-			$sel_param = [
-				'domainid' => $domain_id
-			];
-		} else {
-			// assuming froxlor.vhost (id = 0)
-			$sel_stmt = Database::prepare("
-				SELECT ip FROM `" . TABLE_PANEL_IPSANDPORTS . "`
-				GROUP BY ip
-			");
-			$sel_param = [];
-		}
+		$sel_stmt = Database::prepare("
+			SELECT ip FROM `" . TABLE_PANEL_IPSANDPORTS . "`
+			GROUP BY ip
+		");
+		$sel_param = [];
 		Database::pexecute($sel_stmt, $sel_param);
 		$result = [];
 		while ($ip = $sel_stmt->fetch(PDO::FETCH_ASSOC)) {

@@ -155,23 +155,26 @@ final class SwitchServerIp extends CliCommand
 				}
 
 				// check whether the system.mysql_access_host needs updating
-				if (strstr($check_mysqlip['value'], $ip_pair[0]) !== false) {
-					$new_mysqlip = str_replace($ip_pair[0], $ip_pair[1], $check_mysqlip['value']);
+				$new_mysqlip = self::replaceInList((string)($check_mysqlip['value'] ?? ''), $ip_pair[0], $ip_pair[1]);
+				if ($new_mysqlip !== (string)($check_mysqlip['value'] ?? '')) {
 					$upd2_stmt = Database::prepare("UPDATE `panel_settings` SET `value` = :newmysql WHERE `settinggroup` = 'system' and `varname` = 'mysql_access_host'");
 					Database::pexecute($upd2_stmt, [
 						'newmysql' => $new_mysqlip
 					]);
 					$output->writeln('<info>Updated mysql_access_host from <comment>' . $check_mysqlip['value'] . '</comment> to <comment>' . $new_mysqlip . '</comment></info>');
+					// further ip pairs have to work on the updated value
+					$check_mysqlip['value'] = $new_mysqlip;
 				}
 
 				// check whether the system.axfrservers needs updating
-				if (strstr($check_axfrip['value'], $ip_pair[0]) !== false) {
-					$new_axfrip = str_replace($ip_pair[0], $ip_pair[1], $check_axfrip['value']);
+				$new_axfrip = self::replaceInList((string)($check_axfrip['value'] ?? ''), $ip_pair[0], $ip_pair[1]);
+				if ($new_axfrip !== (string)($check_axfrip['value'] ?? '')) {
 					$upd2_stmt = Database::prepare("UPDATE `panel_settings` SET `value` = :newaxfr WHERE `settinggroup` = 'system' and `varname` = 'axfrservers'");
 					Database::pexecute($upd2_stmt, [
 						'newaxfr' => $new_axfrip
 					]);
 					$output->writeln('<info>Updated axfr-servers from <comment>' . $check_axfrip['value'] . '</comment> to <comment>' . $new_axfrip . '</comment></info>');
+					$check_axfrip['value'] = $new_axfrip;
 				}
 			}
 		}
@@ -180,5 +183,27 @@ final class SwitchServerIp extends CliCommand
 		$output->writeln("<comment>*** ATTENTION *** Remember to replace IP addresses in configuration files if used anywhere.</>");
 		$output->writeln("<info>IP addresses updated</>");
 		return self::SUCCESS;
+	}
+
+	/**
+	 * replaces an ip in a comma separated list only where it is a complete entry,
+	 * a plain string replacement of 10.0.0.1 would also change 10.0.0.10
+	 *
+	 * @param string $list
+	 * @param string $old_ip
+	 * @param string $new_ip
+	 *
+	 * @return string
+	 */
+	private static function replaceInList(string $list, string $old_ip, string $new_ip): string
+	{
+		$entries = explode(',', $list);
+		foreach ($entries as $idx => $entry) {
+			if (trim($entry) === $old_ip) {
+				// keep possible whitespace around the entry
+				$entries[$idx] = str_replace($old_ip, $new_ip, $entry);
+			}
+		}
+		return implode(',', $entries);
 	}
 }
