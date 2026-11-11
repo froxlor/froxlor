@@ -889,23 +889,18 @@ class Nginx extends HttpConfigBase
 			$line = trim($line);
 			$currentBlock[] = $line;
 
-			if (strpos($line, "{") !== false) {
+			$unquoted = self::stripQuotedValues($line);
+			if (strpos($unquoted, "{") !== false) {
 				$blockLevel++;
 			}
-			if (strpos($line, "}") !== false && $blockLevel > 0) {
+			if (strpos($unquoted, "}") !== false && $blockLevel > 0) {
 				$blockLevel--;
 			}
 
 			if ($line == "}" && $blockLevel == 0) {
 				if (in_array($currentBlock[0], $vhost_frx)) {
 					// Add to existing block
-					$pos = array_search($currentBlock[0], $vhost_frx);
-					// the end of this block, it may contain nested blocks
-					$depth = 1;
-					do {
-						$pos++;
-						$depth += substr_count($vhost_frx[$pos], "{") - substr_count($vhost_frx[$pos], "}");
-					} while ($depth > 0);
+					$pos = $this->findBlockEnd($vhost_frx, (int)array_search($currentBlock[0], $vhost_frx));
 
 					for ($i = 1; $i < count($currentBlock) - 1; $i++) {
 						array_splice($vhost_frx, $pos + $i - 1, 0, $currentBlock[$i]);
@@ -938,6 +933,47 @@ class Nginx extends HttpConfigBase
 		}
 
 		return implode("\n", $vhost_frx);
+	}
+
+	/**
+	 * returns the index of the line closing the block that starts at $start, the block may
+	 * contain nested blocks. Braces within quoted values are ignored. If the block is not
+	 * closed properly, fall back to its first closing line (or the end of the config).
+	 *
+	 * @param array $lines
+	 * @param int $start
+	 *
+	 * @return int
+	 */
+	private function findBlockEnd(array $lines, int $start): int
+	{
+		$depth = 0;
+		$line_count = count($lines);
+		for ($i = $start; $i < $line_count; $i++) {
+			$unquoted = self::stripQuotedValues($lines[$i]);
+			$depth += substr_count($unquoted, '{') - substr_count($unquoted, '}');
+			if ($depth <= 0) {
+				return $i;
+			}
+		}
+		for ($i = $start + 1; $i < $line_count; $i++) {
+			if ($lines[$i] == '}') {
+				return $i;
+			}
+		}
+		return $line_count;
+	}
+
+	/**
+	 * removes quoted values from a config line, braces in there are no block delimiters
+	 *
+	 * @param string $line
+	 *
+	 * @return string
+	 */
+	private static function stripQuotedValues(string $line): string
+	{
+		return preg_replace('/"(?:\\\\.|[^"\\\\])*"|\'(?:\\\\.|[^\'\\\\])*\'/', '', $line);
 	}
 
 	private function cleanVhostStruct($vhost = null)

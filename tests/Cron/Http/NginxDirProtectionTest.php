@@ -62,4 +62,34 @@ class NginxDirProtectionTest extends TestCase
 
 		$this->assertMatchesRegularExpression('/c;\s*\}\s*add_header x y;\s*\}/', $merged);
 	}
+
+	/**
+	 * braces within values must not make the search for the end of the block run past the
+	 * end of the config (2.3.17 ran into an endless loop there)
+	 */
+	public function testMergeWithBraceInValueTerminates()
+	{
+		$merged = $this->call('mergeVhostCustom', "location / {\nindex index.php;\nreturn 200 '{';\n}\nlocation ~ \\.php$ {\nx;\n}", "location / {\nadd_header X y;\n}");
+
+		$this->assertMatchesRegularExpression("/return 200 '\\{';\\s*add_header X y;\\s*\\}/", $merged);
+	}
+
+	public function testMergeIntoUnclosedBlockTerminates()
+	{
+		$merged = $this->call('mergeVhostCustom', "location / {\nindex index.php;", "location / {\nadd_header X y;\n}");
+
+		$this->assertStringContainsString('add_header X y;', $merged);
+	}
+
+	/**
+	 * a brace within a quoted value of the custom settings must not swallow all following blocks
+	 */
+	public function testCustomBlocksAfterBraceInValueAreKept()
+	{
+		$merged = $this->call('mergeVhostCustom', "location / {\nindex index.php;\n}", "location ^~ /a {\nadd_header X '{';\n}\nlocation ^~ /b {\nadd_header Y z;\n}");
+
+		$this->assertStringContainsString("add_header X '{';", $merged);
+		$this->assertStringContainsString('location ^~ /b {', $merged);
+		$this->assertStringContainsString('add_header Y z;', $merged);
+	}
 }
