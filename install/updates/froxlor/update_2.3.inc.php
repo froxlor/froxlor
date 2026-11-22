@@ -24,6 +24,7 @@
  */
 
 use Froxlor\Database\Database;
+use Froxlor\Database\DbManager;
 use Froxlor\Froxlor;
 use Froxlor\Install\Update;
 use Froxlor\Settings;
@@ -280,4 +281,75 @@ if (Froxlor::isFroxlorVersion('2.3.15')) {
 if (Froxlor::isFroxlorVersion('2.3.16')) {
 	Update::showUpdateStep("Updating from 2.3.16 to 2.3.17", false);
 	Froxlor::updateToVersion('2.3.17');
+}
+
+if (Froxlor::isDatabaseVersion('202608210')) {
+
+	Update::showUpdateStep("Adding new table for customer global database-users");
+	Database::query("DROP TABLE IF EXISTS `" . TABLE_PANEL_DATABASES_GLOBALUSERS . "`;");
+	$sql = "CREATE TABLE `" . TABLE_PANEL_DATABASES_GLOBALUSERS . "` (
+	  `id` int(11) unsigned NOT NULL auto_increment,
+	  `customerid` int(11) NOT NULL default '0',
+	  `dbserver` int(11) unsigned NOT NULL default '0',
+	  PRIMARY KEY  (`id`),
+	  UNIQUE KEY `customer_dbserver` (`customerid`, `dbserver`)
+	) ENGINE=InnoDB CHARSET=utf8 COLLATE=utf8_general_ci;";
+	Database::query($sql);
+	Update::lastStepStatus(0);
+
+	Froxlor::updateToDbVersion('202611200');
+}
+
+if (Froxlor::isDatabaseVersion('202611200')) {
+
+	Update::showUpdateStep("Adopting existing customer global database-users and removing legacy wildcard privileges");
+	// former versions did not keep track of the global database-users (named like the customer's loginname) and
+	// granted them privileges on `<loginname>%`.* which also matches databases of other customers (e.g. web1%
+	// matches web10sql1); adopt accounts which have been created by froxlor, revoke those grants and grant the
+	// customer's own databases explicitly. Accounts which do not look like they have been created by froxlor
+	// are not touched and cannot be managed by froxlor afterwards.
+	set_time_limit(0);
+	$skipped = [];
+	$adopted = 0;
+	$revoked = 0;
+	$customers_stmt = Database::query("
+		SELECT `customerid`, `loginname`, `deactivated`, `mysqls`, `allowed_mysqlserver` FROM `" . TABLE_PANEL_CUSTOMERS . "`
+	");
+	$customers = $customers_stmt->fetchAll(\PDO::FETCH_ASSOC);
+	$databases = Database::query("SELECT `customerid`, `databasename`, `dbserver` FROM `" . TABLE_PANEL_DATABASES . "`")->fetchAll(\PDO::FETCH_ASSOC);
+	$dbserver_ids = DbManager::getDbServerIds();
+	$unreachable = [];
+	foreach ($dbserver_ids as $dbserver) {
+		if (!Database::canConnect($dbserver)) {
+			$unreachable[] = $dbserver;
+			$skipped[] = 'database server #' . $dbserver . ' (not reachable, global database-users on that server have not been checked and cannot be managed by froxlor)';
+		}
+	}
+	foreach ($customers as $customer) {
+		$allowed_mysqlserver = !empty($customer['allowed_mysqlserver']) ? json_decode($customer['allowed_mysqlserver'], true) : [];
+		$allowed_mysqlserver = array_map('intval', is_array($allowed_mysqlserver) ? $allowed_mysqlserver : []);
+		// check every server, the customer might have been allowed to use a server earlier
+		foreach (array_diff($dbserver_ids, $unreachable) as $dbserver) {
+			try {
+				$result = DbManager::migrateGlobalUser($customer, (int)$dbserver, in_array((int)$dbserver, $allowed_mysqlserver, true), $databases);
+			} catch (Exception $e) {
+				$result = ['result' => 'skipped', 'revoked' => 0, 'reason' => $e->getMessage()];
+			}
+			if ($result['result'] == 'skipped') {
+				$skipped[] = $customer['loginname'] . ' (#' . (int)$dbserver . ': ' . $result['reason'] . ')';
+			} elseif ($result['result'] == 'tracked') {
+				$adopted++;
+				$revoked += $result['revoked'];
+			}
+		}
+	}
+	Database::needRoot(false);
+	$status_msg = 'adopted ' . $adopted . ' user(s), revoked ' . $revoked . ' grant(s)';
+	if (!empty($skipped)) {
+		Update::lastStepStatus(1, $status_msg, 'Not touched (not created by froxlor or cannot be checked), please check manually: ' . implode(', ', $skipped) . '. If such an account is the global database-user of the customer, either remove it from the database server (it will be created again when the customer sets the password of the global database-user) or let froxlor manage it by adding the customer-id and the database server index to the table `' . TABLE_PANEL_DATABASES_GLOBALUSERS . '`.');
+	} else {
+		Update::lastStepStatus(0, $status_msg);
+	}
+
+	Froxlor::updateToDbVersion('202611210');
 }

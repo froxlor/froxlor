@@ -24,9 +24,7 @@
  */
 
 use Froxlor\Database\Database;
-use Froxlor\Database\DbManager;
 use Froxlor\Froxlor;
-use Froxlor\FroxlorLogger;
 use Froxlor\Install\Update;
 use Froxlor\Settings;
 
@@ -215,37 +213,9 @@ if (Froxlor::isDatabaseVersion('202409280')) {
 if (Froxlor::isDatabaseVersion('202411200')) {
 
 	Update::showUpdateStep("Adjusting customer mysql global user");
-	// get all customers that are not deactivated and that have at least one database (hence a global database-user)
-	$customers = Database::query("
-		SELECT DISTINCT c.loginname, c.allowed_mysqlserver
-		FROM `" . TABLE_PANEL_CUSTOMERS . "` c
-		LEFT JOIN `" . TABLE_PANEL_DATABASES . "` d ON c.customerid = d.customerid
-		WHERE c.deactivated = '0' AND d.id IS NOT NULL
-	");
-	while ($customer = $customers->fetch(\PDO::FETCH_ASSOC)) {
-		$current_allowed_mysqlserver = !empty($customer['allowed_mysqlserver']) ? json_decode($customer['allowed_mysqlserver'], true) : [];
-		foreach ($current_allowed_mysqlserver as $dbserver) {
-			// require privileged access for target db-server
-			Database::needRoot(true, $dbserver, false);
-			// get DbManager
-			$dbm = new DbManager(FroxlorLogger::getInstanceOf());
-			foreach (array_map('trim', explode(',', Settings::Get('system.mysql_access_host'))) as $mysql_access_host) {
-				try {
-					if ($dbm->getManager()->userExistsOnHost($customer['loginname'], $mysql_access_host)) {
-						// deactivate temporarily
-						$dbm->getManager()->disableUser($customer['loginname'], $mysql_access_host);
-						// re-enable
-						$dbm->getManager()->enableUser($customer['loginname'], $mysql_access_host, true);
-					}
-				} catch (Exception $e) {
-					// continue
-				}
-			}
-			$dbm->getManager()->flushPrivileges();
-			Database::needRoot();
-		}
-	}
-	Update::lastStepStatus(0);
+	// the privileges of the global database-users are cleaned up by the update to 202611210 (froxlor 2.3), which
+	// in contrast to the former implementation of this step only touches accounts created by froxlor
+	Update::lastStepStatus(0, 'postponed');
 
 	Froxlor::updateToDbVersion('202412030');
 }

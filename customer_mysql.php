@@ -226,22 +226,16 @@ if ($page == 'overview' || $page == 'mysqls') {
 		if (Request::post('send') == 'send') {
 
 			$new_password = Crypt::validatePassword(Request::post('mysql_password'));
+			// make sure, the database-account named after the loginname really is this customer's global user
+			// (created by froxlor) on every server before changing anything
 			foreach ($allowed_mysqlservers as $dbserver) {
-				// require privileged access for target db-server
-				Database::needRoot(true, $dbserver, true);
-				// get DbManager
-				$dbm = new DbManager($log);
-				// give permission to the user on every access-host we have
-				foreach (array_map('trim', explode(',', Settings::Get('system.mysql_access_host'))) as $mysql_access_host) {
-					if ($dbm->getManager()->userExistsOnHost($userinfo['loginname'], $mysql_access_host)) {
-						// update password
-						$dbm->getManager()->grantPrivilegesTo($userinfo['loginname'], $new_password, $mysql_access_host, false, true, true);
-					} else {
-						// create missing user
-						$dbm->getManager()->grantPrivilegesTo($userinfo['loginname'], $new_password, $mysql_access_host, false, false, true);
-					}
+				if (!DbManager::isCustomerGlobalUserManageable($userinfo['loginname'], (int)$userinfo['customerid'], (int)$dbserver)) {
+					$log->logAction(FroxlorLogger::USR_ACTION, LOG_WARNING, "refused to manage global mysql user '" . $userinfo['loginname'] . "' on database server #" . (int)$dbserver);
+					Response::standardError('mysqlglobaluserconflict', $userinfo['loginname']);
 				}
-				$dbm->getManager()->flushPrivileges();
+			}
+			foreach ($allowed_mysqlservers as $dbserver) {
+				DbManager::setGlobalUserPassword($userinfo['loginname'], (int)$userinfo['customerid'], (int)$dbserver, $new_password, $log);
 			}
 
 			Response::redirectTo($filename, [

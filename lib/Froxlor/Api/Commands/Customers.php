@@ -476,24 +476,19 @@ class Customers extends ApiCommand implements ResourceEntity
 						}
 
 						// blacklist some system-internal names that might lead to issues
+						// (froxlor's own database-user and the privileged users of the database-servers are checked
+						// in isLoginnameUsedAsSqlUser() so the error does not reveal their names)
 						Database::needSqlData();
 						$sqldata = Database::getSqlData();
-						Database::needRoot(true);
-						Database::needSqlData();
-						$sqlrdata = Database::getSqlData();
 						$login_blacklist = [
 							'root',
 							'admin',
 							'froxroot',
 							'froxlor',
-							$sqldata['user'],
 							$sqldata['db'],
-							$sqlrdata['user'],
 						];
 						unset($sqldata);
-						unset($sqlrdata);
-						$login_blacklist = array_unique($login_blacklist);
-						if (in_array($loginname, $login_blacklist)) {
+						if (in_array(strtolower($loginname), array_map('strtolower', $login_blacklist), true)) {
 							Response::standardError('loginnameisreservedname', $loginname, true);
 						}
 					} else {
@@ -539,6 +534,9 @@ class Customers extends ApiCommand implements ResourceEntity
 						}
 					} elseif ($email_check_admin && strtolower($email_check_admin['email']) == strtolower($email)) {
 						Response::standardError('emailexistsanon', $email, true);
+					} elseif ($this->getParam('new_loginname', true, '') != '' && self::isLoginnameUsedAsSqlUser($loginname, $allowed_mysqlserver)) {
+						// same error for every reason to not reveal any information about existing database-accounts
+						Response::standardError('loginnamenotavailable', $loginname, true);
 					}
 
 					$guid = intval(Settings::Get('system.lastguid')) + 1;
@@ -792,16 +790,11 @@ class Customers extends ApiCommand implements ResourceEntity
 					// Create default mysql-user if enabled
 					if ($mysqls != 0) {
 						foreach ($allowed_mysqlserver as $dbserver) {
-							// require privileged access for target db-server
-							Database::needRoot(true, $dbserver, false);
-							// get DbManager
-							$dbm = new DbManager($this->logger());
-							// give permission to the user on every access-host we have
-							foreach (array_map('trim', explode(',', Settings::Get('system.mysql_access_host'))) as $mysql_access_host) {
-								$dbm->getManager()->grantPrivilegesTo($loginname, $password, $mysql_access_host, false, false, true);
+							if (!DbManager::isCustomerGlobalUserManageable($loginname, (int)$customerid, (int)$dbserver)) {
+								$this->logger()->logAction(FroxlorLogger::ADM_ACTION, LOG_WARNING, "[API] not creating global mysql user '" . $loginname . "' on database server #" . (int)$dbserver);
+								continue;
 							}
-							$dbm->getManager()->flushPrivileges();
-							Database::needRoot(false);
+							DbManager::setGlobalUserPassword($loginname, (int)$customerid, (int)$dbserver, $password, $this->logger());
 						}
 					}
 
@@ -985,6 +978,70 @@ class Customers extends ApiCommand implements ResourceEntity
 		}
 		$key = ($id > 0 ? "id #" . $id : "loginname '" . $loginname . "'");
 		throw new Exception("Customer with " . $key . " could not be found", 404);
+	}
+
+	/**
+	 * The loginname of a customer is used as name for the customer's global database-user. Check whether
+	 * the given (custom) loginname collides with a database-user froxlor uses itself, with an existing database(-user)
+	 * of another customer, with an existing database-account on the configured database-servers or with a
+	 * database-user name that might be generated for another customer's databases
+	 * (e.g. <loginname><mysqlprefix><N> or <loginname>_<suffix>).
+	 *
+	 * Existing database-accounts are checked on the default database-server and the given (allowed) ones only.
+	 * Database-servers that are allowed later on are protected by DbManager::isCustomerGlobalUserManageable()
+	 *
+	 * @param string $loginname
+	 * @param array $allowed_mysqlserver
+	 *
+	 * @return bool
+	 * @throws Exception if a database-server cannot be checked
+	 */
+	private static function isLoginnameUsedAsSqlUser(string $loginname, array $allowed_mysqlserver = []): bool
+	{
+		if (DbManager::isReservedSqlUser($loginname)) {
+			return true;
+		}
+
+		Database::needRoot(false);
+		$db_check_stmt = Database::prepare("
+			SELECT `id` FROM `" . TABLE_PANEL_DATABASES . "` WHERE `databasename` = :login LIMIT 1
+		");
+		if (Database::pexecute_first($db_check_stmt, ['login' => $loginname], true, true)) {
+			return true;
+		}
+
+		// names that will be generated for databases of existing customers
+		$candidates = [];
+		$mysqlprefix = (string)Settings::Get('customer.mysqlprefix');
+		if (!in_array(strtoupper($mysqlprefix), ['RANDOM', 'DBNAME']) && preg_match('/^(.*?)([0-9]+)$/', $loginname, $matches)) {
+			// every split of the trailing number could be <loginname><mysqlprefix><N>
+			for ($i = 0; $i < strlen($matches[2]); $i++) {
+				$rest = $matches[1] . substr($matches[2], 0, $i);
+				if ($matches[2][$i] !== '0' && ($mysqlprefix === '' || strtolower(substr($rest, -strlen($mysqlprefix))) === strtolower($mysqlprefix))) {
+					$candidate = substr($rest, 0, strlen($rest) - strlen($mysqlprefix));
+					if ($candidate !== '') {
+						$candidates[] = $candidate;
+					}
+				}
+			}
+		}
+		$offset = 0;
+		while (($pos = strcspn($loginname, '_-', $offset) + $offset) < strlen($loginname)) {
+			if ($pos > 0) {
+				$candidates[] = substr($loginname, 0, $pos);
+			}
+			$offset = $pos + 1;
+		}
+		$cust_check_stmt = Database::prepare("
+			SELECT `customerid` FROM `" . TABLE_PANEL_CUSTOMERS . "` WHERE `loginname` = :login
+		");
+		foreach (array_unique($candidates) as $candidate) {
+			if (Database::pexecute_first($cust_check_stmt, ['login' => $candidate], true, true)) {
+				return true;
+			}
+		}
+
+		return DbManager::sqlUserExistsOnServers($loginname, array_merge([0], $allowed_mysqlserver));
 	}
 
 	/**
@@ -1400,25 +1457,11 @@ class Customers extends ApiCommand implements ResourceEntity
 					'customerid' => $id
 				]);
 
-				// enable/disable global mysql-user (loginname)
-				$current_allowed_mysqlserver = isset($result['allowed_mysqlserver']) && !empty($result['allowed_mysqlserver']) ? json_decode($result['allowed_mysqlserver'], true) : [];
-				foreach ($current_allowed_mysqlserver as $dbserver) {
-					// require privileged access for target db-server
-					Database::needRoot(true, $dbserver, true);
-					// get DbManager
-					$dbm = new DbManager($this->logger());
-					foreach (array_map('trim', explode(',', Settings::Get('system.mysql_access_host'))) as $mysql_access_host) {
-						// Prevent access, if deactivated
-						if ($deactivated) {
-							// failsafe if user has been deleted manually (requires MySQL 4.1.2+)
-							$dbm->getManager()->disableUser($result['loginname'], $mysql_access_host);
-						} else {
-							// Otherwise grant access
-							$dbm->getManager()->enableUser($result['loginname'], $mysql_access_host, true);
-						}
+				// enable/disable global mysql-user (loginname) on every server froxlor created it on
+				foreach (DbManager::getGlobalUserServers((int)$id) as $dbserver) {
+					if (!DbManager::setGlobalUserEnabled($result['loginname'], (int)$id, $dbserver, !$deactivated, $this->logger())) {
+						$this->logger()->logAction(FroxlorLogger::ADM_ACTION, LOG_WARNING, "[API] unable to " . ($deactivated ? 'disable' : 'enable') . " global mysql user '" . $result['loginname'] . "' on database server #" . $dbserver);
 					}
-					$dbm->getManager()->flushPrivileges();
-					Database::needRoot(false);
 				}
 
 				// Retrieve customer's databases
@@ -1584,6 +1627,19 @@ class Customers extends ApiCommand implements ResourceEntity
 		$upd_query .= " WHERE `customerid` = :customerid";
 		$upd_stmt = Database::prepare($upd_query);
 		Database::pexecute($upd_stmt, $upd_data);
+
+		if ($this->isAdmin()) {
+			// remove the global mysql-user from database-servers the customer is not allowed to use anymore
+			$former_dbservers = json_decode($result['allowed_mysqlserver'] ?? '', true);
+			$former_dbservers = is_array($former_dbservers) ? array_map('intval', $former_dbservers) : [];
+			$allowed_dbservers = is_array($allowed_mysqlserver) ? array_map('intval', $allowed_mysqlserver) : [];
+			$removed_dbservers = array_diff($former_dbservers, $allowed_dbservers);
+			foreach (array_intersect(DbManager::getGlobalUserServers((int)$id), $removed_dbservers) as $dbserver) {
+				if (!DbManager::deleteGlobalUser($result['loginname'], (int)$id, (int)$dbserver, $this->logger())) {
+					$this->logger()->logAction(FroxlorLogger::ADM_ACTION, LOG_WARNING, "[API] unable to delete global mysql user '" . $result['loginname'] . "' on database server #" . (int)$dbserver);
+				}
+			}
+		}
 
 		if ($password != $result['password']) {
 			// password has been changed - purge 2fa "remember this device" tokens so a
@@ -1755,19 +1811,13 @@ class Customers extends ApiCommand implements ResourceEntity
 			]);
 			$id = $result['customerid'];
 
-			// remove global mysql-user (loginname)
-			$current_allowed_mysqlserver = isset($result['allowed_mysqlserver']) && !empty($result['allowed_mysqlserver']) ? json_decode($result['allowed_mysqlserver'], true) : [];
-			foreach ($current_allowed_mysqlserver as $dbserver) {
-				// require privileged access for target db-server
-				Database::needRoot(true, $dbserver, false);
-				// get DbManager
-				$dbm = new DbManager($this->logger());
-				foreach (array_map('trim', explode(',', Settings::Get('system.mysql_access_host'))) as $mysql_access_host) {
-					$dbm->getManager()->deleteUser($result['loginname'], $mysql_access_host);
+			// remove global mysql-user (loginname) on every server froxlor created it on
+			foreach (DbManager::getGlobalUserServers((int)$id) as $dbserver) {
+				if (!DbManager::deleteGlobalUser($result['loginname'], (int)$id, $dbserver, $this->logger())) {
+					$this->logger()->logAction(FroxlorLogger::ADM_ACTION, LOG_WARNING, "[API] unable to delete global mysql user '" . $result['loginname'] . "' on database server #" . $dbserver);
 				}
-				$dbm->getManager()->flushPrivileges();
-				Database::needRoot(false);
 			}
+			DbManager::untrackGlobalUser((int)$id);
 
 			// remove all databases
 			$databases_stmt = Database::prepare("

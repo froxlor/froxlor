@@ -93,8 +93,11 @@ class Update
 		self::$task_counter++;
 
 		if ($status == -1 || $status == 2) {
-			FroxlorLogger::getInstanceOf()->logAction(FroxlorLogger::ADM_ACTION, \LOG_WARNING, 'Attention - last update task failed!!!');
-		} elseif ($status == 0 || $status == 1) {
+			FroxlorLogger::getInstanceOf()->logAction(FroxlorLogger::ADM_ACTION, \LOG_WARNING, 'Attention - last update task failed!!!' . ($message != 'OK' ? ' ' . $message : '') . ($additional_info != '' ? ' - ' . $additional_info : ''));
+		} elseif ($status == 1) {
+			// the additional information is only shown in the web-updater, log it so it does not get lost on cli/automatic updates
+			FroxlorLogger::getInstanceOf()->logAction(FroxlorLogger::ADM_ACTION, \LOG_WARNING, 'Success with warning: ' . $message . ($additional_info != '' ? ' - ' . $additional_info : ''));
+		} elseif ($status == 0) {
 			FroxlorLogger::getInstanceOf()->logAction(FroxlorLogger::ADM_ACTION, \LOG_WARNING, 'Success');
 		}
 	}

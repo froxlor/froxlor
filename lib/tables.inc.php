@@ -34,6 +34,7 @@ const TABLE_PANEL_ACTIVATION = 'panel_activation';
 const TABLE_PANEL_ADMINS = 'panel_admins';
 const TABLE_PANEL_CUSTOMERS = 'panel_customers';
 const TABLE_PANEL_DATABASES = 'panel_databases';
+const TABLE_PANEL_DATABASES_GLOBALUSERS = 'panel_databases_globalusers';
 const TABLE_PANEL_DOMAINS = 'panel_domains';
 const TABLE_PANEL_HTACCESS = 'panel_htaccess';
 const TABLE_PANEL_HTPASSWDS = 'panel_htpasswds';

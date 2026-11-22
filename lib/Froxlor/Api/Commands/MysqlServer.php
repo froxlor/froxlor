@@ -29,6 +29,7 @@ use Exception;
 use Froxlor\Api\ApiCommand;
 use Froxlor\Api\ResourceEntity;
 use Froxlor\Database\Database;
+use Froxlor\Database\DbManager;
 use Froxlor\FileDir;
 use Froxlor\Froxlor;
 use Froxlor\FroxlorLogger;
@@ -218,6 +219,8 @@ class MysqlServer extends ApiCommand implements ResourceEntity
 
 		// when removing, remove from list of allowed_mysqlservers from any customers
 		$this->removeDatabaseFromCustomerAllowedList($dbserver);
+		// the index might be re-used by a new database-server, so forget about global users created on this one
+		DbManager::untrackGlobalUser(0, $dbserver);
 
 		$description = $sql_root[$dbserver]['caption'] ?? "unknown";
 		$mysql_host = $sql_root[$dbserver]['host'] ?? "unknown";

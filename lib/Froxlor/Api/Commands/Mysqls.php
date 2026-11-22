@@ -90,6 +90,9 @@ class Mysqls extends ApiCommand implements ResourceEntity
 			$databasedescription = Validate::validate(trim($databasedescription), 'description', Validate::REGEX_DESC_TEXT, '', [], true);
 			if (!empty($databasename)) {
 				$databasename = Validate::validate(trim($databasename), 'database_name', '/^[A-Za-z0-9][A-Za-z0-9\-_]+$/i', '', [], true);
+			} elseif (strtoupper(Settings::Get('customer.mysqlprefix')) == 'DBNAME') {
+				// the database(-user) would be named like the customer's global database-user
+				Response::standardError('mysqldbnamerequired', '', true);
 			}
 
 			// validate whether the dbserver exists
@@ -156,7 +159,7 @@ class Mysqls extends ApiCommand implements ResourceEntity
 
 			// update customer usage
 			Customers::increaseUsage($customer['customerid'], 'mysqls_used');
-			Customers::increaseUsage($customer['customerid'], 'mysql_lastaccountnumber');
+			Customers::increaseUsage($customer['customerid'], 'mysql_lastaccountnumber', '', $dbm->getAccountNumberIncrease());
 
 			// send info-mail?
 			if ($sendinfomail == 1) {
@@ -551,10 +554,13 @@ class Mysqls extends ApiCommand implements ResourceEntity
 		]);
 		$id = $result['id'];
 
+		// only revoke privileges of the customer's global user if froxlor created it
+		$global_user = DbManager::isGlobalUserTracked($customer['loginname'], (int)$result['dbserver']) ? $customer['loginname'] : '';
+
 		// Begin root-session
 		Database::needRoot(true, $result['dbserver'], false);
 		$dbm = new DbManager($this->logger());
-		$dbm->getManager()->deleteDatabase($result['databasename'], $customer['loginname']);
+		$dbm->getManager()->deleteDatabase($result['databasename'], $global_user);
 		Database::needRoot(false);
 		// End root-session
 

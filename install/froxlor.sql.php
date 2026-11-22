@@ -256,6 +256,16 @@ CREATE TABLE `panel_databases` (
 ) ENGINE=InnoDB CHARSET=utf8 COLLATE=utf8_general_ci;
 
 
+DROP TABLE IF EXISTS `panel_databases_globalusers`;
+CREATE TABLE `panel_databases_globalusers` (
+  `id` int(11) unsigned NOT NULL auto_increment,
+  `customerid` int(11) NOT NULL default '0',
+  `dbserver` int(11) unsigned NOT NULL default '0',
+  PRIMARY KEY  (`id`),
+  UNIQUE KEY `customer_dbserver` (`customerid`, `dbserver`)
+) ENGINE=InnoDB CHARSET=utf8 COLLATE=utf8_general_ci;
+
+
 DROP TABLE IF EXISTS `panel_domains`;
 CREATE TABLE `panel_domains` (
   `id` int(11) unsigned NOT NULL auto_increment,
@@ -749,7 +759,7 @@ opcache.validate_timestamps'),
 	('panel', 'settings_mode', '0'),
 	('panel', 'menu_collapsed', '1'),
 	('panel', 'version', '2.3.17'),
-	('panel', 'db_version', '202608210');
+	('panel', 'db_version', '202611210');
 
 
 DROP TABLE IF EXISTS `panel_tasks`;

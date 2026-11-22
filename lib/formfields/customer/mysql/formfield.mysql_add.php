@@ -29,7 +29,8 @@ return [
 					'custom_suffix' => [
 						'visible' => strtoupper(Settings::Get('customer.mysqlprefix')) == 'DBNAME',
 						'label' => lng('mysql.databasename'),
-						'type' => 'text'
+						'type' => 'text',
+						'mandatory' => strtoupper(Settings::Get('customer.mysqlprefix')) == 'DBNAME'
 					],
 					'description' => [
 						'label' => lng('mysql.databasedescription'),

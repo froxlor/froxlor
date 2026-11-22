@@ -174,6 +174,18 @@ if ($page == 'overview') {
 			} elseif ($new_password != $new_password_confirm) {
 				Response::standardError('newpasswordconfirmerror');
 			} else {
+				// make sure, the database-account named after the loginname really is this customer's global user
+				// (created by froxlor) on every server before changing anything
+				$allowed_mysqlservers = json_decode($userinfo['allowed_mysqlserver'] ?? '[]', true);
+				$allowed_mysqlservers = is_array($allowed_mysqlservers) ? $allowed_mysqlservers : [];
+				if ($userinfo['mysqls'] != 0 && Request::post('change_global_mysql') == 'true') {
+					foreach ($allowed_mysqlservers as $dbserver) {
+						if (!DbManager::isCustomerGlobalUserManageable($userinfo['loginname'], (int)$userinfo['customerid'], (int)$dbserver)) {
+							$log->logAction(FroxlorLogger::USR_ACTION, LOG_WARNING, "refused to manage global mysql user '" . $userinfo['loginname'] . "' on database server #" . (int)$dbserver);
+							Response::standardError('mysqlglobaluserconflict', $userinfo['loginname']);
+						}
+					}
+				}
 				// Update user password
 				try {
 					Customers::getLocal($userinfo, [
@@ -220,22 +232,8 @@ if ($page == 'overview') {
 
 				// Update global myqsl user password
 				if ($userinfo['mysqls'] != 0 && Request::post('change_global_mysql') == 'true') {
-					$allowed_mysqlservers = json_decode($userinfo['allowed_mysqlserver'] ?? '[]', true);
 					foreach ($allowed_mysqlservers as $dbserver) {
-						// require privileged access for target db-server
-						Database::needRoot(true, $dbserver, false);
-						// get DbManager
-						$dbm = new DbManager($log);
-						// give permission to the user on every access-host we have
-						foreach (array_map('trim', explode(',', Settings::Get('system.mysql_access_host'))) as $mysql_access_host) {
-							if ($dbm->getManager()->userExistsOnHost($userinfo['loginname'], $mysql_access_host)) {
-								$dbm->getManager()->grantPrivilegesTo($userinfo['loginname'], $new_password, $mysql_access_host, false, true);
-							} else {
-								// create global mysql user if not exists
-								$dbm->getManager()->grantPrivilegesTo($userinfo['loginname'], $new_password, $mysql_access_host, false, false, true);
-							}
-						}
-						$dbm->getManager()->flushPrivileges();
+						DbManager::setGlobalUserPassword($userinfo['loginname'], (int)$userinfo['customerid'], (int)$dbserver, $new_password, $log);
 					}
 				}
 

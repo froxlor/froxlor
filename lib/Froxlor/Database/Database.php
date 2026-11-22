@@ -83,6 +83,11 @@ class Database
 	private static bool $need_dbname = true;
 
 	/**
+	 * cached results of canConnect() per database-server
+	 */
+	private static array $reachable = [];
+
+	/**
 	 * Wrapper for PDOStatement::execute, so we can catch the PDOException
 	 * and display the error nicely on the panel - also fetches the
 	 * result from the statement and returns the resulting array
@@ -371,6 +376,65 @@ class Database
 		self::setServer($dbserver);
 		self::$needroot = $needroot;
 		self::$need_dbname = $need_db;
+	}
+
+	/**
+	 * check whether a privileged connection to the given database-server can be established,
+	 * without showing an error and terminating as the regular connection does.
+	 * The result is cached for the current request.
+	 *
+	 * @param int $dbserver
+	 *
+	 * @return bool
+	 */
+	public static function canConnect(int $dbserver = 0): bool
+	{
+		if (isset(self::$reachable[$dbserver])) {
+			return self::$reachable[$dbserver];
+		}
+
+		$sql = [];
+		$sql_root = [];
+		require Froxlor::getInstallDir() . "/lib/userdata.inc.php";
+		if ((!isset($sql_root) || !is_array($sql_root)) && isset($sql['root_user']) && isset($sql['root_password'])) {
+			// old format, see getDB()
+			$sql_root = [
+				0 => [
+					'host' => $sql['host'],
+					'socket' => ($sql['socket'] ?? null),
+					'user' => $sql['root_user'],
+					'password' => $sql['root_password']
+				]
+			];
+		}
+		if (!isset($sql_root[$dbserver]) || !is_array($sql_root[$dbserver])) {
+			self::$reachable[$dbserver] = false;
+			return false;
+		}
+		$root_data = $sql_root[$dbserver];
+
+		$dsn = "mysql:charset=utf8;";
+		$options = [
+			PDO::ATTR_TIMEOUT => 5
+		];
+		if (!empty($root_data['socket'])) {
+			$dsn .= "unix_socket=" . FileDir::makeCorrectFile($root_data['socket']) . ";";
+		} else {
+			$dsn .= "host=" . $root_data['host'] . ";port=" . ($root_data['port'] ?? '3306') . ";";
+			if (!empty($root_data['ssl']['caFile'])) {
+				$options[self::pdoMysqlAttribute('SSL_CA')] = $root_data['ssl']['caFile'];
+				$options[self::pdoMysqlAttribute('SSL_VERIFY_SERVER_CERT')] = (bool)($root_data['ssl']['verifyServerCertificate'] ?? false);
+			}
+		}
+
+		try {
+			$link = new PDO($dsn, $root_data['user'], $root_data['password'], $options);
+			unset($link);
+			self::$reachable[$dbserver] = true;
+		} catch (PDOException $e) {
+			self::$reachable[$dbserver] = false;
+		}
+		return self::$reachable[$dbserver];
 	}
 
 	/**

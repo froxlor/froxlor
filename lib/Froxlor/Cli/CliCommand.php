@@ -28,9 +28,11 @@ namespace Froxlor\Cli;
 use Exception;
 use Froxlor\Database\Database;
 use Froxlor\Froxlor;
+use Froxlor\Install\Update;
 use Froxlor\Settings;
 use PDO;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Formatter\OutputFormatter;
 use Symfony\Component\Console\Output\OutputInterface;
 
 class CliCommand extends Command
@@ -128,6 +130,12 @@ class CliCommand extends Command
 		]);
 		include_once Froxlor::getInstallDir() . '/install/updatesql.php';
 		ob_end_flush();
+		// show warnings/errors of update-steps which are otherwise only visible in the web-updater
+		foreach (Update::getUpdateTasks() as $task) {
+			if (($task['result'] ?? 0) != 0) {
+				$output->writeln('<comment>' . OutputFormatter::escape($task['title'] . ': ' . ($task['result_txt'] ?? '') . (!empty($task['result_desc']) ? ' - ' . $task['result_desc'] : '')) . '</>');
+			}
+		}
 		$output->writeln('<info>' . ($manual ? 'Database' : 'Automatic') . ' update done - you should check your settings to be sure everything is fine</>');
 		return self::SUCCESS;
 	}
