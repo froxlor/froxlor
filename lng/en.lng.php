@@ -903,6 +903,7 @@ return [
 		'subdomainiswrong' => 'The subdomain %s contains invalid characters.',
 		'domaincantbeempty' => 'The domain-name can not be empty.',
 		'domainexistalready' => 'The domain %s already exists.',
+		'subdomainofforeigndomain' => 'The subdomain %s cannot be added, as it is located below a domain which does not belong to you.',
 		'domainisaliasorothercustomer' => 'The selected alias domain is either itself an alias domain, has a different ip/port combination or belongs to another customer.',
 		'emailexistalready' => 'The email-address %s already exists.',
 		'maindomainnonexist' => 'The main-domain %s does not exist.',

@@ -150,21 +150,18 @@ class Emails extends ApiCommand implements ResourceEntity
 			// get needed customer info to reduce the email-address-counter by one
 			$customer = $this->getCustomerData('emails');
 
-			// duplicate check
+			// duplicate check, among all customers as the mail-system resolves addresses by name only
 			$stmt = Database::prepare("
 				SELECT `id`, `email`, `email_full`, `iscatchall`, `destination`, `customerid` FROM `" . TABLE_MAIL_VIRTUAL . "`
 				WHERE (`email` = :email OR `email_full` = :emailfull )
-				AND `customerid`= :cid
 			");
 			$params = [
 				"email" => $email,
-				"emailfull" => $email_full,
-				"cid" => $customer['customerid']
+				"emailfull" => $email_full
 			];
-			$email_check = Database::pexecute_first($stmt, $params, true, true);
-
-			if ($email_check) {
-				if (strtolower($email_check['email_full']) == strtolower($email_full)) {
+			Database::pexecute($stmt, $params, true, true);
+			while ($email_check = $stmt->fetch(PDO::FETCH_ASSOC)) {
+				if ($email_check['customerid'] != $customer['customerid'] || strtolower($email_check['email_full']) == strtolower($email_full)) {
 					Response::standardError('emailexistalready', $idna_convert->decode($email_full), true);
 				} elseif ($email_check['email'] == $email) {
 					Response::standardError('youhavealreadyacatchallforthisdomain', '', true);

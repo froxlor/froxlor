@@ -346,8 +346,9 @@ class EmailSender extends ApiCommand implements ResourceEntity
 	private static function validateLocalDomainOwnership(string $domain): void
 	{
 		// check whether the used domain belongs to the customer if it's a domain on this system
-		$sel_stmt = Database::prepare("SELECT customerid FROM `" . TABLE_PANEL_DOMAINS . "` WHERE `domain` = :domain");
-		$domain_result = Database::pexecute_first($sel_stmt, ['domain' => $domain]);
+		// (every entry with that name has to be owned by the customer)
+		$sel_stmt = Database::prepare("SELECT customerid FROM `" . TABLE_PANEL_DOMAINS . "` WHERE `domain` = :domain ORDER BY `customerid` = :customerid ASC");
+		$domain_result = Database::pexecute_first($sel_stmt, ['domain' => $domain, 'customerid' => CurrentUser::getField('customerid')]);
 		if ($domain_result && $domain_result['customerid'] != CurrentUser::getField('customerid')) {
 			// domain exists in our system but not owned by current user
 			Response::standardError('senderdomainnotowned', $domain, true);

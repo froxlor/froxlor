@@ -1794,7 +1794,7 @@ class Domains extends ApiCommand implements ResourceEntity
 				Cronjob::inserttask(TaskId::REBUILD_DNS);
 			}
 			// check whether nameserver has been disabled, #581
-			if ($isbinddomain != $result['isbinddomain'] && $isbinddomain == 0) {
+			if ($isbinddomain != $result['isbinddomain'] && $isbinddomain == 0 && !Domain::isDomainNameUsedElsewhere($result['domain'], (int)$result['id'])) {
 				Cronjob::inserttask(TaskId::DELETE_DOMAIN_PDNS, $result['domain']);
 			}
 
@@ -1824,7 +1824,9 @@ class Domains extends ApiCommand implements ResourceEntity
 					'id' => $id
 				], true, true);
 				// remove domain from acme.sh / lets encrypt if used
-				Cronjob::inserttask(TaskId::DELETE_DOMAIN_SSL, $result['domain']);
+				if (!Domain::isDomainNameUsedElsewhere($result['domain'], (int)$result['id'])) {
+					Cronjob::inserttask(TaskId::DELETE_DOMAIN_SSL, $result['domain']);
+				}
 			}
 
 			$updatechildren = '';
@@ -2338,11 +2340,14 @@ class Domains extends ApiCommand implements ResourceEntity
 				Domain::triggerLetsEncryptCSRForAliasDestinationDomain($result['aliasdomain'], $this->logger());
 			}
 
-			// remove domains DNS from powerDNS if used, #581
-			Cronjob::inserttask(TaskId::DELETE_DOMAIN_PDNS, $result['domain']);
+			// these tasks act on the domain-name, so skip them if another entry with the same name exists
+			if (!Domain::isDomainNameUsedElsewhere($result['domain'], (int)$result['id'])) {
+				// remove domains DNS from powerDNS if used, #581
+				Cronjob::inserttask(TaskId::DELETE_DOMAIN_PDNS, $result['domain']);
 
-			// remove domain from acme.sh / lets encrypt if used
-			Cronjob::inserttask(TaskId::DELETE_DOMAIN_SSL, $result['domain']);
+				// remove domain from acme.sh / lets encrypt if used
+				Cronjob::inserttask(TaskId::DELETE_DOMAIN_SSL, $result['domain']);
+			}
 
 			$this->logger()->logAction(FroxlorLogger::ADM_ACTION, LOG_WARNING, "[API] deleted domain/subdomains (#" . $result['id'] . ")");
 			User::updateCounters();

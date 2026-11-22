@@ -832,6 +832,7 @@ return [
 		'subdomainiswrong' => 'Die Subdomain "%s" enthält ungültige Zeichen.',
 		'domaincantbeempty' => 'Der Domainname darf nicht leer sein.',
 		'domainexistalready' => 'Die Domain "%s" existiert bereits.',
+		'subdomainofforeigndomain' => 'Die Subdomain %s kann nicht angelegt werden, da sie unterhalb einer Domain liegt, die nicht Ihnen gehört.',
 		'domainisaliasorothercustomer' => 'Die ausgewählte Aliasdomain ist entweder selbst eine Aliasdomain, hat nicht die gleiche IP/Port-Kombination oder gehört einem anderen Kunden.',
 		'emailexistalready' => 'Die E-Mail-Adresse "%s" existiert bereits.',
 		'maindomainnonexist' => 'Die Hauptdomain "%s" existiert nicht.',

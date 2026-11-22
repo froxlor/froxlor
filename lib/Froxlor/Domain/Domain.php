@@ -302,6 +302,30 @@ class Domain
 	}
 
 	/**
+	 * check whether a domain-name is used by any other domain-entry than the given one;
+	 * tasks which act on the domain-name (e.g. removing certificates or dns-zones) must not be
+	 * triggered for the given entry in that case
+	 *
+	 * @param string $domainname
+	 * @param int $did domain-id
+	 *
+	 * @return bool
+	 * @throws \Exception
+	 */
+	public static function isDomainNameUsedElsewhere(string $domainname, int $did): bool
+	{
+		$result_stmt = Database::prepare("
+			SELECT `id` FROM `" . TABLE_PANEL_DOMAINS . "`
+			WHERE `domain` = :domain AND `id` <> :did
+			LIMIT 1
+		");
+		return (bool)Database::pexecute_first($result_stmt, [
+			'domain' => $domainname,
+			'did' => $did
+		]);
+	}
+
+	/**
 	 * @param int $aliasDestinationDomainID
 	 * @param FroxlorLogger $log
 	 *

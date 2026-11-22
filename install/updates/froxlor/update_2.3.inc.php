@@ -353,3 +353,36 @@ if (Froxlor::isDatabaseVersion('202611200')) {
 
 	Froxlor::updateToDbVersion('202611210');
 }
+
+if (Froxlor::isDatabaseVersion('202611210')) {
+
+	Update::showUpdateStep("Checking for domains and email-addresses used by more than one customer");
+	// former versions allowed customers to add a subdomain with the name of an existing domain of another
+	// customer; the mail-system resolves domains/addresses by name only, so these need to be resolved by the admin
+	$duplicates = [];
+	$dup_stmt = Database::query("
+		SELECT `domain`, GROUP_CONCAT(DISTINCT `customerid` ORDER BY `customerid` SEPARATOR ', ') AS `customers`
+		FROM `" . TABLE_PANEL_DOMAINS . "`
+		GROUP BY `domain`
+		HAVING COUNT(DISTINCT `customerid`) > 1
+	");
+	while ($dup = $dup_stmt->fetch(\PDO::FETCH_ASSOC)) {
+		$duplicates[] = 'domain ' . $dup['domain'] . ' (customer-ids ' . $dup['customers'] . ')';
+	}
+	$dup_stmt = Database::query("
+		SELECT `email`, GROUP_CONCAT(DISTINCT `customerid` ORDER BY `customerid` SEPARATOR ', ') AS `customers`
+		FROM `" . TABLE_MAIL_VIRTUAL . "`
+		GROUP BY `email`
+		HAVING COUNT(DISTINCT `customerid`) > 1
+	");
+	while ($dup = $dup_stmt->fetch(\PDO::FETCH_ASSOC)) {
+		$duplicates[] = 'email-address ' . $dup['email'] . ' (customer-ids ' . $dup['customers'] . ')';
+	}
+	if (!empty($duplicates)) {
+		Update::lastStepStatus(1, 'found ' . count($duplicates) . ' duplicate(s)', 'The following names are used by more than one customer, mails to these addresses are delivered to all of them. Please remove the entries which do not belong to the respective customer: ' . implode(', ', $duplicates));
+	} else {
+		Update::lastStepStatus(0);
+	}
+
+	Froxlor::updateToDbVersion('202611220');
+}

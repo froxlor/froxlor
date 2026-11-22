@@ -166,12 +166,14 @@ class SubDomains extends ApiCommand implements ResourceEntity
 				Response::standardError('admin_domain_emailsystemhostname', '', true);
 			}
 
-			// check whether the domain already exists
+			// check whether the domain already exists, the name must be unique among all customers as
+			// e.g. the mail-system resolves addresses by domain-name only (an email-only domain of the
+			// same customer may be turned into a subdomain though)
 			$completedomain_stmt = Database::prepare("
-				SELECT * FROM `" . TABLE_PANEL_DOMAINS . "`
+				SELECT `id`, `domain` FROM `" . TABLE_PANEL_DOMAINS . "`
 				WHERE `domain` = :domain
-				AND `customerid` = :customerid
-				AND `email_only` = '0'
+				AND (`customerid` <> :customerid OR `email_only` = '0')
+				LIMIT 1
 			");
 			$completedomain_check = Database::pexecute_first($completedomain_stmt, [
 				"domain" => $completedomain,
@@ -236,12 +238,28 @@ class SubDomains extends ApiCommand implements ResourceEntity
 			} elseif ($subdomain == 'www' && $domain_check['wwwserveralias'] == '1') {
 				// you cannot add 'www' as subdomain when the maindomain generates a www-alias
 				Response::standardError('wwwnotallowed', '', true);
-			} elseif ($completedomain_check && strtolower($completedomain_check['domain']) == strtolower($completedomain)) {
-				// the domain does already exist as main-domain
-				Response::standardError('domainexistalready', $completedomain, true);
 			} elseif ((int)$domain_check['deactivated'] == 1) {
 				// main domain is deactivated
 				Response::standardError('maindomaindeactivated', $domain, true);
+			}
+
+			// the new subdomain must not be located below a domain of another customer which itself is located below
+			// the given main domain (e.g. www.shop.example.com when shop.example.com belongs to another customer)
+			$parentdomain = strtolower($domain_check['domain']);
+			$foreign_stmt = Database::prepare("
+				SELECT `domain` FROM `" . TABLE_PANEL_DOMAINS . "`
+				WHERE `customerid` <> :customerid
+				AND `domain` LIKE :parentpattern
+			");
+			Database::pexecute($foreign_stmt, [
+				"customerid" => $customer['customerid'],
+				"parentpattern" => '%.' . str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $parentdomain)
+			], true, true);
+			while ($foreign_domain = $foreign_stmt->fetch(PDO::FETCH_ASSOC)) {
+				$foreign_suffix = '.' . strtolower($foreign_domain['domain']);
+				if (substr(strtolower($completedomain), -strlen($foreign_suffix)) === $foreign_suffix) {
+					Response::standardError('subdomainofforeigndomain', $completedomain, true);
+				}
 			}
 
 			// if allowed, check for 'is email domain'-flag
@@ -925,7 +943,9 @@ class SubDomains extends ApiCommand implements ResourceEntity
 					'id' => $id
 				], true, true);
 				// remove domain from acme.sh / lets encrypt if used
-				Cronjob::inserttask(TaskId::DELETE_DOMAIN_SSL, $result['domain']);
+				if (!Domain::isDomainNameUsedElsewhere($result['domain'], (int)$result['id'])) {
+					Cronjob::inserttask(TaskId::DELETE_DOMAIN_SSL, $result['domain']);
+				}
 			}
 
 			Cronjob::inserttask(TaskId::REBUILD_VHOST);
@@ -1262,10 +1282,13 @@ class SubDomains extends ApiCommand implements ResourceEntity
 		Cronjob::inserttask(TaskId::REBUILD_VHOST);
 		// Using nameserver, insert a task which rebuilds the server config
 		Cronjob::inserttask(TaskId::REBUILD_DNS);
-		// remove domains DNS from powerDNS if used, #581
-		Cronjob::inserttask(TaskId::DELETE_DOMAIN_PDNS, $result['domain']);
-		// remove domain from acme.sh / lets encrypt if used
-		Cronjob::inserttask(TaskId::DELETE_DOMAIN_SSL, $result['domain']);
+		// these tasks act on the domain-name, so skip them if another entry with the same name exists
+		if (!Domain::isDomainNameUsedElsewhere($result['domain'], (int)$result['id'])) {
+			// remove domains DNS from powerDNS if used, #581
+			Cronjob::inserttask(TaskId::DELETE_DOMAIN_PDNS, $result['domain']);
+			// remove domain from acme.sh / lets encrypt if used
+			Cronjob::inserttask(TaskId::DELETE_DOMAIN_SSL, $result['domain']);
+		}
 
 		// reduce subdomain-usage-counter
 		Customers::decreaseUsage($customer['customerid'], 'subdomains_used');
