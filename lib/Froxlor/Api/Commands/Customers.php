@@ -1045,6 +1045,44 @@ class Customers extends ApiCommand implements ResourceEntity
 	}
 
 	/**
+	 * atomically increase resource-usage of a customer if the limits of all given resources allow it;
+	 * limit checks based on previously read customer-data are not sufficient for concurrent requests
+	 *
+	 * @param int $customerid
+	 * @param array $resources
+	 *            [<resource>_used => amount], the limit is read from <resource>, -1 means unlimited
+	 *
+	 * @return bool whether the resources have been reserved (and the usage-counters increased)
+	 * @throws Exception
+	 */
+	public static function reserveUsage(int $customerid, array $resources): bool
+	{
+		$set = [];
+		$where = [];
+		foreach ($resources as $resource => $amount) {
+			$amount = (int)$amount;
+			if (!preg_match('/^([a-z_]+)_used$/', $resource, $matches) || $amount <= 0) {
+				continue;
+			}
+			$limit = $matches[1];
+			$set[] = "`" . $resource . "` = `" . $resource . "` + " . $amount;
+			$where[] = "(`" . $limit . "` = '-1' OR `" . $resource . "` + " . $amount . " <= `" . $limit . "`)";
+		}
+		if (empty($set)) {
+			return true;
+		}
+		$stmt = Database::prepare("
+			UPDATE `" . TABLE_PANEL_CUSTOMERS . "`
+			SET " . implode(", ", $set) . "
+			WHERE `customerid` = :customerid AND " . implode(" AND ", $where)
+		);
+		Database::pexecute($stmt, [
+			'customerid' => $customerid
+		], true, true);
+		return $stmt->rowCount() > 0;
+	}
+
+	/**
 	 * increase resource-usage
 	 *
 	 * @param int $customerid

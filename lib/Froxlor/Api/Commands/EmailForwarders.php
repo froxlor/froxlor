@@ -105,6 +105,11 @@ class EmailForwarders extends ApiCommand implements ResourceEntity
 			// get needed customer info to reduce the email-forwarder-counter by one
 			$customer = $this->getCustomerData('email_forwarders');
 
+			// reserve the resource atomically, the check above is based on previously read data (concurrent requests)
+			if (!Customers::reserveUsage((int)$customer['customerid'], ['email_forwarders_used' => 1])) {
+				throw new Exception("No more resources available", 406);
+			}
+
 			// add destination to address
 			$result['destination'] .= ' ' . $destination;
 			$stmt = Database::prepare("
@@ -116,10 +121,12 @@ class EmailForwarders extends ApiCommand implements ResourceEntity
 				"cid" => $customer['customerid'],
 				"id" => $id
 			];
-			Database::pexecute($stmt, $params, true, true);
-
-			// update customer usage
-			Customers::increaseUsage($customer['customerid'], 'email_forwarders_used');
+			try {
+				Database::pexecute($stmt, $params, true, true);
+			} catch (Exception $e) {
+				Customers::decreaseUsage($customer['customerid'], 'email_forwarders_used');
+				throw $e;
+			}
 
 			$this->logger()->logAction($this->isAdmin() ? FroxlorLogger::ADM_ACTION : FroxlorLogger::USR_ACTION, LOG_NOTICE, "[API] added email forwarder for '" . $result['email_full'] . "'");
 

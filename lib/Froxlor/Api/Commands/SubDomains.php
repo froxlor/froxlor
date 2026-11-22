@@ -342,6 +342,11 @@ class SubDomains extends ApiCommand implements ResourceEntity
 				}
 			}
 
+			// reserve the resource atomically, the check above is based on previously read data (concurrent requests)
+			if (!Customers::reserveUsage((int)$customer['customerid'], ['subdomains_used' => 1])) {
+				throw new Exception("No more resources available", 406);
+			}
+
 			// actually insert domain
 			$stmt = Database::prepare("
 				INSERT INTO `" . TABLE_PANEL_DOMAINS . "` SET
@@ -412,7 +417,12 @@ class SubDomains extends ApiCommand implements ResourceEntity
 				"sslenabled" => $sslenabled,
 				"dkim" => $domain_check['dkim'],
 			];
-			Database::pexecute($stmt, $params, true, true);
+			try {
+				Database::pexecute($stmt, $params, true, true);
+			} catch (Exception $e) {
+				Customers::decreaseUsage($customer['customerid'], 'subdomains_used');
+				throw $e;
+			}
 			$subdomain_id = Database::lastInsertId();
 
 			$stmt = Database::prepare("
@@ -433,8 +443,6 @@ class SubDomains extends ApiCommand implements ResourceEntity
 			Cronjob::inserttask(TaskId::REBUILD_VHOST);
 			// Using nameserver, insert a task which rebuilds the server config
 			Cronjob::inserttask(TaskId::REBUILD_DNS);
-
-			Customers::increaseUsage($customer['customerid'], 'subdomains_used');
 
 			$this->logger()->logAction($this->isAdmin() ? FroxlorLogger::ADM_ACTION : FroxlorLogger::USR_ACTION, LOG_INFO, "[API] added subdomain '" . $completedomain . "'");
 

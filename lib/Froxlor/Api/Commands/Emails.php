@@ -174,6 +174,11 @@ class Emails extends ApiCommand implements ResourceEntity
 			}
 			$description = Validate::validate(trim($description), 'description', Validate::REGEX_DESC_TEXT, '', [], true);
 
+			// reserve the resource atomically, the check above is based on previously read data (concurrent requests)
+			if (!Customers::reserveUsage((int)$customer['customerid'], ['emails_used' => 1])) {
+				throw new Exception("No more resources available", 406);
+			}
+
 			$stmt = Database::prepare("
 				INSERT INTO `" . TABLE_MAIL_VIRTUAL . "` SET
 				`customerid` = :cid,
@@ -201,10 +206,12 @@ class Emails extends ApiCommand implements ResourceEntity
 				"domainid" => $domain_check['id'],
 				"description" => $description
 			];
-			Database::pexecute($stmt, $params, true, true);
-
-			// update customer usage
-			Customers::increaseUsage($customer['customerid'], 'emails_used');
+			try {
+				Database::pexecute($stmt, $params, true, true);
+			} catch (Exception $e) {
+				Customers::decreaseUsage($customer['customerid'], 'emails_used');
+				throw $e;
+			}
 
 			Cronjob::inserttask(TaskId::REBUILD_RSPAMD);
 			$this->logger()->logAction($this->isAdmin() ? FroxlorLogger::ADM_ACTION : FroxlorLogger::USR_ACTION, LOG_NOTICE, "[API] added email address '" . $email_full . "'");

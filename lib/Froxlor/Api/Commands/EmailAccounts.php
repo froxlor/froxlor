@@ -180,6 +180,15 @@ class EmailAccounts extends ApiCommand implements ResourceEntity
 			}
 
 			// insert data
+			// reserve the resource atomically, the check above is based on previously read data (concurrent requests)
+			if (!Customers::reserveUsage((int)$customer['customerid'], ['email_accounts_used' => 1])) {
+				throw new Exception("No more resources available", 406);
+			}
+			if (!Customers::reserveUsage((int)$customer['customerid'], ['email_quota_used' => $quota])) {
+				Customers::decreaseUsage($customer['customerid'], 'email_accounts_used');
+				Response::standardError('allocatetoomuchquota', $quota, true);
+			}
+
 			$stmt = Database::prepare("INSERT INTO `" . TABLE_MAIL_USERS . "` SET
 				`customerid` = :cid,
 				`email` = :email,
@@ -212,7 +221,13 @@ class EmailAccounts extends ApiCommand implements ResourceEntity
 			if (Settings::Get('system.mailpwcleartext') == '1') {
 				$params["password"] = $password;
 			}
-			Database::pexecute($stmt, $params, true, true);
+			try {
+				Database::pexecute($stmt, $params, true, true);
+			} catch (Exception $e) {
+				Customers::decreaseUsage($customer['customerid'], 'email_accounts_used');
+				Customers::decreaseUsage($customer['customerid'], 'email_quota_used', '', $quota);
+				throw $e;
+			}
 			$popaccountid = Database::lastInsertId();
 
 			// add email address to its destination field
@@ -229,9 +244,6 @@ class EmailAccounts extends ApiCommand implements ResourceEntity
 			];
 			Database::pexecute($stmt, $params, true, true);
 
-			// update customer usage
-			Customers::increaseUsage($customer['customerid'], 'email_accounts_used');
-			Customers::increaseUsage($customer['customerid'], 'email_quota_used', '', $quota);
 
 			if ($sendinfomail) {
 				// replacer array for mail to create account on server
@@ -455,16 +467,31 @@ class EmailAccounts extends ApiCommand implements ResourceEntity
 			}
 		}
 
+		// reserve additional quota atomically, the check above is based on previously read data (concurrent requests)
+		$quota_increase = $customer['email_quota'] != '-1' ? (int)$quota - (int)$result['quota'] : 0;
+		if ($quota_increase > 0 && !Customers::reserveUsage((int)$customer['customerid'], ['email_quota_used' => $quota_increase])) {
+			Response::standardError('allocatetoomuchquota', $quota, true);
+		}
+
 		// build update query
 		if (!empty($upd_query)) {
 			$upd_stmt = Database::prepare("
 				UPDATE `" . TABLE_MAIL_USERS . "` SET " . $upd_query . " WHERE `id` = :id AND `customerid`= :cid
 			");
-			Database::pexecute($upd_stmt, $upd_params, true, true);
+			try {
+				Database::pexecute($upd_stmt, $upd_params, true, true);
+			} catch (Exception $e) {
+				if ($quota_increase > 0) {
+					Customers::decreaseUsage($customer['customerid'], 'email_quota_used', '', $quota_increase);
+				}
+				throw $e;
+			}
 		}
 
 		if ($customer['email_quota'] != '-1') {
-			Customers::increaseUsage($customer['customerid'], 'email_quota_used', '', ($quota - $result['quota']));
+			if ($quota_increase <= 0) {
+				Customers::increaseUsage($customer['customerid'], 'email_quota_used', '', ($quota - $result['quota']));
+			}
 			Admins::increaseUsage($customer['adminid'], 'email_quota_used', '', ($quota - $result['quota']));
 		}
 

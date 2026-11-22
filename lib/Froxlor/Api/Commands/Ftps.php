@@ -195,6 +195,11 @@ class Ftps extends ApiCommand implements ResourceEntity
 				$path = FileDir::makeCorrectDir($customer['documentroot'] . '/' . $path, $customer['documentroot']);
 				$cryptPassword = Crypt::makeCryptPassword($password, false, true);
 
+				// reserve the resource atomically, the check above is based on previously read data (concurrent requests)
+				if (!$is_defaultuser && !Customers::reserveUsage((int)$customer['customerid'], ['ftps_used' => 1])) {
+					throw new Exception("No more resources available", 406);
+				}
+
 				$stmt = Database::prepare("INSERT INTO `" . TABLE_FTP_USERS . "`
 						(`customerid`, `username`, `description`, `password`, `homedir`, `login_enabled`, `uid`, `gid`, `shell`)
 						VALUES (:customerid, :username, :description, :password, :homedir, :loginenabled, :guid, :guid, :shell)");
@@ -208,7 +213,14 @@ class Ftps extends ApiCommand implements ResourceEntity
 					"guid" => $customer['guid'],
 					"shell" => $shell
 				];
-				Database::pexecute($stmt, $params, true, true);
+				try {
+					Database::pexecute($stmt, $params, true, true);
+				} catch (Exception $e) {
+					if (!$is_defaultuser) {
+						Customers::decreaseUsage($customer['customerid'], 'ftps_used');
+					}
+					throw $e;
+				}
 
 				$result_stmt = Database::prepare("
 					SELECT `bytes_in_used` FROM `" . TABLE_FTP_QUOTATALLIES . "` WHERE `name` = :name
@@ -275,7 +287,6 @@ class Ftps extends ApiCommand implements ResourceEntity
 
 				if (!$is_defaultuser) {
 					// update customer usage
-					Customers::increaseUsage($customer['customerid'], 'ftps_used');
 					Customers::increaseUsage($customer['customerid'], 'ftp_lastaccountnumber');
 					Cronjob::inserttask(TaskId::REBUILD_NSSUSERS);
 				}

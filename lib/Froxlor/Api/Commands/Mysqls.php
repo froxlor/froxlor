@@ -121,44 +121,52 @@ class Mysqls extends ApiCommand implements ResourceEntity
 				'loginname' => ($this->isAdmin() ? $customer['loginname'] : $this->getUserDetail('loginname')),
 				'mysql_lastaccountnumber' => ($this->isAdmin() ? $customer['mysql_lastaccountnumber'] : $this->getUserDetail('mysql_lastaccountnumber'))
 			];
-			// create database, user, set permissions, etc.pp.
-			$dbm = new DbManager($this->logger());
+			// reserve the resource atomically, the check above is based on previously read data (concurrent requests)
+			if (!Customers::reserveUsage((int)$customer['customerid'], ['mysqls_used' => 1])) {
+				throw new Exception("No more resources available", 406);
+			}
+			try {
+				// create database, user, set permissions, etc.pp.
+				$dbm = new DbManager($this->logger());
 
-			if (strtoupper(Settings::Get('customer.mysqlprefix')) == 'DBNAME' && !empty($databasename)) {
-				if (strlen($newdb_params['loginname'] . '_' . $databasename) > Database::getSqlUsernameLength()) {
-					throw new Exception("Database name cannot be longer than " . (Database::getSqlUsernameLength() - strlen($newdb_params['loginname'] . '_')) . " characters.", 406);
+				if (strtoupper(Settings::Get('customer.mysqlprefix')) == 'DBNAME' && !empty($databasename)) {
+					if (strlen($newdb_params['loginname'] . '_' . $databasename) > Database::getSqlUsernameLength()) {
+						throw new Exception("Database name cannot be longer than " . (Database::getSqlUsernameLength() - strlen($newdb_params['loginname'] . '_')) . " characters.", 406);
+					}
+					$username = $dbm->createDatabase($newdb_params['loginname'] . '_' . $databasename, $password, $dbserver, 0, $newdb_params['loginname']);
+				} else {
+					$username = $dbm->createDatabase($newdb_params['loginname'], $password, $dbserver, $newdb_params['mysql_lastaccountnumber'], $newdb_params['loginname']);
 				}
-				$username = $dbm->createDatabase($newdb_params['loginname'] . '_' . $databasename, $password, $dbserver, 0, $newdb_params['loginname']);
-			} else {
-				$username = $dbm->createDatabase($newdb_params['loginname'], $password, $dbserver, $newdb_params['mysql_lastaccountnumber'], $newdb_params['loginname']);
-			}
 
-			// we've checked against the password in dbm->createDatabase
-			if ($username == false) {
-				Response::standardError('passwordshouldnotbeusername', '', true);
-			}
+				// we've checked against the password in dbm->createDatabase
+				if ($username == false) {
+					Response::standardError('passwordshouldnotbeusername', '', true);
+				}
 
-			// add database info to froxlor
-			$stmt = Database::prepare("
-				INSERT INTO `" . TABLE_PANEL_DATABASES . "`
-				SET
-				`customerid` = :customerid,
-				`databasename` = :databasename,
-				`description` = :description,
-				`dbserver` = :dbserver
-			");
-			$params = [
-				"customerid" => $customer['customerid'],
-				"databasename" => $username,
-				"description" => $databasedescription,
-				"dbserver" => $dbserver
-			];
-			Database::pexecute($stmt, $params, true, true);
+				// add database info to froxlor
+				$stmt = Database::prepare("
+					INSERT INTO `" . TABLE_PANEL_DATABASES . "`
+					SET
+					`customerid` = :customerid,
+					`databasename` = :databasename,
+					`description` = :description,
+					`dbserver` = :dbserver
+				");
+				$params = [
+					"customerid" => $customer['customerid'],
+					"databasename" => $username,
+					"description" => $databasedescription,
+					"dbserver" => $dbserver
+				];
+				Database::pexecute($stmt, $params, true, true);
+			} catch (Exception $e) {
+				Customers::decreaseUsage($customer['customerid'], 'mysqls_used');
+				throw $e;
+			}
 			$databaseid = Database::lastInsertId();
 			$params['id'] = $databaseid;
 
 			// update customer usage
-			Customers::increaseUsage($customer['customerid'], 'mysqls_used');
 			Customers::increaseUsage($customer['customerid'], 'mysql_lastaccountnumber', '', $dbm->getAccountNumberIncrease());
 
 			// send info-mail?
