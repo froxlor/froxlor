@@ -1366,21 +1366,40 @@ class Domains extends ApiCommand implements ResourceEntity
 			], true, true);
 			$alias_check = $alias_check['count'];
 
-			// count where we are used in email-accounts
+			// ids of this domain and all of its subdomains (they always move along with the domain)
+			$domaintree_ids = [(int)$result['id']];
+			$domaintree_stmt = Database::prepare("
+				SELECT `id` FROM `" . TABLE_PANEL_DOMAINS . "` WHERE `parentdomainid` = :resultid
+			");
+			Database::pexecute($domaintree_stmt, [
+				'resultid' => $result['id']
+			], true, true);
+			while ($domaintree_row = $domaintree_stmt->fetch(PDO::FETCH_ASSOC)) {
+				$domaintree_ids[] = (int)$domaintree_row['id'];
+			}
+			$domaintree_idlist = implode(', ', $domaintree_ids);
+
+			// count where we are used in email-accounts (including the subdomains)
 			$domain_emails_result_stmt = Database::prepare("
-				SELECT `email`, `email_full`, `destination`, `popaccountid`
-				FROM `" . TABLE_MAIL_VIRTUAL . "` WHERE `customerid` = :customerid AND `domainid` = :id
+				SELECT `email`, `email_full`, `destination`, `popaccountid`, `domainid`
+				FROM `" . TABLE_MAIL_VIRTUAL . "` WHERE `customerid` = :customerid AND `domainid` IN (" . $domaintree_idlist . ")
 			");
 			Database::pexecute($domain_emails_result_stmt, [
-				'customerid' => $result['customerid'],
-				'id' => $result['id']
+				'customerid' => $result['customerid']
 			], true, true);
 
-			$emails = Database::num_rows();
+			// addresses of the domain itself
+			$emails = 0;
+			// addresses, forwarders and accounts of the domain and its subdomains
+			$emails_tree = 0;
 			$email_forwarders = 0;
 			$email_accounts = 0;
 
 			while ($domain_emails_row = $domain_emails_result_stmt->fetch(PDO::FETCH_ASSOC)) {
+				$emails_tree++;
+				if ($domain_emails_row['domainid'] == $result['id']) {
+					$emails++;
+				}
 				if ($domain_emails_row['destination'] != '') {
 					$domain_emails_row['destination'] = explode(' ', FileDir::makeCorrectDestination($domain_emails_row['destination']));
 					$email_forwarders += count($domain_emails_row['destination']);
@@ -1408,7 +1427,7 @@ class Domains extends ApiCommand implements ResourceEntity
 				$params = [
 					'customerid' => $customerid,
 					'subdomains' => $subdomains,
-					'emails' => $emails,
+					'emails' => $emails_tree,
 					'forwarders' => $email_forwarders,
 					'accounts' => $email_accounts
 				];
@@ -1867,21 +1886,21 @@ class Domains extends ApiCommand implements ResourceEntity
 			}
 
 			if ($customerid != $result['customerid'] && Settings::Get('panel.allow_domain_change_customer') == '1') {
+				// move the email addresses and accounts of the domain and all of its subdomains
 				$upd_data = [
-					'customerid' => $customerid,
-					'domainid' => $result['id']
+					'customerid' => $customerid
 				];
 				$upd_stmt = Database::prepare("
-					UPDATE `" . TABLE_MAIL_USERS . "` SET `customerid` = :customerid WHERE `domainid` = :domainid
+					UPDATE `" . TABLE_MAIL_USERS . "` SET `customerid` = :customerid WHERE `domainid` IN (" . $domaintree_idlist . ")
 				");
 				Database::pexecute($upd_stmt, $upd_data, true, true);
 				$upd_stmt = Database::prepare("
-					UPDATE `" . TABLE_MAIL_VIRTUAL . "` SET `customerid` = :customerid WHERE `domainid` = :domainid
+					UPDATE `" . TABLE_MAIL_VIRTUAL . "` SET `customerid` = :customerid WHERE `domainid` IN (" . $domaintree_idlist . ")
 				");
 				Database::pexecute($upd_stmt, $upd_data, true, true);
 				$upd_data = [
 					'subdomains' => $subdomains,
-					'emails' => $emails,
+					'emails' => $emails_tree,
 					'forwarders' => $email_forwarders,
 					'accounts' => $email_accounts
 				];
@@ -2124,6 +2143,63 @@ class Domains extends ApiCommand implements ResourceEntity
 				WHERE `parentdomainid` = :parentdomainid
 			");
 			Database::pexecute($_update_stmt, $_update_data, true, true);
+
+			if ($customerid != $result['customerid'] && Settings::Get('panel.allow_domain_change_customer') == '1') {
+				// subdomains must not keep pointing into the docroot of the previous customer
+				$oldcustomer_stmt = Database::prepare("
+					SELECT `documentroot` FROM `" . TABLE_PANEL_CUSTOMERS . "` WHERE `customerid` = :customerid
+				");
+				$oldcustomer = Database::pexecute_first($oldcustomer_stmt, [
+					'customerid' => $result['customerid']
+				], true, true);
+				if (!empty($oldcustomer['documentroot'])) {
+					$upd_stmt = Database::prepare("
+						UPDATE `" . TABLE_PANEL_DOMAINS . "` SET
+						`documentroot` = CONCAT(:newroot, SUBSTRING(`documentroot`, CHAR_LENGTH(:oldroot) + 1))
+						WHERE `parentdomainid` = :parentdomainid
+						AND LEFT(`documentroot`, CHAR_LENGTH(:oldroot)) = :oldroot
+					");
+					Database::pexecute($upd_stmt, [
+						'newroot' => FileDir::makeCorrectDir($customer['documentroot']),
+						'oldroot' => FileDir::makeCorrectDir($oldcustomer['documentroot']),
+						'parentdomainid' => $id
+					], true, true);
+				}
+
+				// remove alias-links between the moved domains and domains of other customers
+				$aliasdest_stmt = Database::prepare("
+					SELECT DISTINCT `a`.`id` FROM `" . TABLE_PANEL_DOMAINS . "` `d`
+					JOIN `" . TABLE_PANEL_DOMAINS . "` `a` ON `d`.`aliasdomain` = `a`.`id`
+					WHERE `d`.`customerid` <> `a`.`customerid`
+					AND (`d`.`id` IN (" . $domaintree_idlist . ") OR `a`.`id` IN (" . $domaintree_idlist . "))
+				");
+				Database::pexecute($aliasdest_stmt, [], true, true);
+				$aliasdest_ids = $aliasdest_stmt->fetchAll(PDO::FETCH_COLUMN);
+				$upd_stmt = Database::prepare("
+					UPDATE `" . TABLE_PANEL_DOMAINS . "` `d`
+					JOIN `" . TABLE_PANEL_DOMAINS . "` `a` ON `d`.`aliasdomain` = `a`.`id`
+					SET `d`.`aliasdomain` = NULL
+					WHERE `d`.`customerid` <> `a`.`customerid`
+					AND (`d`.`id` IN (" . $domaintree_idlist . ") OR `a`.`id` IN (" . $domaintree_idlist . "))
+				");
+				Database::pexecute($upd_stmt, [], true, true);
+				// the certificates of the alias-destinations must not contain the removed aliases any longer
+				foreach ($aliasdest_ids as $aliasdest_id) {
+					Domain::triggerLetsEncryptCSRForAliasDestinationDomain((int)$aliasdest_id, $this->logger());
+				}
+
+				// remove allowed-senders between the moved domains and accounts of other customers
+				$del_stmt = Database::prepare("
+					DELETE `s` FROM `" . TABLE_MAIL_SENDER_ALIAS . "` `s`
+					JOIN `" . TABLE_MAIL_USERS . "` `u` ON `u`.`username` = `s`.`email`
+					JOIN `" . TABLE_PANEL_DOMAINS . "` `d` ON `d`.`domain` = SUBSTRING_INDEX(`s`.`allowed_sender`, '@', -1)
+					WHERE `d`.`customerid` <> `u`.`customerid`
+					AND (`u`.`domainid` IN (" . $domaintree_idlist . ") OR `d`.`id` IN (" . $domaintree_idlist . "))
+				");
+				Database::pexecute($del_stmt, [], true, true);
+
+				Cronjob::inserttask(TaskId::REBUILD_VHOST);
+			}
 
 			// get current ip<>domain entries
 			$ip_sel_stmt = Database::prepare("
