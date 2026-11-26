@@ -86,7 +86,7 @@ class DirProtections extends ApiCommand implements ResourceEntity
 		$path = FileDir::makeCorrectDir(Validate::validate($path, 'path', Validate::REGEX_DIR, '', [], true));
 		$path = FileDir::makeCorrectDir($customer['documentroot'] . '/' . $path, $customer['documentroot']);
 		$username = Validate::validate(trim($username), 'username', '/^[a-zA-Z0-9][a-zA-Z0-9\-_]+\$?$/D', '', [], true);
-		$authname = Validate::validate(trim($authname), 'directory_authname', '/^[a-zA-Z0-9][a-zA-Z0-9\-_ ]+\$?$/D', '', [], true);
+		$authname = Validate::validate(trim($authname), 'directory_authname', '/^[a-zA-Z0-9][a-zA-Z0-9\-_ ]+$/D', '', [], true);
 		$password = Validate::validate($password, 'password', '', '', [], true);
 		$password = Crypt::validatePassword($password, true);
 
@@ -246,9 +246,10 @@ class DirProtections extends ApiCommand implements ResourceEntity
 
 		// get needed customer info
 		$customer = $this->getCustomerData();
+		$this->checkRecordOwner($customer, $result);
 
 		// validation
-		$authname = Validate::validate(trim($authname), 'directory_authname', '/^[a-zA-Z0-9][a-zA-Z0-9\-_ ]+\$?$/D', '', [], true);
+		$authname = Validate::validate(trim($authname), 'directory_authname', '/^[a-zA-Z0-9][a-zA-Z0-9\-_ ]+$/D', '', [], true);
 		$password = Validate::validate($password, 'password', '', '', [], true);
 		$password = Crypt::validatePassword($password, true);
 

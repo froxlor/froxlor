@@ -128,7 +128,8 @@ class SshKeys extends ApiCommand implements ResourceEntity
 		$params = [
 			"cid" => $customer['customerid'],
 			"fid" => $id,
-			"sshpub" => trim($ssh_pubkey),
+			// store the normalized form (type, key, comment) and never the raw input
+			"sshpub" => trim($key->toString('OpenSSH', ['comment' => (string)$key->getComment()])),
 			"desc" => $description
 		];
 		Database::pexecute($stmt, $params, true, true);
@@ -255,6 +256,7 @@ class SshKeys extends ApiCommand implements ResourceEntity
 
 		// get needed customer info
 		$customer = $this->getCustomerData();
+		$this->checkRecordOwner($customer, $result);
 
 		$stmt = Database::prepare("
 			UPDATE `" . TABLE_PANEL_USER_SSHKEYS . "`
@@ -404,6 +406,7 @@ class SshKeys extends ApiCommand implements ResourceEntity
 		$id = $result['id'];
 
 		$customer = $this->getCustomerData();
+		$this->checkRecordOwner($customer, $result);
 
 		// remove entry
 		$stmt = Database::prepare("

@@ -110,6 +110,11 @@ class Ajax
 		if (CurrentUser::hasSession() == false) {
 			throw new Exception("No valid session");
 		}
+		// same as for regular requests: deactivated/removed users and sessions
+		// with an outdated password must not be served any longer
+		if (CurrentUser::reReadUserData() == false) {
+			throw new Exception("No valid session");
+		}
 		// create new csrf token if not set
 		if (!$csrf_token = CurrentUser::getField('csrf_token')) {
 			$csrf_token = Froxlor::genSessionId(20);

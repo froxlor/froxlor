@@ -372,6 +372,7 @@ class Mysqls extends ApiCommand implements ResourceEntity
 			'mysql_server' => $dbserver
 		]);
 		$id = $result['id'];
+		$this->checkRecordOwner($customer, $result);
 
 		// parameters
 		$password = $this->getParam('mysql_password', true, '');
@@ -561,6 +562,7 @@ class Mysqls extends ApiCommand implements ResourceEntity
 			'mysql_server' => $dbserver
 		]);
 		$id = $result['id'];
+		$this->checkRecordOwner($customer, $result);
 
 		// only revoke privileges of the customer's global user if froxlor created it
 		$global_user = DbManager::isGlobalUserTracked($customer['loginname'], (int)$result['dbserver']) ? $customer['loginname'] : '';
@@ -573,9 +575,10 @@ class Mysqls extends ApiCommand implements ResourceEntity
 		// End root-session
 
 		// delete from table
-		$stmt = Database::prepare("DELETE FROM `" . TABLE_PANEL_DATABASES . "` WHERE `id` = :id");
+		$stmt = Database::prepare("DELETE FROM `" . TABLE_PANEL_DATABASES . "` WHERE `id` = :id AND `customerid` = :customerid");
 		Database::pexecute($stmt, [
-			"id" => $id
+			"id" => $id,
+			"customerid" => $customer['customerid']
 		], true, true);
 
 		// get needed customer info to reduce the mysql-usage-counter by one

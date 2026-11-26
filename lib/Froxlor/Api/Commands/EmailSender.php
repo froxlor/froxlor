@@ -317,6 +317,7 @@ class EmailSender extends ApiCommand implements ResourceEntity
 		if (!empty($result['popaccountid'])) {
 			// get needed customer info
 			$customer = $this->getCustomerData();
+			$this->checkRecordOwner($customer, $result);
 
 			$sel_stmt = Database::prepare("
 				SELECT s.id

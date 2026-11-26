@@ -233,4 +233,27 @@ class DirProtectionsTest extends TestCase
 		// trimmed, no newline makes it into the database
 		$this->assertEquals('foo', $result['authname']);
 	}
+
+	/**
+	 * the authname is written into double-quoted webserver directives, where a
+	 * trailing "$" starts a variable in nginx
+	 */
+	public function testCustomerDirProtectionsAddAuthnameTrailingDollar()
+	{
+		global $admin_userdata;
+
+		// get customer
+		$json_result = Customers::getLocal($admin_userdata, array(
+			'loginname' => 'test1'
+		))->get();
+		$customer_userdata = json_decode($json_result, true)['data'];
+
+		$this->expectExceptionCode(400);
+		DirProtections::getLocal($customer_userdata, [
+			'path' => '/test-dollar',
+			'username' => 'dollartest',
+			'directory_password' => \Froxlor\System\Crypt::generatePassword(),
+			'directory_authname' => 'Restricted$'
+		])->add();
+	}
 }

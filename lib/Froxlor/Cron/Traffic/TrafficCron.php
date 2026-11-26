@@ -888,7 +888,7 @@ class TrafficCron extends FroxlorCron
 			}
 
 			FroxlorLogger::getInstanceOf()->logAction(FroxlorLogger::CRON_ACTION, LOG_INFO, "Running awstats_buildstaticpages.pl for domain '" . $domain . "' (Output: '" . $staticOutputdir . "')");
-			FileDir::safe_exec($awbsp . ' -awstatsprog=' . escapeshellarg($awprog) . ' -update -month=' . date('m', $current_stamp) . ' -year=' . date('Y', $current_stamp) . ' -config=' . $domain . ' -dir=' . escapeshellarg($staticOutputdir));
+			FileDir::safe_exec($awbsp . ' -awstatsprog=' . escapeshellarg($awprog) . ' -update -month=' . date('m', $current_stamp) . ' -year=' . date('Y', $current_stamp) . ' -config=' . escapeshellarg($domain) . ' -dir=' . escapeshellarg($staticOutputdir));
 
 			// update our awstats index files
 			self::awstatsGenerateIndex($domain, $outputdir, $fixed_homedir);

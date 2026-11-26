@@ -458,6 +458,10 @@ class Admins extends ApiCommand implements ResourceEntity
 					// unset sensitive data
 					unset($result['password']);
 					unset($result['data_2fa']);
+					// notes are only visible to the admin itself if allowed
+					if ($this->getUserDetail('change_serversettings') != 1 && $result['custom_notes_show'] != '1') {
+						$result['custom_notes'] = '';
+					}
 				}
 				$this->logger()->logAction(FroxlorLogger::ADM_ACTION, LOG_INFO, "[API] get admin '" . $result['loginname'] . "'");
 				return $this->response($result);
@@ -579,6 +583,11 @@ class Admins extends ApiCommand implements ResourceEntity
 
 				// you cannot edit some of the details of yourself
 				if ($result['adminid'] == $this->getUserDetail('adminid')) {
+					if ($this->getUserDetail('change_serversettings') != 1) {
+						// notes about an admin are maintained by its superior
+						$custom_notes = $result['custom_notes'] ?? "";
+						$custom_notes_show = $result['custom_notes_show'];
+					}
 					$gui_access = $result['gui_access'];
 					$api_allowed = $result['api_allowed'];
 					$deactivated = $result['deactivated'];

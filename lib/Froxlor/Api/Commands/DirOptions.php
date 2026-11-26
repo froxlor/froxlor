@@ -175,11 +175,19 @@ class DirOptions extends ApiCommand implements ResourceEntity
 					if (!substr($errdoc, 0, 1) == '/') {
 						$errdoc = '/' . $errdoc;
 					}
-				} elseif (preg_match('/^"([^\r\n\t\f\0"]+)"$/', $errdoc)) {
+					// the path is written to the webserver-configuration (spaces are
+					// already escaped by makeCorrectFile())
+					if (!Validate::isWebserverConfigSafe(str_replace('\\ ', '', $errdoc))) {
+						Response::standardError('invaliderrordocumentvalue', '', $throw_exception);
+					}
+				} elseif (preg_match('/^"([^\r\n\t\f\0"$\\\\]+)"$/', $errdoc)) {
 					// a string (check for ending ")
 				} else {
 					Response::standardError('invaliderrordocumentvalue', '', $throw_exception);
 				}
+			} elseif (!Validate::isWebserverConfigSafe(trim($errdoc))) {
+				// a URL, written to the webserver-configuration as well
+				Response::standardError('invaliderrordocumentvalue', '', $throw_exception);
 			}
 		}
 		return trim($errdoc);
@@ -281,6 +289,7 @@ class DirOptions extends ApiCommand implements ResourceEntity
 
 		// get needed customer info to reduce the email-address-counter by one
 		$customer = $this->getCustomerData();
+		$this->checkRecordOwner($customer, $result);
 
 		// parameters
 		$options_indexes = $this->getBoolParam('options_indexes', true, $result['options_indexes']);

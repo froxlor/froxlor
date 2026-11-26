@@ -29,4 +29,18 @@ use RobThree\Auth\TwoFactorAuth;
 
 class FroxlorTwoFactorAuth extends TwoFactorAuth
 {
+	/**
+	 * never verify against an empty secret (e.g. an already used/removed one-time
+	 * email-2fa secret), as a valid code can be calculated for it by anyone
+	 *
+	 * @inheritDoc
+	 */
+	public function verifyCode($secret, $code, $discrepancy = 1, $time = null, &$timeslice = 0)
+	{
+		if (!is_string($secret) || trim($secret) === '' || !is_string($code) || trim($code) === '') {
+			$timeslice = 0;
+			return false;
+		}
+		return parent::verifyCode($secret, $code, $discrepancy, $time, $timeslice);
+	}
 }

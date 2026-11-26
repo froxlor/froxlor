@@ -94,6 +94,11 @@ abstract class ApiParameter
 	protected function getUlParam(?string $param = null, ?string $ul_field = null, bool $optional = false, $default = 0)
 	{
 		$param_value = (int)$this->getParam($param, $optional, $default);
+		if ($param_value < -1) {
+			// -1 is the only valid negative value (unlimited), everything below would
+			// allow to tamper with the resource-usage counters
+			throw new Exception('Invalid value for parameter "' . $param . '" in "' . $this->getModFunctionString() . '": must not be lower than -1', 406);
+		}
 		$ul_field_value = $this->getBoolParam($ul_field, true, 0);
 		if ($ul_field_value != '0') {
 			$param_value = -1;

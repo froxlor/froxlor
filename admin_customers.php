@@ -213,11 +213,13 @@ if (($page == 'customers' || $page == 'overview') && $userinfo['customers'] != '
 
 			// hosting plans
 			$hosting_plans = [];
-			$plans = Database::query("
+			// only the plans the admin is allowed to see (same as HostingPlans.listing)
+			$plans = Database::prepare("
 				SELECT *
-				FROM `" . TABLE_PANEL_PLANS . "`
+				FROM `" . TABLE_PANEL_PLANS . "`" . ($userinfo['customers_see_all'] ? '' : " WHERE `adminid` = :adminid") . "
 				ORDER BY name ASC
 			");
+			Database::pexecute($plans, $userinfo['customers_see_all'] ? [] : ['adminid' => $userinfo['adminid']]);
 			$hosting_plans = [
 				0 => "---"
 			];
@@ -295,11 +297,13 @@ if (($page == 'customers' || $page == 'overview') && $userinfo['customers'] != '
 				}
 
 				// hosting plans
-				$plans = Database::query("
+				// only the plans the admin is allowed to see (same as HostingPlans.listing)
+				$plans = Database::prepare("
 					SELECT *
-					FROM `" . TABLE_PANEL_PLANS . "`
+					FROM `" . TABLE_PANEL_PLANS . "`" . ($userinfo['customers_see_all'] ? '' : " WHERE `adminid` = :adminid") . "
 					ORDER BY name ASC
 				");
+				Database::pexecute($plans, $userinfo['customers_see_all'] ? [] : ['adminid' => $userinfo['adminid']]);
 				$hosting_plans = [
 					0 => "---"
 				];

@@ -334,6 +334,9 @@ class DomainZones extends ApiCommand implements ResourceEntity
 			}
 		} elseif ($type == 'TXT' && !empty($content)) {
 			// check that TXT content is enclosed in " "
+			if (!Dns::isValidTXTContent($content)) {
+				$errors[] = lng('error.dns_content_invalid');
+			}
 			$content = Dns::encloseTXTContent($content);
 		}
 

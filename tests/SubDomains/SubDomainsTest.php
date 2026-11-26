@@ -222,6 +222,37 @@ class SubDomainsTest extends TestCase
 		$this->assertEquals('https://www.froxlor.org/', $result['documentroot']);
 	}
 
+	/**
+	 * the redirect-url is written unquoted into the nginx vhost
+	 *
+	 * @dataProvider configBreakingRedirectUrls
+	 */
+	public function testCustomerSubDomainsUpdateRedirectUrlConfigBreaking(string $url)
+	{
+		global $admin_userdata;
+		// get customer
+		$json_result = Customers::getLocal($admin_userdata, array(
+			'loginname' => 'test1'
+		))->get();
+		$customer_userdata = json_decode($json_result, true)['data'];
+
+		$this->expectExceptionMessage("The URL you have entered for the documentroot is not valid");
+		SubDomains::getLocal($customer_userdata, [
+			'domainname' => 'mysub.test2.local',
+			'url' => $url
+		])->update();
+	}
+
+	public function configBreakingRedirectUrls(): array
+	{
+		return [
+			['https://www.froxlor.org/;'],
+			['https://www.froxlor.org/$host'],
+			["https://www.froxlor.org/a'b"],
+			['https://www.froxlor.org/x;return 200'],
+		];
+	}
+
 	public function testCustomerSubDomainsList()
 	{
 		global $admin_userdata;

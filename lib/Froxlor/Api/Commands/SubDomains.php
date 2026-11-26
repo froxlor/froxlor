@@ -215,7 +215,7 @@ class SubDomains extends ApiCommand implements ResourceEntity
 			$_doredirect = false;
 			$path = $this->validateDomainDocumentRoot($path, $url, $customer, $completedomain, $_doredirect);
 
-			if ($openbasedir_path > 2 && $openbasedir_path < 0) {
+			if (!in_array((int)$openbasedir_path, [0, 1, 2], true)) {
 				$openbasedir_path = 0;
 			}
 
@@ -595,7 +595,7 @@ class SubDomains extends ApiCommand implements ResourceEntity
 		$maybeUrl = !empty($url) ? $url : (preg_match('/^https?\:\/\//', $path) ? $path : '');
 		if ($maybeUrl !== '') {
 			$encoded = $idna->encode($maybeUrl);
-			if (!Validate::validateUrl($encoded, true)) {
+			if (!Validate::validateUrl($encoded, true) || !Validate::isWebserverConfigSafe($encoded)) {
 				Response::standardError('invaliddocumentrooturl', '', true);
 			}
 			$_doredirect = true;
@@ -742,6 +742,7 @@ class SubDomains extends ApiCommand implements ResourceEntity
 
 		// get needed customer info to reduce the subdomain-usage-counter by one
 		$customer = $this->getCustomerData();
+		$this->checkRecordOwner($customer, $result);
 
 		$alias_stmt = Database::prepare("SELECT COUNT(`id`) AS count FROM `" . TABLE_PANEL_DOMAINS . "` WHERE `aliasdomain`= :aliasdomain");
 		$alias_check = Database::pexecute_first($alias_stmt, [
@@ -783,11 +784,14 @@ class SubDomains extends ApiCommand implements ResourceEntity
 				$isemaildomain = intval($isemaildomain);
 			} elseif ($result['parentdomainid'] != '0') {
 				$isemaildomain = $result['subcanemaildomain'] == '3' ? 1 : 0;
+			} elseif (!$this->isAdmin()) {
+				// whether a main-domain is an email-domain is up to the admin
+				$isemaildomain = $result['isemaildomain'];
 			}
 		}
 
 		// check changes of openbasedir-path variable
-		if ($openbasedir_path > 2 && $openbasedir_path < 0) {
+		if (!in_array((int)$openbasedir_path, [0, 1, 2], true)) {
 			$openbasedir_path = 0;
 		}
 
@@ -1208,6 +1212,7 @@ class SubDomains extends ApiCommand implements ResourceEntity
 
 		// get needed customer info to reduce the subdomain-usage-counter by one
 		$customer = $this->getCustomerData();
+		$this->checkRecordOwner($customer, $result);
 
 		// SubDomains.get() also returns main domains (parentdomainid = 0) owned by the customer
 		// (needed to show e.g. domain details), but customers must never be able to delete their

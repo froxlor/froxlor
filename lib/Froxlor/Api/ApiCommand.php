@@ -262,87 +262,132 @@ abstract class ApiCommand extends ApiParameter
 	protected function getSearchWhere(&$query_fields = [], $append = false)
 	{
 		$search = $this->getParam('sql_search', true, []);
-		$condition = '';
-		if (!empty($search)) {
-			if ($append == true) {
-				$condition = ' AND ';
-			} else {
-				$condition = ' WHERE ';
-			}
-			$ops = [
-				'<',
-				'>',
-				'=',
-				'<>'
-			];
-			$first = true;
-			foreach ($search as $field => $valoper) {
-				if ($field == '_plainsql' && $this->internal_call) {
-					if (isset($valoper['sql']) && isset($valoper['values']) && is_array($valoper['values'])) {
-						if (preg_match('/^([a-z0-9\-\.,=\+_`\(\)\:\'\"\!\<\>\ ]+)$/i', $valoper['sql']) == false) {
-							// skip
-							continue;
-						}
-						$condition .= $valoper['sql'];
-						foreach ($valoper['values'] as $var => $value) {
-							$query_fields[':' . $var] = $value;
-						}
-					}
-				} else {
-					$cleanfield = str_replace(".", "", $field);
-					$sortfield = explode('.', $field);
-					foreach ($sortfield as $id => $sfield) {
-						if (substr($sfield, -1, 1) != '`') {
-							$sfield .= '`';
-						}
-						if ($sfield[0] != '`') {
-							$sfield = '`' . $sfield;
-						}
-						$sortfield[$id] = $sfield;
-					}
-					$field = implode('.', $sortfield);
-					if (preg_match('/^([a-z0-9\-\._`]+)$/i', $field) == false) {
+		if (empty($search) || !is_array($search)) {
+			return '';
+		}
+		$ops = [
+			'<',
+			'>',
+			'=',
+			'<>'
+		];
+		$conditions = [];
+		$plainsql = '';
+		// placeholders are numbered and never derived from the field-name, so they
+		// cannot collide with placeholders of the calling statement (e.g. :customerid)
+		$phcnt = 0;
+		foreach ($search as $field => $valoper) {
+			if ($field == '_plainsql' && $this->internal_call) {
+				if (isset($valoper['sql']) && isset($valoper['values']) && is_array($valoper['values'])) {
+					if (preg_match('/^([a-z0-9\-\.,=\+_`\(\)\:\'\"\!\<\>\ ]+)$/i', $valoper['sql']) == false) {
 						// skip
 						continue;
 					}
-					if (!$first) {
-						$condition .= ' AND ';
-					}
-					if (!is_array($valoper) || !isset($valoper['op']) || empty($valoper['op'])) {
-						$condition .= $field . ' LIKE :' . $cleanfield;
-						if (!is_array($valoper)) {
-							$query_fields[':' . $cleanfield] = '%' . $valoper . '%';
-						} else {
-							$query_fields[':' . $cleanfield] = '%' . $valoper['value'] . '%';
-						}
-					} elseif (in_array($valoper['op'], $ops)) {
-						$condition .= $field . ' ' . $valoper['op'] . ':' . $cleanfield;
-						$query_fields[':' . $cleanfield] = $valoper['value'] ?? '';
-					} elseif (strtolower($valoper['op']) == 'in' && is_array($valoper['value']) && count($valoper['value']) > 0) {
-						$condition .= $field . ' ' . $valoper['op'] . ' (';
-						foreach ($valoper['value'] as $incnt => $invalue) {
-							if (!is_numeric($incnt)) {
-								// skip
-								continue;
-							}
-							if (!empty($invalue) && preg_match('/^([a-z0-9\-\._`]+)$/i', $invalue) == false) {
-								// skip
-								continue;
-							}
-							$condition .= ":" . $cleanfield . $incnt . ", ";
-							$query_fields[':' . $cleanfield . $incnt] = $invalue ?? '';
-						}
-						$condition = substr($condition, 0, -2) . ')';
-					} else {
-						continue;
-					}
-					if ($first) {
-						$first = false;
+					$plainsql .= $valoper['sql'];
+					foreach ($valoper['values'] as $var => $value) {
+						$query_fields[':' . $var] = $value;
 					}
 				}
+				continue;
 			}
+			$field = $this->quoteSqlField((string)$field);
+			if ($field === null) {
+				// skip
+				continue;
+			}
+			$placeholder = ':fsrch_' . $phcnt;
+			if (!is_array($valoper) || !isset($valoper['op']) || empty($valoper['op'])) {
+				$conditions[] = $field . ' LIKE ' . $placeholder;
+				if (!is_array($valoper)) {
+					$query_fields[$placeholder] = '%' . $valoper . '%';
+				} else {
+					$query_fields[$placeholder] = '%' . ($valoper['value'] ?? '') . '%';
+				}
+			} elseif (in_array($valoper['op'], $ops, true)) {
+				$conditions[] = $field . ' ' . $valoper['op'] . ' ' . $placeholder;
+				$query_fields[$placeholder] = $valoper['value'] ?? '';
+			} elseif (is_string($valoper['op']) && strtolower($valoper['op']) == 'in' && isset($valoper['value']) && is_array($valoper['value']) && count($valoper['value']) > 0) {
+				$in_placeholders = [];
+				foreach ($valoper['value'] as $incnt => $invalue) {
+					if (!is_numeric($incnt)) {
+						// skip
+						continue;
+					}
+					if (!empty($invalue) && preg_match('/^([a-z0-9\-\._`]+)$/i', $invalue) == false) {
+						// skip
+						continue;
+					}
+					$in_placeholder = $placeholder . '_' . count($in_placeholders);
+					$in_placeholders[] = $in_placeholder;
+					$query_fields[$in_placeholder] = $invalue ?? '';
+				}
+				if (empty($in_placeholders)) {
+					// skip
+					continue;
+				}
+				$conditions[] = $field . ' IN (' . implode(', ', $in_placeholders) . ')';
+			} else {
+				continue;
+			}
+			$phcnt++;
 		}
-		return $condition;
+
+		$condition = implode(' AND ', $conditions);
+		if ($plainsql != '') {
+			$condition = $plainsql . ($condition != '' ? ' AND ' . $condition : '');
+		}
+		if ($condition == '') {
+			return '';
+		}
+		return ($append == true ? ' AND ' : ' WHERE ') . $condition;
+	}
+
+	/**
+	 * columns which hold credentials or key-material; these are never returned by the API
+	 * and must therefore neither be usable to filter nor to sort a listing (as this would
+	 * allow to guess their content by comparing)
+	 *
+	 * @var string[]
+	 */
+	private static $protected_sql_fields = [
+		'password',
+		'password_enc',
+		'data_2fa',
+		'ssl_key_file',
+		'dkim_privkey',
+		'leprivatekey',
+		'apikey',
+		'secret',
+		'token',
+		'hash'
+	];
+
+	/**
+	 * validate and quote a (table-prefixed) fieldname given via sql_search / sql_orderby
+	 *
+	 * @param string $field
+	 *
+	 * @return string|null quoted fieldname or null if the field is invalid
+	 * @throws Exception if the field is protected
+	 */
+	private function quoteSqlField(string $field): ?string
+	{
+		if (preg_match('/^([a-z0-9\-\._`]+)$/i', $field) == false) {
+			return null;
+		}
+		$parts = explode('.', $field);
+		foreach ($parts as $id => $part) {
+			$part = str_replace('`', '', $part);
+			if ($part === '') {
+				return null;
+			}
+			$parts[$id] = '`' . $part . '`';
+		}
+		$column = strtolower(trim(end($parts), '`'));
+		if (in_array($column, self::$protected_sql_fields, true)) {
+			throw new Exception('Field "' . $column . '" cannot be used for searching or sorting', 406);
+		}
+		return implode('.', $parts);
 	}
 
 	/**
@@ -405,22 +450,12 @@ abstract class ApiCommand extends ApiParameter
 			];
 
 			foreach ($orderby as $field => $by) {
-				$sortfield = explode('.', $field);
-				foreach ($sortfield as $id => $sfield) {
-					if (substr($sfield, -1, 1) != '`') {
-						$sfield .= '`';
-					}
-					if ($sfield[0] != '`') {
-						$sfield = '`' . $sfield;
-					}
-					$sortfield[$id] = $sfield;
-				}
-				$field = implode('.', $sortfield);
-				if (preg_match('/^([a-z0-9\-\._`]+)$/i', $field) == false) {
+				$field = $this->quoteSqlField((string)$field);
+				if ($field === null) {
 					// skip
 					continue;
 				}
-				$by = strtoupper($by);
+				$by = strtoupper((string)$by);
 				if (!in_array($by, [
 					'ASC',
 					'DESC'
@@ -438,6 +473,10 @@ abstract class ApiCommand extends ApiParameter
 				} else {
 					$order .= $field . " " . $by . ", ";
 				}
+			}
+			if (substr($order, -2) != ', ') {
+				// no valid field given at all
+				return "";
 			}
 			$order = substr($order, 0, -2);
 		}
@@ -615,6 +654,24 @@ abstract class ApiCommand extends ApiParameter
 			$customer = $this->getUserData();
 		}
 		return $customer;
+	}
+
+	/**
+	 * make sure a record which was looked up on its own (by id/name, among all customers
+	 * of the admin) belongs to the customer the command is executed for (admins specify
+	 * the customer by parameter), so that changes and resource-usage are never applied
+	 * to a customer the record does not belong to
+	 *
+	 * @param array $customer
+	 * @param array $record
+	 *
+	 * @throws Exception
+	 */
+	protected function checkRecordOwner(array $customer, array $record)
+	{
+		if (isset($record['customerid']) && (int)$record['customerid'] != (int)$customer['customerid']) {
+			throw new Exception("The requested entity does not belong to the given customer", 406);
+		}
 	}
 
 	/**

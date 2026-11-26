@@ -396,4 +396,14 @@ class ValidateTest extends TestCase
 		$result = Validate::validateDnsNaptr('100 10 U E2U+sip regexp .');
 		$this->assertFalse($result);
 	}
+
+	public function testIsWebserverConfigSafe()
+	{
+		foreach (['https://www.froxlor.org/a/b?c=d&e=f', '/errors/404.html', 'https://[2001:db8::1]:8443/x~y/(z)'] as $value) {
+			$this->assertTrue(Validate::isWebserverConfigSafe($value), $value);
+		}
+		foreach (['', 'https://a.b/;', 'https://a.b/$uri', "/a'b", '/a"b', '/a b', "/a\tb", "/a\nb", '/a{', '/a}', '/a#', '/a\\b', '/a`b'] as $value) {
+			$this->assertFalse(Validate::isWebserverConfigSafe($value), $value);
+		}
+	}
 }

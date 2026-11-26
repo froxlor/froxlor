@@ -596,7 +596,7 @@ class Domains extends ApiCommand implements ResourceEntity
 					$mod_fcgid_maxrequests = '-1';
 				}
 
-				if ($openbasedir_path > 2 && $openbasedir_path < 0) {
+				if (!in_array((int)$openbasedir_path, [0, 1, 2], true)) {
 					$openbasedir_path = 0;
 				}
 
@@ -662,7 +662,7 @@ class Domains extends ApiCommand implements ResourceEntity
 				// Check if given documentroot is either a valid URL or a valid path
 				if (preg_match('/^https?\:\/\//', $documentroot)) {
 					$encoded = $idna_convert->encode($documentroot);
-					if (!Validate::validateUrl($encoded, true)) {
+					if (!Validate::validateUrl($encoded, true) || !Validate::isWebserverConfigSafe($encoded)) {
 						Response::standardError('invaliddocumentrooturl', '', true);
 					}
 					$documentroot = $encoded;
@@ -679,6 +679,34 @@ class Domains extends ApiCommand implements ResourceEntity
 				$domain_check = Database::pexecute_first($domain_check_stmt, [
 					'domain' => strtolower($domain)
 				], true, true);
+
+				// admins who can only manage their own customers must not add a domain which is
+				// located below a domain of another admin's customer (e.g. shop.example.com when
+				// example.com belongs to someone else). The standard-subdomain of the customer
+				// (below the system-hostname) is not affected by this.
+				$std_basedomain = Settings::Get('system.stdsubdomain') ?: Settings::Get('system.hostname');
+				if ($this->getUserDetail('customers_see_all') != '1' && strtolower($domain) != strtolower($customer['loginname'] . '.' . $std_basedomain)) {
+					$parent_labels = explode('.', strtolower($domain));
+					$parent_domains = [];
+					while (count($parent_labels) > 1) {
+						array_shift($parent_labels);
+						$parent_domains['pd' . count($parent_domains)] = implode('.', $parent_labels);
+					}
+					if (!empty($parent_domains)) {
+						$foreign_stmt = Database::prepare("
+							SELECT `domain` FROM `" . TABLE_PANEL_DOMAINS . "`
+							WHERE `adminid` <> :adminid
+							AND `domain` IN (:" . implode(', :', array_keys($parent_domains)) . ")
+							LIMIT 1
+						");
+						$foreign_domain = Database::pexecute_first($foreign_stmt, array_merge([
+							'adminid' => $this->getUserDetail('adminid')
+						], $parent_domains), true, true);
+						if ($foreign_domain) {
+							Response::standardError('subdomainofforeigndomain', $idna_convert->decode($domain), true);
+						}
+					}
+				}
 				$aliasdomain_check = [
 					'id' => 0
 				];
@@ -1239,7 +1267,8 @@ class Domains extends ApiCommand implements ResourceEntity
 			$p_ipandports = $this->getParam('ipandport', true, []);
 			$adminid = intval($this->getParam('adminid', true, $result['adminid']));
 
-			if ($this->getParam('customerid', true, 0) == 0 && $this->getParam('loginname', true, '') == '') {
+			if (Settings::Get('panel.allow_domain_change_customer') != '1' || ($this->getParam('customerid', true, 0) == 0 && $this->getParam('loginname', true, '') == '')) {
+				// no customer given or moving domains between customers is not allowed
 				$customerid = $result['customerid'];
 				$customer = $this->apiCall('Customers.get', [
 					'id' => $customerid
@@ -1591,7 +1620,7 @@ class Domains extends ApiCommand implements ResourceEntity
 			}
 
 			// check changes of openbasedir-path variable
-			if ($openbasedir_path > 2 && $openbasedir_path < 0) {
+			if (!in_array((int)$openbasedir_path, [0, 1, 2], true)) {
 				$openbasedir_path = 0;
 			}
 
@@ -1665,7 +1694,7 @@ class Domains extends ApiCommand implements ResourceEntity
 			if ($documentroot != $result['documentroot']) {
 				if (preg_match('/^https?\:\/\//', $documentroot)) {
 					$encoded = $idna_convert->encode($documentroot);
-					if (!Validate::validateUrl($encoded, true)) {
+					if (!Validate::validateUrl($encoded, true) || !Validate::isWebserverConfigSafe($encoded)) {
 						Response::standardError('invaliddocumentrooturl', '', true);
 					}
 					$documentroot = $encoded;

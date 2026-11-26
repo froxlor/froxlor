@@ -1098,4 +1098,51 @@ class DomainZonesTest extends TestCase
 		$this->assertTrue($result['data']);
 		//$this->assertEquals(304, http_response_code());
 	}
+
+	/**
+	 * @dataProvider malformedTxtContents
+	 */
+	public function testAdminDomainZonesAddTXTMalformed(string $content)
+	{
+		global $admin_userdata;
+
+		$this->expectExceptionMessage("DNS content invalid");
+		DomainZones::getLocal($admin_userdata, [
+			'domainname' => 'test2.local',
+			'record' => '_malformed',
+			'type' => 'TXT',
+			'content' => $content
+		])->add();
+	}
+
+	public function malformedTxtContents(): array
+	{
+		return [
+			['foo" evil'],
+			['"foo" ; comment "bar'],
+			['"foo" ( "bar"'],
+			['ends with backslash\\'],
+		];
+	}
+
+	public function testAdminDomainZonesAddTXTMultiString()
+	{
+		global $admin_userdata;
+
+		$json_result = DomainZones::getLocal($admin_userdata, [
+			'domainname' => 'test2.local',
+			'record' => '_multi',
+			'type' => 'TXT',
+			'content' => '"v=DKIM1; k=rsa; p=abc" "def \\"quoted\\" (x)"'
+		])->add();
+		$result = json_decode($json_result, true)['data'];
+		$found = false;
+		foreach ($result as $entry) {
+			if (substr($entry, 0, 6) == '_multi') {
+				$found = true;
+				break;
+			}
+		}
+		$this->assertTrue($found);
+	}
 }

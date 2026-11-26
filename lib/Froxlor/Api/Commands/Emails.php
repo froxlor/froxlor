@@ -149,6 +149,9 @@ class Emails extends ApiCommand implements ResourceEntity
 
 			// get needed customer info to reduce the email-address-counter by one
 			$customer = $this->getCustomerData('emails');
+			if ((int)$domain_check['customerid'] != (int)$customer['customerid']) {
+				Response::standardError('maindomainnonexist', $idna_convert->decode($domain), true);
+			}
 
 			// duplicate check, among all customers as the mail-system resolves addresses by name only
 			$stmt = Database::prepare("
@@ -340,6 +343,7 @@ class Emails extends ApiCommand implements ResourceEntity
 
 		// get needed customer info to reduce the email-address-counter by one
 		$customer = $this->getCustomerData();
+		$this->checkRecordOwner($customer, $result);
 
 		// check for catchall-flag
 		$email = $result['email_full'];
@@ -523,6 +527,7 @@ class Emails extends ApiCommand implements ResourceEntity
 
 		// get needed customer info to reduce the email-address-counter by one
 		$customer = $this->getCustomerData();
+		$this->checkRecordOwner($customer, $result);
 
 		// check for forwarders
 		$number_forwarders = 0;

@@ -232,6 +232,58 @@ class MysqlsTest extends TestCase
 	}
 
 	/**
+	 * sql_search must never be able to replace the customerid-filter of the listing
+	 *
+	 * @depends testCustomerMysqlsList
+	 */
+	public function testCustomerMysqlsListSearchCannotOverrideOwner()
+	{
+		global $admin_userdata;
+
+		// get customer
+		$json_result = Customers::getLocal($admin_userdata, array(
+			'loginname' => 'test1'
+		))->get();
+		$customer_userdata = json_decode($json_result, true)['data'];
+
+		// another customer without any databases
+		$foreign_userdata = $customer_userdata;
+		$foreign_userdata['customerid'] = $customer_userdata['customerid'] + 1000;
+
+		foreach (['customerid', '`customerid`', 'dbserver'] as $field) {
+			$data = [
+				'sql_search' => [
+					$field => [
+						'op' => '=',
+						'value' => $field == 'dbserver' ? 0 : $customer_userdata['customerid']
+					]
+				]
+			];
+			$json_result = Mysqls::getLocal($foreign_userdata, $data)->listing();
+			$result = json_decode($json_result, true)['data'];
+			$this->assertEquals(0, $result['count'], 'sql_search on "' . $field . '" exposed foreign databases');
+
+			$json_result = Mysqls::getLocal($foreign_userdata, $data)->listingCount();
+			$result = json_decode($json_result, true)['data'];
+			$this->assertEquals(0, $result);
+		}
+
+		// the owner itself can of course still search
+		$json_result = Mysqls::getLocal($customer_userdata, [
+			'sql_search' => [
+				'databasename' => [
+					'op' => 'IN',
+					'value' => ['test1sql1', 'doesnotexist']
+				],
+				'description' => 'testdb'
+			]
+		])->listing();
+		$result = json_decode($json_result, true)['data'];
+		$this->assertEquals(1, $result['count']);
+		$this->assertEquals('test1sql1', $result['list'][0]['databasename']);
+	}
+
+	/**
 	 * @depends testCustomerMysqlsList
 	 */
 	public function testUpdateCustomerAllowedMysqlWithExistingDbs()

@@ -114,6 +114,7 @@ class EmailAccounts extends ApiCommand implements ResourceEntity
 				'emailaddr' => $emailaddr
 			]);
 			$id = $result['id'];
+			$this->checkRecordOwner($customer, $result);
 
 			$idna_convert = new IdnaWrapper();
 			$email_full = $result['email_full'];
@@ -404,6 +405,7 @@ class EmailAccounts extends ApiCommand implements ResourceEntity
 
 		// get needed customer info to reduce the email-account-counter by one
 		$customer = $this->getCustomerData();
+		$this->checkRecordOwner($customer, $result);
 
 		// validation
 		$quota = Validate::validate($quota, 'email_quota', '/^\d+$/', 'vmailquotawrong', [], true);
@@ -563,6 +565,7 @@ class EmailAccounts extends ApiCommand implements ResourceEntity
 
 		// get needed customer info to reduce the email-account-counter by one
 		$customer = $this->getCustomerData();
+		$this->checkRecordOwner($customer, $result);
 
 		// delete entry
 		$stmt = Database::prepare("

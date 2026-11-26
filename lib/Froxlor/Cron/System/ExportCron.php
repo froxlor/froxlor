@@ -162,7 +162,7 @@ class ExportCron extends FroxlorCron
 					}
 					$cronlog->logAction(FroxlorLogger::CRON_ACTION, LOG_DEBUG, 'shell> '.basename($mysql_dump) . ' -u ' . escapeshellarg($sql_root['user']) . ' -pXXXXX ' . $row['databasename'] . ' > ' . FileDir::makeCorrectFile($tmpdir . '/mysql/' . $row['databasename'] . '_' . date('YmdHi', time()) . '.sql'));
 					$bool_false = false;
-					FileDir::safe_exec($mysql_dump . ' --defaults-file=' . escapeshellarg($mysqlcnf_file) . ' -u ' . escapeshellarg($sql_root['user']) . ' ' . $row['databasename'] . ' > ' . FileDir::makeCorrectFile($tmpdir . '/mysql/' . $row['databasename'] . '_' . date('YmdHi', time()) . '.sql'), $bool_false, [
+					FileDir::safe_exec($mysql_dump . ' --defaults-file=' . escapeshellarg($mysqlcnf_file) . ' -u ' . escapeshellarg($sql_root['user']) . ' ' . escapeshellarg($row['databasename']) . ' > ' . escapeshellarg(FileDir::makeCorrectFile($tmpdir . '/mysql/' . $row['databasename'] . '_' . date('YmdHi', time()) . '.sql')), $bool_false, [
 						'>'
 					]);
 					$has_dbs = true;
@@ -192,16 +192,26 @@ class ExportCron extends FroxlorCron
 				'cid' => $data['customerid']
 			]);
 
-			$tar_file_list = "";
+			$tar_file_list = [];
 			$mail_homedir = "";
 			while ($row = $sel_stmt->fetch()) {
-				$tar_file_list .= escapeshellarg("./" . $row['maildir']) . " ";
+				if (preg_match('/[\x00-\x1F\x7F]/', $row['maildir'])) {
+					continue;
+				}
+				$tar_file_list[] = "./" . $row['maildir'];
 				$mail_homedir = $row['homedir'];
 			}
 
 			if (!empty($tar_file_list)) {
-				$cronlog->logAction(FroxlorLogger::CRON_ACTION, LOG_DEBUG, 'shell> tar cfvz ' . escapeshellarg(FileDir::makeCorrectFile($tmpdir . '/mail/' . $data['loginname'] . '-mail.tar.gz')) . ' -C ' . escapeshellarg($mail_homedir) . ' ' . trim($tar_file_list));
-				FileDir::safe_exec('tar cfz ' . escapeshellarg(FileDir::makeCorrectFile($tmpdir . '/mail/' . $data['loginname'] . '-mail.tar.gz')) . ' -C ' . escapeshellarg($mail_homedir) . ' ' . trim($tar_file_list));
+				// pass the maildirs via a file-list (one per line, read literally) instead of
+				// the command line, so characters which are valid in a mail-address but
+				// rejected by safe_exec() (e.g. '&' or '$') neither abort the cronjob nor
+				// reach the shell
+				$tar_list_file = tempnam("/tmp", "frx");
+				file_put_contents($tar_list_file, implode("\n", $tar_file_list) . "\n");
+				$cronlog->logAction(FroxlorLogger::CRON_ACTION, LOG_DEBUG, 'shell> tar cfvz ' . escapeshellarg(FileDir::makeCorrectFile($tmpdir . '/mail/' . $data['loginname'] . '-mail.tar.gz')) . ' -C ' . escapeshellarg($mail_homedir) . ' -T ' . escapeshellarg($tar_list_file));
+				FileDir::safe_exec('tar cfz ' . escapeshellarg(FileDir::makeCorrectFile($tmpdir . '/mail/' . $data['loginname'] . '-mail.tar.gz')) . ' -C ' . escapeshellarg($mail_homedir) . ' -T ' . escapeshellarg($tar_list_file));
+				@unlink($tar_list_file);
 				$create_export_tar_data .= './mail ';
 			}
 		}

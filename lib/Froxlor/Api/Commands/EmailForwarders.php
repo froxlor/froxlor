@@ -104,6 +104,7 @@ class EmailForwarders extends ApiCommand implements ResourceEntity
 
 			// get needed customer info to reduce the email-forwarder-counter by one
 			$customer = $this->getCustomerData('email_forwarders');
+			$this->checkRecordOwner($customer, $result);
 
 			// reserve the resource atomically, the check above is based on previously read data (concurrent requests)
 			if (!Customers::reserveUsage((int)$customer['customerid'], ['email_forwarders_used' => 1])) {
@@ -285,6 +286,7 @@ class EmailForwarders extends ApiCommand implements ResourceEntity
 		if (isset($result['destination'][$forwarderid]) && $result['email'] != $result['destination'][$forwarderid]) {
 			// get needed customer info to reduce the email-forwarder-counter by one
 			$customer = $this->getCustomerData();
+			$this->checkRecordOwner($customer, $result);
 
 			// unset it from array
 			unset($result['destination'][$forwarderid]);

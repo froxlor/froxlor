@@ -564,6 +564,31 @@ class Dns
 	}
 
 	/**
+	 * Returns whether the content of a TXT record is (once enclosed) a well-formed sequence
+	 * of character-strings for a zonefile: either quoted strings (with \-escapes) or
+	 * unquoted tokens, without unbalanced quotes, comments or parentheses outside of
+	 * a quoted string that would affect the lines following the record
+	 *
+	 * @param string $txt_content
+	 *
+	 * @return bool
+	 */
+	public static function isValidTXTContent(string $txt_content): bool
+	{
+		if (preg_match('/[\x00-\x1F\x7F]/', $txt_content)) {
+			return false;
+		}
+		// same enclosing as encloseTXTContent() does for zonefiles
+		if (substr($txt_content, 0, 1) != '"') {
+			$txt_content = '"' . $txt_content;
+		}
+		if (substr($txt_content, -1) != '"') {
+			$txt_content .= '"';
+		}
+		return preg_match('/^(?:"(?:[^"\\\\]|\\\\.)*"|[^\s"();\\\\]+)(?:\s+(?:"(?:[^"\\\\]|\\\\.)*"|[^\s"();\\\\]+))*$/', $txt_content) === 1;
+	}
+
+	/**
 	 * @param string $txt_content
 	 * @param bool $isMultiLine
 	 * @return string

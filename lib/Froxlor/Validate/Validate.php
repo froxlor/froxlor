@@ -201,6 +201,21 @@ class Validate
 	}
 
 	/**
+	 * Returns whether the given value (url or path) can be written to a webserver
+	 * configuration as a single, unquoted argument without changing the meaning of
+	 * the directive: no whitespace/control characters, no quotes, no variable-,
+	 * comment-, block- or statement-delimiters
+	 *
+	 * @param string $value
+	 *
+	 * @return bool
+	 */
+	public static function isWebserverConfigSafe(string $value): bool
+	{
+		return $value !== '' && preg_match('/[\s\x00-\x1F\x7F"\'`$;{}#\\\\]/', $value) !== 1;
+	}
+
+	/**
 	 * Returns whether a URL is in a correct format or not
 	 *
 	 * @param string $url URL to be tested

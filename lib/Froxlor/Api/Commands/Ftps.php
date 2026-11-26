@@ -85,7 +85,8 @@ class Ftps extends ApiCommand implements ResourceEntity
 			throw new Exception("You cannot access this resource", 405);
 		}
 
-		$is_defaultuser = $this->getBoolParam('is_defaultuser', true, 0);
+		// the default-user is only created by admins along with the customer itself
+		$is_defaultuser = $this->isAdmin() ? $this->getBoolParam('is_defaultuser', true, 0) : 0;
 		$login_enabled = $this->getBoolParam('login_enabled', true, 1);
 
 		if (($this->getUserDetail('ftps_used') < $this->getUserDetail('ftps') || $this->getUserDetail('ftps') == '-1') || $this->isAdmin() && $is_defaultuser == 1) {
@@ -101,7 +102,11 @@ class Ftps extends ApiCommand implements ResourceEntity
 			$ftpusername = $this->getParam('ftp_username', true, '');
 			$ftpdomain = $this->getParam('ftp_domain', true, '');
 
-			$additional_members = $this->getParam('additional_members', true, []);
+			// adding other users to the group of this customer is reserved to admins
+			$additional_members = $this->isAdmin() ? $this->getParam('additional_members', true, []) : [];
+			if (!is_array($additional_members)) {
+				$additional_members = [];
+			}
 			foreach ($additional_members as $index => $add_member) {
 				// members end up comma-joined, unsanitized, in the NSS group-file line built by
 				// Extrausers::generateFile() - reject anything but a plain username here so a
@@ -465,6 +470,7 @@ class Ftps extends ApiCommand implements ResourceEntity
 
 		// get needed customer info to reduce the ftp-user-counter by one
 		$customer = $this->getCustomerData();
+		$this->checkRecordOwner($customer, $result);
 
 		if (Settings::Get('system.allow_customer_shell') == '1' && $customer['shell_allowed'] == '1') {
 			$shell = Validate::validate(trim($shell), 'shell', '', '', [], true);

@@ -206,10 +206,67 @@ class DirOptionsTest extends TestCase
 			'path' => '/testmalformed',
 			'error404path' => '/"'.PHP_EOL.'something/../../../../weird 404.html'.PHP_EOL.'#'
 		];
+		// quotes and comment-signs would end up in the webserver-configuration
+		$this->expectExceptionMessage("The value given as ErrorDocument does not seem to be a valid file, URL or string.");
+		DirOptions::getLocal($customer_userdata, $data)->add();
+	}
+
+	public function testCustomerDirOptionsAddFileWithSpace()
+	{
+		global $admin_userdata;
+
+		// get customer
+		$json_result = Customers::getLocal($admin_userdata, array(
+			'loginname' => 'test1'
+		))->get();
+		$customer_userdata = json_decode($json_result, true)['data'];
+
+		$data = [
+			'path' => '/testspace',
+			'error404path' => '/errors/../weird 404.html',
+			'error403path' => 'https://www.froxlor.org/403.html',
+			'error500path' => '"Something went wrong"'
+		];
 		$json_result = DirOptions::getLocal($customer_userdata, $data)->add();
 		$result = json_decode($json_result, true)['data'];
-		$expected = '/"something/././././weird\ 404.html#';
-		$this->assertEquals($expected, $result['error404path']);
+		$this->assertEquals('/errors/./weird\ 404.html', $result['error404path']);
+		$this->assertEquals('https://www.froxlor.org/403.html', $result['error403path']);
+		$this->assertEquals('"Something went wrong"', $result['error500path']);
+		DirOptions::getLocal($customer_userdata, ['id' => $result['id']])->delete();
+	}
+
+	/**
+	 * @dataProvider configBreakingErrorDocuments
+	 */
+	public function testCustomerDirOptionsAddConfigBreakingValue(string $field, string $value)
+	{
+		global $admin_userdata;
+
+		// get customer
+		$json_result = Customers::getLocal($admin_userdata, array(
+			'loginname' => 'test1'
+		))->get();
+		$customer_userdata = json_decode($json_result, true)['data'];
+
+		$this->expectExceptionMessage("The value given as ErrorDocument does not seem to be a valid file, URL or string.");
+		DirOptions::getLocal($customer_userdata, [
+			'path' => '/testbreaking',
+			$field => $value
+		])->add();
+	}
+
+	public function configBreakingErrorDocuments(): array
+	{
+		return [
+			['error404path', '/404.html}'],
+			['error403path', '/403.html{'],
+			['error500path', '/500.html#'],
+			['error404path', "/404'.html"],
+			['error403path', 'https://www.froxlor.org/$host'],
+			['error403path', 'https://www.froxlor.org/a;b'],
+			['error500path', '"costs $uri"'],
+			['error500path', '"ends with backslash\\"']
+		];
 	}
 
 	public function testCustomerDirOptionsAddMalformedInvalid()

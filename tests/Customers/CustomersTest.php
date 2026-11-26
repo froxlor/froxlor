@@ -355,6 +355,138 @@ class CustomersTest extends TestCase
 	 *
 	 * @depends testAdminCustomersAdd
 	 */
+	public function testAdminCustomersUpdateNegativeLimit()
+	{
+		global $admin_userdata;
+
+		$this->expectExceptionCode(406);
+		$this->expectExceptionMessage('must not be lower than -1');
+		Customers::getLocal($admin_userdata, [
+			'loginname' => 'test1',
+			'mysqls' => -5
+		])->update();
+	}
+
+	public function testAdminCustomersUpdateUnlimitedStaysValid()
+	{
+		global $admin_userdata;
+
+		$json_result = Customers::getLocal($admin_userdata, [
+			'loginname' => 'test1'
+		])->get();
+		$before = json_decode($json_result, true)['data'];
+
+		// explicit -1 and the _ul flag both mean "unlimited"
+		$json_result = Customers::getLocal($admin_userdata, [
+			'loginname' => 'test1',
+			'subdomains' => -1,
+			'ftps_ul' => 1
+		])->update();
+		$result = json_decode($json_result, true)['data'];
+		$this->assertEquals(-1, $result['subdomains']);
+		$this->assertEquals(-1, $result['ftps']);
+
+		// an update without any limit-parameter must accept the stored unlimited values
+		$json_result = Customers::getLocal($admin_userdata, [
+			'loginname' => 'test1'
+		])->update();
+		$result = json_decode($json_result, true)['data'];
+		$this->assertEquals(-1, $result['subdomains']);
+		$this->assertEquals(-1, $result['ftps']);
+
+		// restore
+		$json_result = Customers::getLocal($admin_userdata, [
+			'loginname' => 'test1',
+			'subdomains' => $before['subdomains'],
+			'ftps' => $before['ftps']
+		])->update();
+		$result = json_decode($json_result, true)['data'];
+		$this->assertEquals($before['subdomains'], $result['subdomains']);
+		$this->assertEquals($before['ftps'], $result['ftps']);
+	}
+
+	/**
+	 * @dataProvider protectedSearchFields
+	 */
+	public function testCustomersListSearchProtectedField(string $field)
+	{
+		global $admin_userdata;
+
+		$this->expectExceptionCode(406);
+		$this->expectExceptionMessage('cannot be used for searching or sorting');
+		Customers::getLocal($admin_userdata, [
+			'sql_search' => [
+				$field => [
+					'op' => '<',
+					'value' => 'x'
+				]
+			]
+		])->listing();
+	}
+
+	/**
+	 * @dataProvider protectedSearchFields
+	 */
+	public function testCustomersListOrderByProtectedField(string $field)
+	{
+		global $admin_userdata;
+
+		$this->expectExceptionCode(406);
+		$this->expectExceptionMessage('cannot be used for searching or sorting');
+		Customers::getLocal($admin_userdata, [
+			'sql_orderby' => [
+				$field => 'ASC'
+			]
+		])->listing();
+	}
+
+	public function protectedSearchFields(): array
+	{
+		return [
+			['password'],
+			['c.password'],
+			['a.password'],
+			['`a`.`PassWord`'],
+			['a.data_2fa'],
+			['c.data_2fa'],
+			['c.leprivatekey'],
+			['ssl_key_file'],
+			['d.dkim_privkey'],
+			['password_enc'],
+			['secret'],
+			['apikey']
+		];
+	}
+
+	public function testCustomersListSearchInvalidFieldIsIgnored()
+	{
+		global $admin_userdata;
+
+		$json_result = Customers::getLocal($admin_userdata)->listing();
+		$all = json_decode($json_result, true)['data']['count'];
+
+		// invalid fields are skipped and must not break the statement
+		$json_result = Customers::getLocal($admin_userdata, [
+			'sql_search' => [
+				'c.login name' => 'x',
+				'c.loginname' => 'test1'
+			],
+			'sql_orderby' => [
+				'c.login name' => 'ASC'
+			]
+		])->listing();
+		$result = json_decode($json_result, true)['data'];
+		$this->assertEquals(1, $result['count']);
+
+		$json_result = Customers::getLocal($admin_userdata, [
+			'sql_search' => [
+				'c.login name' => 'x'
+			]
+		])->listing();
+		$result = json_decode($json_result, true)['data'];
+		$this->assertEquals($all, $result['count']);
+	}
+
 	public function testResellerCustomersAddAllocateMore()
 	{
 		global $admin_userdata;
