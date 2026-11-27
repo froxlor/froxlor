@@ -614,6 +614,21 @@ class CustomersTest extends TestCase
 	public function testAdminCustomersMove()
 	{
 		global $admin_userdata;
+
+		// an api-key the customer created while it belonged to the previous admin
+		$json_result = Customers::getLocal($admin_userdata, array(
+			'loginname' => 'test1'
+		))->get();
+		$customer = json_decode($json_result, true)['data'];
+		$ins_stmt = Database::prepare("
+			INSERT INTO `" . TABLE_API_KEYS . "` SET
+			`apikey` = 'movetestkey', `secret` = 'movetestsecret', `adminid` = :adminid, `customerid` = :customerid, `valid_until` = '-1', `allowed_from` = ''
+		");
+		Database::pexecute($ins_stmt, [
+			'adminid' => $customer['adminid'],
+			'customerid' => $customer['customerid']
+		]);
+
 		$json_result = Customers::getLocal($admin_userdata, array(
 			'loginname' => 'test1',
 			'adminid' => 2
@@ -621,6 +636,13 @@ class CustomersTest extends TestCase
 		$result = json_decode($json_result, true)['data'];
 
 		$this->assertEquals(2, $result['adminid']);
+
+		// the key moves along and is not left with the previous admin
+		$sel_stmt = Database::prepare("SELECT `adminid` FROM `" . TABLE_API_KEYS . "` WHERE `apikey` = 'movetestkey'");
+		$key = Database::pexecute_first($sel_stmt);
+		$del_stmt = Database::prepare("DELETE FROM `" . TABLE_API_KEYS . "` WHERE `apikey` = 'movetestkey'");
+		Database::pexecute($del_stmt);
+		$this->assertEquals(2, $key['adminid']);
 	}
 
 	/**

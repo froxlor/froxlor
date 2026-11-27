@@ -758,7 +758,7 @@ opcache.validate_timestamps'),
 	('panel', 'logo_overridecustom', '0'),
 	('panel', 'settings_mode', '0'),
 	('panel', 'menu_collapsed', '1'),
-	('panel', 'version', '2.3.17'),
+	('panel', 'version', '2.3.18'),
 	('panel', 'db_version', '202611220');
 
 

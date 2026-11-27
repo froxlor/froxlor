@@ -386,3 +386,17 @@ if (Froxlor::isDatabaseVersion('202611210')) {
 
 	Froxlor::updateToDbVersion('202611220');
 }
+
+if (Froxlor::isFroxlorVersion('2.3.17')) {
+	Update::showUpdateStep("Assigning api-keys of moved customers to their current admin");
+	Database::query("
+		UPDATE `" . TABLE_API_KEYS . "` ak
+		JOIN `" . TABLE_PANEL_CUSTOMERS . "` c ON c.`customerid` = ak.`customerid`
+		SET ak.`adminid` = c.`adminid`
+		WHERE ak.`customerid` > 0 AND ak.`adminid` <> c.`adminid`
+	");
+	Update::lastStepStatus(0);
+
+	Update::showUpdateStep("Updating from 2.3.17 to 2.3.18", false);
+	Froxlor::updateToVersion('2.3.18');
+}

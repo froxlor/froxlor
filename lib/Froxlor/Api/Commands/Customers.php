@@ -2177,6 +2177,15 @@ class Customers extends ApiCommand implements ResourceEntity
 				'cid' => $id
 			], true, true);
 
+			// Update api-keys of the customer, the previous admin must not keep access to them
+			$updApiKeys_stmt = Database::prepare("
+				UPDATE `" . TABLE_API_KEYS . "` SET `adminid` = :adminid WHERE `customerid` = :cid
+			");
+			Database::pexecute($updApiKeys_stmt, [
+				'adminid' => $adminid,
+				'cid' => $id
+			], true, true);
+
 			// now, recalculate the resource-usage for the old and the new admin
 			User::updateCounters(false);
 
